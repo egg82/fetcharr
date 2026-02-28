@@ -5,15 +5,14 @@ import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.env.DurationFormatException;
 import me.egg82.fetcharr.env.ParsedDateTime;
 import me.egg82.fetcharr.env.ParsedDuration;
+import me.egg82.fetcharr.file.JSONFile;
 import me.egg82.fetcharr.web.ArrAPI;
 import me.egg82.fetcharr.web.NullAPI;
 import me.egg82.fetcharr.web.common.*;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.io.IOException;
+import java.util.*;
 
 public class MovieFile extends APIObject {
     public static final MovieFile UNKNOWN = new MovieFile();
@@ -54,6 +53,23 @@ public class MovieFile extends APIObject {
         this.info = getMediaInfo(MovieFile.MediaInfo.UNKNOWN, "mediaInfo");
         this.cutoff = !getBoolean(false, "qualityCutoffNotMet");
         this.id = getInt(-1, "id");
+
+        this.file = new JSONFile(getPath(api, getClass(), id));
+        this.metaFile = new JSONFile(getMetaPath(api, getClass(), id));
+        if (!file.exists()) {
+            try {
+                this.file.write(obj);
+            } catch (IOException ex) {
+                logger.warn("Could not write JSON data to {}", this.file.path());
+            }
+        }
+        if (!metaFile.exists()) {
+            try {
+                this.metaFile.write(meta().object());
+            } catch (IOException ex) {
+                logger.warn("Could not write JSON data to {}", this.file.path());
+            }
+        }
     }
 
     private MovieFile() {
@@ -75,6 +91,23 @@ public class MovieFile extends APIObject {
         this.info = MovieFile.MediaInfo.UNKNOWN;
         this.cutoff = false;
         this.id = -1;
+
+        this.file = new JSONFile(getPath(api, getClass(), id));
+        this.metaFile = new JSONFile(getMetaPath(api, getClass(), id));
+        if (!file.exists()) {
+            try {
+                this.file.write(obj);
+            } catch (IOException ex) {
+                logger.warn("Could not write JSON data to {}", this.file.path());
+            }
+        }
+        if (!metaFile.exists()) {
+            try {
+                this.metaFile.write(meta().object());
+            } catch (IOException ex) {
+                logger.warn("Could not write JSON data to {}", this.file.path());
+            }
+        }
     }
 
     public boolean unknown() { return id < 0; }
@@ -93,6 +126,11 @@ public class MovieFile extends APIObject {
             return def;
         }
         return new MovieFile.MediaInfo(o, api);
+    }
+
+    @Override
+    public @NotNull APIMeta meta() {
+        return new APIMeta();
     }
 
     @Override
@@ -286,6 +324,11 @@ public class MovieFile extends APIObject {
         }
 
         public boolean unknown() { return api instanceof NullAPI; }
+
+        @Override
+        public @NotNull APIMeta meta() {
+            return new APIMeta();
+        }
 
         @Override
         public boolean equals(Object o) {

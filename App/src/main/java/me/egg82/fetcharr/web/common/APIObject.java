@@ -3,12 +3,16 @@ package me.egg82.fetcharr.web.common;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONException;
 import kong.unirest.core.json.JSONObject;
+import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.ParsedDateTime;
+import me.egg82.fetcharr.file.JSONFile;
 import me.egg82.fetcharr.web.ArrAPI;
+import me.egg82.fetcharr.web.radarr.RadarrAPI;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -19,10 +23,36 @@ public abstract class APIObject {
     protected final JSONObject obj;
     protected final ArrAPI api;
 
+    protected JSONFile file = null;
+    protected JSONFile metaFile = null;
+
     protected APIObject(@NotNull JSONObject obj, @NotNull ArrAPI api) {
         this.obj = obj;
         this.api = api;
     }
+
+    public static @NotNull File getPath(@NotNull ArrAPI api, @NotNull Class<? extends APIObject> clazz, int id) {
+        return new File(getBasePath(api, clazz), id + ".json");
+    }
+
+    public static @NotNull File getMetaPath(@NotNull ArrAPI api, @NotNull Class<? extends APIObject> clazz, int id) {
+        return new File(getBasePath(api, clazz), id + ".meta.json");
+    }
+
+    private static @NotNull File getBasePath(@NotNull ArrAPI api, @NotNull Class<? extends APIObject> clazz) {
+        File base = ConfigVars.getVar(ConfigVars.DATA_DIR, (File) ConfigVars.DATA_DIR.def());
+
+        File arr;
+        if (api instanceof RadarrAPI) {
+            arr = new File(base, "radarr-" + api.id());
+        } else {
+            arr = new File(base, "unknown");
+        }
+
+        return new File(arr, clazz.getSimpleName());
+    }
+
+    public abstract @NotNull APIMeta meta();
 
     protected @NotNull JSONObject traverseObj(@NotNull JSONObject o, @NotNull String... path) {
         if (path.length <= 1) {

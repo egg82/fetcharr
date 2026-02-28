@@ -36,7 +36,7 @@ public class ParsedDuration {
         this.duration = Duration.ofMillis(millis + (seconds * 1000L) + (minutes * 60L * 1000L) + (hours * 60L * 60L * 1000L));
     }
 
-    private ParsedDuration(@NotNull Duration duration) {
+    public ParsedDuration(@NotNull Duration duration) {
         this.duration = duration;
     }
 

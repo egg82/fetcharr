@@ -17,4 +17,9 @@ public class CustomFormat extends APIObject {
     }
 
     // public boolean unknown() { return id < 0; }
+
+    @Override
+    public @NotNull APIMeta meta() {
+        return new APIMeta();
+    }
 }

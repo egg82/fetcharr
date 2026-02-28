@@ -8,6 +8,8 @@ import org.jetbrains.annotations.Nullable;
 public interface ArrAPI {
     boolean valid();
 
+    int id();
+
     default @Nullable QualityProfile qualityProfile(int id) { return qualityProfile(id, true); }
     @Nullable QualityProfile qualityProfile(int id, boolean cache);
 

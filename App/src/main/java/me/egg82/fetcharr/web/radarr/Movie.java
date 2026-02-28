@@ -2,12 +2,15 @@ package me.egg82.fetcharr.web.radarr;
 
 import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.env.ParsedDateTime;
+import me.egg82.fetcharr.file.JSONFile;
 import me.egg82.fetcharr.web.NullAPI;
+import me.egg82.fetcharr.web.common.APIMeta;
 import me.egg82.fetcharr.web.common.APIObject;
 import me.egg82.fetcharr.web.common.QualityProfile;
 import me.egg82.fetcharr.web.common.ReleaseStatus;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.Set;
 
@@ -72,6 +75,23 @@ public class Movie extends APIObject {
         this.popularity = getFloat(-1.0F, "popularity");
         this.lastSearch = getDateTime(ParsedDateTime.UNKNOWN, "lastSearchTime");
         this.id = getInt(-1, "id");
+
+        this.file = new JSONFile(getPath(api, getClass(), id));
+        this.metaFile = new JSONFile(getMetaPath(api, getClass(), id));
+        if (!file.exists()) {
+            try {
+                this.file.write(obj);
+            } catch (IOException ex) {
+                logger.warn("Could not write JSON data to {}", this.file.path());
+            }
+        }
+        if (!metaFile.exists()) {
+            try {
+                this.metaFile.write(meta().object());
+            } catch (IOException ex) {
+                logger.warn("Could not write JSON data to {}", this.file.path());
+            }
+        }
     }
 
     private Movie() {
@@ -104,6 +124,23 @@ public class Movie extends APIObject {
         this.popularity = -1.0F;
         this.lastSearch = ParsedDateTime.UNKNOWN;
         this.id = -1;
+
+        this.file = new JSONFile(getPath(api, getClass(), id));
+        this.metaFile = new JSONFile(getMetaPath(api, getClass(), id));
+        if (!file.exists()) {
+            try {
+                this.file.write(obj);
+            } catch (IOException ex) {
+                logger.warn("Could not write JSON data to {}", this.file.path());
+            }
+        }
+        if (!metaFile.exists()) {
+            try {
+                this.metaFile.write(meta().object());
+            } catch (IOException ex) {
+                logger.warn("Could not write JSON data to {}", this.file.path());
+            }
+        }
     }
 
     public boolean unknown() { return id < 0; }
@@ -120,6 +157,11 @@ public class Movie extends APIObject {
             return def;
         }
         return v;
+    }
+
+    @Override
+    public @NotNull APIMeta meta() {
+        return new APIMeta();
     }
 
     @Override

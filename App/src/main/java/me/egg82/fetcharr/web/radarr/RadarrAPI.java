@@ -7,13 +7,15 @@ import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONException;
 import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.ParsedTime;
+import me.egg82.fetcharr.file.JSONFile;
 import me.egg82.fetcharr.web.common.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 public class RadarrAPI extends CommonAPI {
     private final LoadingCache<Integer, @Nullable Movie> movies;
@@ -22,19 +24,24 @@ public class RadarrAPI extends CommonAPI {
     private final LoadingCache<Integer, @Nullable CustomFormat> customFormats;
     private final LoadingCache<Integer, @Nullable Language> languages;
 
-    private final boolean useCache = ConfigVars.getVar(ConfigVars.USE_CACHE, true);
+    private final boolean useCache = ConfigVars.getVar(ConfigVars.USE_CACHE, (boolean) ConfigVars.USE_CACHE.def());
 
-    public RadarrAPI(@NotNull String url, @NotNull String key) {
-        super(url, key);
+    private final ParsedTime shortCacheTime;
+    private final ParsedTime longCacheTime;
 
-        ParsedTime shortCacheTime = ConfigVars.getVar(ConfigVars.SHORT_CACHE_TIME, new ParsedTime(30L, TimeUnit.MINUTES));
-        ParsedTime longCacheTime = ConfigVars.getVar(ConfigVars.LONG_CACHE_TIME, new ParsedTime(6L, TimeUnit.HOURS));
+    public RadarrAPI(@NotNull String url, @NotNull String key, int id) {
+        super(url, key, id);
+
+        this.shortCacheTime = ConfigVars.getVar(ConfigVars.SHORT_CACHE_TIME, (ParsedTime) ConfigVars.SHORT_CACHE_TIME.def());
+        this.longCacheTime = ConfigVars.getVar(ConfigVars.LONG_CACHE_TIME, (ParsedTime) ConfigVars.LONG_CACHE_TIME.def());
+
         this.movies = Caffeine.newBuilder()
                 .expireAfterWrite(shortCacheTime.time(), shortCacheTime.unit())
                 .build(this::movieInternal);
         this.movieFiles = Caffeine.newBuilder()
                 .expireAfterWrite(shortCacheTime.time(), shortCacheTime.unit())
                 .build(this::movieFileInternal);
+
         this.qualityProfiles = Caffeine.newBuilder()
                 .expireAfterWrite(longCacheTime.time(), longCacheTime.unit())
                 .build(this::qualityProfileInternal);
@@ -71,6 +78,25 @@ public class RadarrAPI extends CommonAPI {
     }
 
     private @Nullable QualityProfile qualityProfileInternal(int id) {
+        JSONFile file = new JSONFile(APIObject.getPath(this, QualityProfile.class, id));
+        JSONFile metaFile = new JSONFile(APIObject.getMetaPath(this, QualityProfile.class, id));
+
+        if (file.exists() && metaFile.exists()) {
+            try {
+                APIMeta meta = new APIMeta(metaFile.read());
+                LocalDateTime expiration = meta.created().plusNanos(longCacheTime.unit().toNanos(longCacheTime.time()));
+                if (expiration.isAfter(LocalDateTime.now())) {
+                    logger.debug("Getting quality profile at ID {}: {}", id, file.path());
+                    return new QualityProfile(file.read(), this);
+                } else {
+                    metaFile.delete();
+                    file.delete();
+                }
+            } catch (IOException ex) {
+                logger.warn("Could not open file at {}", file.path(), ex);
+            }
+        }
+
         logger.debug("Getting quality profile at ID {}: {}", id, url + "/api/v3/qualityprofile/" + id);
 
         JsonNode response = get("/api/v3/qualityprofile/" + id);
@@ -97,6 +123,25 @@ public class RadarrAPI extends CommonAPI {
     }
 
     public @Nullable CustomFormat customFormatInternal(int id) {
+        JSONFile file = new JSONFile(APIObject.getPath(this, CustomFormat.class, id));
+        JSONFile metaFile = new JSONFile(APIObject.getMetaPath(this, CustomFormat.class, id));
+
+        if (file.exists() && metaFile.exists()) {
+            try {
+                APIMeta meta = new APIMeta(metaFile.read());
+                LocalDateTime expiration = meta.created().plusNanos(longCacheTime.unit().toNanos(longCacheTime.time()));
+                if (expiration.isAfter(LocalDateTime.now())) {
+                    logger.debug("Getting custom format at ID {}: {}", id, file.path());
+                    return new CustomFormat(file.read(), this);
+                } else {
+                    metaFile.delete();
+                    file.delete();
+                }
+            } catch (IOException ex) {
+                logger.warn("Could not open file at {}", file.path(), ex);
+            }
+        }
+
         logger.debug("Getting custom format at ID {}: {}", id, url + "/api/v3/customformat/" + id);
 
         JsonNode response = get("/api/v3/customformat/" + id);
@@ -123,6 +168,25 @@ public class RadarrAPI extends CommonAPI {
     }
 
     public @Nullable Language languageInternal(int id) {
+        JSONFile file = new JSONFile(APIObject.getPath(this, Language.class, id));
+        JSONFile metaFile = new JSONFile(APIObject.getMetaPath(this, Language.class, id));
+
+        if (file.exists() && metaFile.exists()) {
+            try {
+                APIMeta meta = new APIMeta(metaFile.read());
+                LocalDateTime expiration = meta.created().plusNanos(longCacheTime.unit().toNanos(longCacheTime.time()));
+                if (expiration.isAfter(LocalDateTime.now())) {
+                    logger.debug("Getting language at ID {}: {}", id, file.path());
+                    return new Language(file.read(), this);
+                } else {
+                    metaFile.delete();
+                    file.delete();
+                }
+            } catch (IOException ex) {
+                logger.warn("Could not open file at {}", file.path(), ex);
+            }
+        }
+
         logger.debug("Getting language at ID {}: {}", id, url + "/api/v3/language/" + id);
 
         JsonNode response = get("/api/v3/language/" + id);
@@ -182,6 +246,25 @@ public class RadarrAPI extends CommonAPI {
     }
 
     private @Nullable Movie movieInternal(int id) {
+        JSONFile file = new JSONFile(APIObject.getPath(this, Movie.class, id));
+        JSONFile metaFile = new JSONFile(APIObject.getMetaPath(this, Movie.class, id));
+
+        if (file.exists() && metaFile.exists()) {
+            try {
+                APIMeta meta = new APIMeta(metaFile.read());
+                LocalDateTime expiration = meta.created().plusNanos(shortCacheTime.unit().toNanos(shortCacheTime.time()));
+                if (expiration.isAfter(LocalDateTime.now())) {
+                    logger.debug("Getting movie at ID {}: {}", id, file.path());
+                    return new Movie(file.read(), this);
+                } else {
+                    metaFile.delete();
+                    file.delete();
+                }
+            } catch (IOException ex) {
+                logger.warn("Could not open file at {}", file.path(), ex);
+            }
+        }
+
         logger.debug("Getting movie at ID {}: {}", id, url + "/api/v3/movie/" + id);
 
         JsonNode response = get("/api/v3/movie/" + id);
@@ -202,6 +285,25 @@ public class RadarrAPI extends CommonAPI {
     public @Nullable MovieFile movieFile(int id) { return movieFiles.get(id); }
 
     public @Nullable MovieFile movieFileInternal(int id) {
+        JSONFile file = new JSONFile(APIObject.getPath(this, MovieFile.class, id));
+        JSONFile metaFile = new JSONFile(APIObject.getMetaPath(this, MovieFile.class, id));
+
+        if (file.exists() && metaFile.exists()) {
+            try {
+                APIMeta meta = new APIMeta(metaFile.read());
+                LocalDateTime expiration = meta.created().plusNanos(shortCacheTime.unit().toNanos(shortCacheTime.time()));
+                if (expiration.isAfter(LocalDateTime.now())) {
+                    logger.debug("Getting movie file at ID {}: {}", id, file.path());
+                    return new MovieFile(file.read(), this);
+                } else {
+                    metaFile.delete();
+                    file.delete();
+                }
+            } catch (IOException ex) {
+                logger.warn("Could not open file at {}", file.path(), ex);
+            }
+        }
+
         logger.debug("Getting movie file at ID {}: {}", id, url + "/api/v3/moviefile/" + id);
 
         JsonNode response = get("/api/v3/moviefile/" + id);

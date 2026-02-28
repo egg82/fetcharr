@@ -14,11 +14,16 @@ public abstract class CommonAPI implements ArrAPI {
 
     protected final String url;
     private final String key;
+    private final int id;
 
-    public CommonAPI(@NotNull String url, @NotNull String key) {
+    public CommonAPI(@NotNull String url, @NotNull String key, int id) {
         this.url = url;
         this.key = key;
+        this.id = id;
     }
+
+    @Override
+    public int id() { return id; }
 
     protected @Nullable JsonNode get(@NotNull String path) {
         return parseResponse(Unirest.get(url + path)

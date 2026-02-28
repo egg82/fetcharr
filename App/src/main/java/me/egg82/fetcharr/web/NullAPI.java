@@ -16,6 +16,11 @@ public class NullAPI implements ArrAPI {
     }
 
     @Override
+    public int id() {
+        return -1;
+    }
+
+    @Override
     public @Nullable QualityProfile qualityProfile(int id, boolean cache) {
         return null;
     }

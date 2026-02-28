@@ -5,35 +5,39 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.util.concurrent.TimeUnit;
+
 public enum ConfigVars {
-    LOG_MODE(String.class, "Logging mode", false),
-    PROXY_HOST(String.class, "HTTP proxy host", false),
-    PROXY_PORT(Integer.class, "HTTP proxy port", false),
-    CONNECT_TIMEOUT(Integer.class, "HTTP connection timeout in milliseconds", false),
-    REQUEST_TIMEOUT(Integer.class, "HTTP request timeout in milliseconds", false),
-    CONNECT_TTL(Integer.class, "HTTP connection TTL in milliseconds", false),
-    VERIFY_CERTS(Boolean.class, "Verify SSL certificates", false),
-    USE_CACHE(Boolean.class, "Use internal caching mechanisms", false),
-    SHORT_CACHE_TIME(ParsedTime.class, "Expiration time for short-lived cached values", false),
-    LONG_CACHE_TIME(ParsedTime.class, "Expiration time for long-lived cached values", false);
+    LOG_MODE(LogMode.class, "Logging mode", LogMode.INFO),
+    PROXY_HOST(String.class, "HTTP proxy host", null),
+    PROXY_PORT(Integer.class, "HTTP proxy port", 0),
+    CONNECT_TIMEOUT(Integer.class, "HTTP connection timeout in milliseconds", 0),
+    REQUEST_TIMEOUT(Integer.class, "HTTP request timeout in milliseconds", 0),
+    CONNECT_TTL(Integer.class, "HTTP connection TTL in milliseconds", -1),
+    VERIFY_CERTS(Boolean.class, "Verify SSL certificates", true),
+    USE_CACHE(Boolean.class, "Use internal caching mechanisms", true),
+    SHORT_CACHE_TIME(ParsedTime.class, "Expiration time for short-lived cached values", new ParsedTime(30L, TimeUnit.MINUTES)),
+    LONG_CACHE_TIME(ParsedTime.class, "Expiration time for long-lived cached values", new ParsedTime(6L, TimeUnit.HOURS)),
+    DATA_DIR(File.class, "Data storage directory", new File("/data"));
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigVars.class);
 
     private final Class<?> type;
     private final String description;
-    private final boolean required;
+    private final Object def;
 
-    ConfigVars(@NotNull Class<?> type, @NotNull String description, boolean required) {
+    <T> ConfigVars(@NotNull Class<T> type, @NotNull String description, T def) {
         this.type = type;
         this.description = description;
-        this.required = required;
+        this.def = def;
     }
 
     public @NotNull Class<?> type() { return this.type; }
 
     public @NotNull String description() { return this.description; }
 
-    public boolean required() { return this.required; }
+    public <T> T def() { return (T) this.def; }
 
     public static boolean hasVar(@NotNull ConfigVars var) {
         return System.getenv(var.name()) != null;
@@ -46,6 +50,15 @@ public enum ConfigVars {
     public static @NotNull String getVar(@NotNull ConfigVars var, @NotNull String def) {
         String val = System.getenv(var.name());
         return val != null ? val : def;
+    }
+
+    public static @NotNull LogMode getVar(@NotNull ConfigVars var, @NotNull LogMode def) {
+        return LogMode.getMode(System.getenv(var.name()), def);
+    }
+
+    public static @NotNull File getVar(@NotNull ConfigVars var, @NotNull File def) {
+        String val = System.getenv(var.name());
+        return val != null ? new File(val) : def;
     }
 
     public static int getVar(@NotNull ConfigVars var, int def) {
