@@ -88,6 +88,25 @@ public abstract class APIObject {
         return def;
     }
 
+    protected @NotNull Set<@NotNull Integer> getIntSet(@NotNull Set<@NotNull Integer> def, @NotNull String... path) {
+        JSONArray arr;
+        try {
+            arr = traverseObj(obj).getJSONArray(path[path.length - 1]);
+        } catch (JSONException ex) {
+            logger.warn("Could not transform {} to array", String.join(".", path), ex);
+            return def;
+        }
+        Set<Integer> v = new HashSet<>();
+        for (int i = 0; i < arr.length(); i++) {
+            try {
+                v.add(arr.getInt(i));
+            } catch (JSONException ex) {
+                logger.warn("Could not transform {} at index {} to int", String.join(".", path), i, ex);
+            }
+        }
+        return !v.isEmpty() ? v : def;
+    }
+
     protected long getLong(long def, @NotNull String... path) {
         if (path.length == 0) {
             logger.warn("Could not traverse empty JSON path");
@@ -255,7 +274,7 @@ public abstract class APIObject {
                     v.add(l);
                 }
             } catch (JSONException ex) {
-                logger.warn("Could not transform {} at index {} to Language", String.join(".", path), i, ex);
+                logger.warn("Could not transform {} at index {} to language", String.join(".", path), i, ex);
             }
         }
         return !v.isEmpty() ? v : def;
@@ -305,7 +324,43 @@ public abstract class APIObject {
                     v.add(f);
                 }
             } catch (JSONException ex) {
-                logger.warn("Could not transform {} at index {} to Language", String.join(".", path), i, ex);
+                logger.warn("Could not transform {} at index {} to custom fomat", String.join(".", path), i, ex);
+            }
+        }
+        return !v.isEmpty() ? v : def;
+    }
+
+    protected @NotNull Tag getTag(@NotNull Tag def, @NotNull String... path) {
+        int val = getInt(-1, path);
+        if (val < 0) {
+            return def;
+        }
+
+        Tag v = api.tag(val);
+        if  (v == null) {
+            logger.warn("Could not transform {} to tag. Got unexpected \"{}\"", String.join(".", path), val);
+            return def;
+        }
+        return v;
+    }
+
+    protected @NotNull Set<@NotNull Tag> getTagSet(@NotNull Set<@NotNull Tag> def, @NotNull String... path) {
+        JSONArray arr;
+        try {
+            arr = traverseObj(obj).getJSONArray(path[path.length - 1]);
+        } catch (JSONException ex) {
+            logger.warn("Could not transform {} to array", String.join(".", path), ex);
+            return def;
+        }
+        Set<Tag> v = new HashSet<>();
+        for (int i = 0; i < arr.length(); i++) {
+            try {
+                Tag f = api.tag(arr.getInt(i));
+                if (f != null) {
+                    v.add(f);
+                }
+            } catch (JSONException ex) {
+                logger.warn("Could not transform {} at index {} to tag", String.join(".", path), i, ex);
             }
         }
         return !v.isEmpty() ? v : def;

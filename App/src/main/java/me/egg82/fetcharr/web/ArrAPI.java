@@ -3,6 +3,7 @@ package me.egg82.fetcharr.web;
 import me.egg82.fetcharr.web.common.CustomFormat;
 import me.egg82.fetcharr.web.common.Language;
 import me.egg82.fetcharr.web.common.QualityProfile;
+import me.egg82.fetcharr.web.common.Tag;
 import org.jetbrains.annotations.Nullable;
 
 public interface ArrAPI {
@@ -18,4 +19,7 @@ public interface ArrAPI {
 
     default @Nullable Language language(int id) { return language(id, true); }
     @Nullable Language language(int id, boolean cache);
+
+    default @Nullable Tag tag(int id) { return tag(id, true); }
+    @Nullable Tag tag(int id, boolean cache);
 }

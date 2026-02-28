@@ -4,10 +4,7 @@ import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.env.ParsedDateTime;
 import me.egg82.fetcharr.file.JSONFile;
 import me.egg82.fetcharr.web.NullAPI;
-import me.egg82.fetcharr.web.common.APIMeta;
-import me.egg82.fetcharr.web.common.APIObject;
-import me.egg82.fetcharr.web.common.QualityProfile;
-import me.egg82.fetcharr.web.common.ReleaseStatus;
+import me.egg82.fetcharr.web.common.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -37,7 +34,7 @@ public class Movie extends APIObject {
     private final int tmdb;
     private final String certification;
     private final Set<@NotNull String> genres;
-    private final Set<@NotNull String> tags;
+    private final Set<@NotNull Tag> tags;
     private final ParsedDateTime added;
     private final float popularity;
     private final ParsedDateTime lastSearch;
@@ -70,7 +67,7 @@ public class Movie extends APIObject {
         this.tmdb = getInt(-1, "tmdbId");
         this.certification = getString("", "certification");
         this.genres = getStringSet(Set.of(), "genres");
-        this.tags = getStringSet(Set.of(), "tags");
+        this.tags = getTagSet(Set.of(), "tags");
         this.added = getDateTime(ParsedDateTime.UNKNOWN, "added");
         this.popularity = getFloat(-1.0F, "popularity");
         this.lastSearch = getDateTime(ParsedDateTime.UNKNOWN, "lastSearchTime");
@@ -255,7 +252,7 @@ public class Movie extends APIObject {
         return genres;
     }
 
-    public @NotNull Set<@NotNull String> tags() {
+    public @NotNull Set<@NotNull Tag> tags() {
         return tags;
     }
 

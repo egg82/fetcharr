@@ -23,6 +23,7 @@ public class RadarrAPI extends CommonAPI {
     private final LoadingCache<Integer, @Nullable QualityProfile> qualityProfiles;
     private final LoadingCache<Integer, @Nullable CustomFormat> customFormats;
     private final LoadingCache<Integer, @Nullable Language> languages;
+    private final LoadingCache<Integer, @Nullable Tag> tags;
 
     private final boolean useCache = ConfigVars.getVar(ConfigVars.USE_CACHE, (boolean) ConfigVars.USE_CACHE.def());
 
@@ -51,6 +52,9 @@ public class RadarrAPI extends CommonAPI {
         this.languages = Caffeine.newBuilder()
                 .expireAfterWrite(longCacheTime.time(), longCacheTime.unit())
                 .build(this::languageInternal);
+        this.tags = Caffeine.newBuilder()
+                .expireAfterWrite(longCacheTime.time(), longCacheTime.unit())
+                .build(this::tagInternal);
     }
 
     @Override
@@ -81,7 +85,7 @@ public class RadarrAPI extends CommonAPI {
         JSONFile file = new JSONFile(APIObject.getPath(this, QualityProfile.class, id));
         JSONFile metaFile = new JSONFile(APIObject.getMetaPath(this, QualityProfile.class, id));
 
-        if (file.exists() && metaFile.exists()) {
+        if (useCache && file.exists() && metaFile.exists()) {
             try {
                 APIMeta meta = new APIMeta(metaFile.read());
                 LocalDateTime expiration = meta.created().plusNanos(longCacheTime.unit().toNanos(longCacheTime.time()));
@@ -126,7 +130,7 @@ public class RadarrAPI extends CommonAPI {
         JSONFile file = new JSONFile(APIObject.getPath(this, CustomFormat.class, id));
         JSONFile metaFile = new JSONFile(APIObject.getMetaPath(this, CustomFormat.class, id));
 
-        if (file.exists() && metaFile.exists()) {
+        if (useCache && file.exists() && metaFile.exists()) {
             try {
                 APIMeta meta = new APIMeta(metaFile.read());
                 LocalDateTime expiration = meta.created().plusNanos(longCacheTime.unit().toNanos(longCacheTime.time()));
@@ -171,7 +175,7 @@ public class RadarrAPI extends CommonAPI {
         JSONFile file = new JSONFile(APIObject.getPath(this, Language.class, id));
         JSONFile metaFile = new JSONFile(APIObject.getMetaPath(this, Language.class, id));
 
-        if (file.exists() && metaFile.exists()) {
+        if (useCache && file.exists() && metaFile.exists()) {
             try {
                 APIMeta meta = new APIMeta(metaFile.read());
                 LocalDateTime expiration = meta.created().plusNanos(longCacheTime.unit().toNanos(longCacheTime.time()));
@@ -201,6 +205,51 @@ public class RadarrAPI extends CommonAPI {
             return null;
         } catch (JSONException ignored) {
             return new Language(response.getObject(), this);
+        }
+    }
+
+    @Override
+    public @Nullable Tag tag(int id, boolean cache) {
+        if (!cache) {
+            tags.invalidate(id);
+        }
+        return useCache ? tags.get(id) : tagInternal(id);
+    }
+
+    public @Nullable Tag tagInternal(int id) {
+        JSONFile file = new JSONFile(APIObject.getPath(this, Tag.class, id));
+        JSONFile metaFile = new JSONFile(APIObject.getMetaPath(this, Tag.class, id));
+
+        if (useCache && file.exists() && metaFile.exists()) {
+            try {
+                APIMeta meta = new APIMeta(metaFile.read());
+                LocalDateTime expiration = meta.created().plusNanos(longCacheTime.unit().toNanos(longCacheTime.time()));
+                if (expiration.isAfter(LocalDateTime.now())) {
+                    logger.debug("Getting tag at ID {}: {}", id, file.path());
+                    return new Tag(file.read(), this);
+                } else {
+                    metaFile.delete();
+                    file.delete();
+                }
+            } catch (IOException ex) {
+                logger.warn("Could not open file at {}", file.path(), ex);
+            }
+        }
+
+        logger.debug("Getting tag at ID {}: {}", id, url + "/api/v3/tag/" + id);
+
+        JsonNode response = get("/api/v3/tag/" + id);
+        if (response == null) {
+            logger.warn("Radarr instance returned invalid response for URL {}", url + "/api/v3/tag/" + id);
+            return null;
+        }
+
+        try {
+            int status = response.getObject().getInt("status");
+            logger.warn("Radarr instance returned status code {} for URL {}", status, url + "/api/v3/tag/" + id);
+            return null;
+        } catch (JSONException ignored) {
+            return new Tag(response.getObject(), this);
         }
     }
 
@@ -249,7 +298,7 @@ public class RadarrAPI extends CommonAPI {
         JSONFile file = new JSONFile(APIObject.getPath(this, Movie.class, id));
         JSONFile metaFile = new JSONFile(APIObject.getMetaPath(this, Movie.class, id));
 
-        if (file.exists() && metaFile.exists()) {
+        if (useCache && file.exists() && metaFile.exists()) {
             try {
                 APIMeta meta = new APIMeta(metaFile.read());
                 LocalDateTime expiration = meta.created().plusNanos(shortCacheTime.unit().toNanos(shortCacheTime.time()));
@@ -288,7 +337,7 @@ public class RadarrAPI extends CommonAPI {
         JSONFile file = new JSONFile(APIObject.getPath(this, MovieFile.class, id));
         JSONFile metaFile = new JSONFile(APIObject.getMetaPath(this, MovieFile.class, id));
 
-        if (file.exists() && metaFile.exists()) {
+        if (useCache && file.exists() && metaFile.exists()) {
             try {
                 APIMeta meta = new APIMeta(metaFile.read());
                 LocalDateTime expiration = meta.created().plusNanos(shortCacheTime.unit().toNanos(shortCacheTime.time()));
