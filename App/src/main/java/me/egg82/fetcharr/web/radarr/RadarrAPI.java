@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONException;
+import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.ParsedTime;
 import me.egg82.fetcharr.file.JSONFile;
@@ -13,9 +14,9 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class RadarrAPI extends CommonAPI {
     private final LoadingCache<Integer, @Nullable Movie> movies;
@@ -77,6 +78,10 @@ public class RadarrAPI extends CommonAPI {
     public @Nullable QualityProfile qualityProfile(int id, boolean cache) {
         if (!cache) {
             qualityProfiles.invalidate(id);
+            try {
+                new JSONFile(APIObject.getMetaPath(this, QualityProfile.class, id)).delete();
+                new JSONFile(APIObject.getPath(this, QualityProfile.class, id)).delete();
+            } catch (IOException ignored) { }
         }
         return useCache ? qualityProfiles.get(id) : qualityProfileInternal(id);
     }
@@ -122,6 +127,10 @@ public class RadarrAPI extends CommonAPI {
     public @Nullable CustomFormat customFormat(int id, boolean cache) {
         if (!cache) {
             customFormats.invalidate(id);
+            try {
+                new JSONFile(APIObject.getMetaPath(this, CustomFormat.class, id)).delete();
+                new JSONFile(APIObject.getPath(this, CustomFormat.class, id)).delete();
+            } catch (IOException ignored) { }
         }
         return useCache ? customFormats.get(id) : customFormatInternal(id);
     }
@@ -167,6 +176,10 @@ public class RadarrAPI extends CommonAPI {
     public @Nullable Language language(int id, boolean cache) {
         if (!cache) {
             languages.invalidate(id);
+            try {
+                new JSONFile(APIObject.getMetaPath(this, Language.class, id)).delete();
+                new JSONFile(APIObject.getPath(this, Language.class, id)).delete();
+            } catch (IOException ignored) { }
         }
         return useCache ? languages.get(id) : languageInternal(id);
     }
@@ -212,6 +225,10 @@ public class RadarrAPI extends CommonAPI {
     public @Nullable Tag tag(int id, boolean cache) {
         if (!cache) {
             tags.invalidate(id);
+            try {
+                new JSONFile(APIObject.getMetaPath(this, Tag.class, id)).delete();
+                new JSONFile(APIObject.getPath(this, Tag.class, id)).delete();
+            } catch (IOException ignored) { }
         }
         return useCache ? tags.get(id) : tagInternal(id);
     }
@@ -253,6 +270,80 @@ public class RadarrAPI extends CommonAPI {
         }
     }
 
+    @Override
+    public void addTag(int itemId, int tagId) {
+        Tag t = tag(tagId);
+        Movie m = movie(itemId);
+
+        if (t == null && m == null) {
+            logger.warn("Attempted to add nonexistent tag {} to nonexistent movie {}", tagId, itemId);
+            return;
+        } else if (t == null && m != null) {
+            logger.warn("Attempted to add nonexistent tag {} to movie {}", tagId, itemId);
+            return;
+        } else if (t != null && m == null) {
+            logger.warn("Attempted to add tag {} to nonexistent movie {}", tagId, itemId);
+            return;
+        }
+
+        if (m.tags().contains(t)) {
+            logger.debug("Attempted to add tag {} to movie {} where tag already exists", t.id(), m.id());
+            return;
+        }
+
+        logger.debug("Adding tag {} ({}) to movie {} ({}): {}", t.id(), t.label(), m.id(), m.title(), url + "/api/v3/movie/editor");
+
+        JSONObject data = new JSONObject(Map.of(
+                "movieIds", List.of(m.id()),
+                "tags", List.of(t.id()),
+                "applyTags", "add"
+        ));
+        JsonNode response = put(url + "/api/v3/movie/editor", new JsonNode(data.toString()));
+        if (response == null) {
+            logger.warn("Radarr instance returned invalid response for URL {}", url + "/api/v3/movie/editor");
+            return;
+        }
+
+        movie(itemId, false); // Force refresh cache
+    }
+
+    @Override
+    public void removeTag(int itemId, int tagId) {
+        Tag t = tag(tagId);
+        Movie m = movie(itemId);
+
+        if (t == null && m == null) {
+            logger.warn("Attempted to remove nonexistent tag {} from nonexistent movie {}", tagId, itemId);
+            return;
+        } else if (t == null && m != null) {
+            logger.warn("Attempted to remove nonexistent tag {} from movie {}", tagId, itemId);
+            return;
+        } else if (t != null && m == null) {
+            logger.warn("Attempted to remove tag {} from nonexistent movie {}", tagId, itemId);
+            return;
+        }
+
+        if (!m.tags().contains(t)) {
+            logger.debug("Attempted to remove tag {} from movie {} where tag doesn't exist", t.id(), m.id());
+            return;
+        }
+
+        logger.debug("Removing tag {} ({}) from movie {} ({}): {}", t.id(), t.label(), m.id(), m.title(), url + "/api/v3/movie/editor");
+
+        JSONObject data = new JSONObject(Map.of(
+                "movieIds", List.of(m.id()),
+                "tags", List.of(t.id()),
+                "applyTags", "remove"
+        ));
+        JsonNode response = put(url + "/api/v3/movie/editor", new JsonNode(data.toString()));
+        if (response == null) {
+            logger.warn("Radarr instance returned invalid response for URL {}", url + "/api/v3/movie/editor");
+            return;
+        }
+
+        movie(itemId, false); // Force refresh cache
+    }
+
     public @NotNull Set<@NotNull Movie> movies() {
         return movies(true);
     }
@@ -262,6 +353,10 @@ public class RadarrAPI extends CommonAPI {
 
         if (!cache) {
             movies.invalidateAll();
+            try {
+                Files.deleteIfExists(APIObject.getMetaPath(this, MovieFile.class, 0).getParentFile().toPath());
+                Files.deleteIfExists(APIObject.getPath(this, MovieFile.class, 0).getParentFile().toPath());
+            } catch (IOException ignored) { }
         }
 
         JsonNode response = get("/api/v3/movie");
@@ -290,6 +385,10 @@ public class RadarrAPI extends CommonAPI {
     public @Nullable Movie movie(int id, boolean cache) {
         if (!cache) {
             movies.invalidate(id);
+            try {
+                new JSONFile(APIObject.getMetaPath(this, Movie.class, id)).delete();
+                new JSONFile(APIObject.getPath(this, Movie.class, id)).delete();
+            } catch (IOException ignored) { }
         }
         return useCache ? movies.get(id) : movieInternal(id);
     }
@@ -331,7 +430,18 @@ public class RadarrAPI extends CommonAPI {
         }
     }
 
-    public @Nullable MovieFile movieFile(int id) { return movieFiles.get(id); }
+    public @Nullable MovieFile movieFile(int id) { return movieFile(id, true); }
+
+    public @Nullable MovieFile movieFile(int id, boolean cache) {
+        if (!cache) {
+            movieFiles.invalidate(id);
+            try {
+                new JSONFile(APIObject.getMetaPath(this, MovieFile.class, id)).delete();
+                new JSONFile(APIObject.getPath(this, MovieFile.class, id)).delete();
+            } catch (IOException ignored) { }
+        }
+        return useCache ? movieFiles.get(id) : movieFileInternal(id);
+    }
 
     public @Nullable MovieFile movieFileInternal(int id) {
         JSONFile file = new JSONFile(APIObject.getPath(this, MovieFile.class, id));

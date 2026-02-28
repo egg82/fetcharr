@@ -28,6 +28,7 @@ public abstract class CommonAPI implements ArrAPI {
     protected @Nullable JsonNode get(@NotNull String path) {
         return parseResponse(Unirest.get(url + path)
                 .header("X-Api-Key", key)
+                .accept("application/json")
                 .asJson());
     }
 
@@ -38,6 +39,8 @@ public abstract class CommonAPI implements ArrAPI {
     protected @Nullable JsonNode post(@NotNull String path, @Nullable JsonNode body) {
         return parseResponse(Unirest.post(url + path)
                 .header("X-Api-Key", key)
+                .header("Content-Type", "application/json")
+                .accept("application/json")
                 .body(body)
                 .asJson());
     }
@@ -49,6 +52,8 @@ public abstract class CommonAPI implements ArrAPI {
     protected @Nullable JsonNode put(@NotNull String path, @Nullable JsonNode body) {
         return parseResponse(Unirest.put(url + path)
                 .header("X-Api-Key", key)
+                .header("Content-Type", "application/json")
+                .accept("application/json")
                 .body(body)
                 .asJson());
     }
@@ -60,6 +65,8 @@ public abstract class CommonAPI implements ArrAPI {
     protected @Nullable JsonNode delete(@NotNull String path, @Nullable JsonNode body) {
         return parseResponse(Unirest.put(url + path)
                 .header("X-Api-Key", key)
+                .header("Content-Type", "application/json")
+                .accept("application/json")
                 .body(body)
                 .asJson());
     }

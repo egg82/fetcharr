@@ -22,4 +22,7 @@ public interface ArrAPI {
 
     default @Nullable Tag tag(int id) { return tag(id, true); }
     @Nullable Tag tag(int id, boolean cache);
+
+    void addTag(int itemId, int tagId);
+    void removeTag(int itemId, int tagId);
 }

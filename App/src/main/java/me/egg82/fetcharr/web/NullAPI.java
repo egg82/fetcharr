@@ -40,4 +40,14 @@ public class NullAPI implements ArrAPI {
     public @Nullable Tag tag(int id, boolean cache) {
         return null;
     }
+
+    @Override
+    public void addTag(int itemId, int tagId) {
+
+    }
+
+    @Override
+    public void removeTag(int itemId, int tagId) {
+
+    }
 }
