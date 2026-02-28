@@ -135,7 +135,11 @@ public abstract class APIObject {
         try {
             JSONObject o = traverseObj(obj);
             if (o.has(path[path.length - 1])) {
-                return o.getFloat(path[path.length - 1]);
+                try {
+                    return Float.parseFloat(o.getString(path[path.length - 1]));
+                } catch (NumberFormatException ex) {
+                    logger.debug("Could not transform {} to float", String.join(".", path), ex);
+                }
             } else {
                 logger.debug("Could not traverse JSON path {} (failed at {})", String.join(".", path), String.join(".", path));
             }

@@ -293,7 +293,7 @@ public class MovieFile extends APIObject {
             try {
                 p = new ParsedDuration(getString("", "runtime"));
             } catch (DurationFormatException ignored) {
-                logger.warn("Could not transform runtime to duration: {}", getString("", "runtime"));
+                logger.debug("Could not transform runtime to duration: {}", getString("", "runtime"));
                 p = ParsedDuration.UNKNOWN;
             }
             this.runtime = p;
