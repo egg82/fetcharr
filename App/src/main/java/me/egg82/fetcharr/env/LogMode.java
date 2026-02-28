@@ -4,6 +4,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum LogMode {
+    TRACE,
     DEBUG,
     INFO,
     WARN,
@@ -17,11 +18,16 @@ public enum LogMode {
         mode = mode.strip();
 
         if (
+                mode.equalsIgnoreCase("trace")
+                || mode.equalsIgnoreCase("tracing")
+        ) {
+            return LogMode.TRACE;
+        }
+
+        if (
                 mode.equalsIgnoreCase("debug")
                 || mode.equalsIgnoreCase("debugging")
                 || mode.equalsIgnoreCase("debugger")
-                || mode.equalsIgnoreCase("trace")
-                || mode.equalsIgnoreCase("tracing")
         ) {
             return LogMode.DEBUG;
         }

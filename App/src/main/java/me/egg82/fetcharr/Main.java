@@ -4,13 +4,33 @@ import kong.unirest.core.Proxy;
 import kong.unirest.core.Unirest;
 import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.LogMode;
+import me.egg82.fetcharr.env.RadarrConfigVars;
 import me.egg82.fetcharr.web.LoggingInterceptor;
+import me.egg82.fetcharr.web.radarr.RadarrAPI;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
+    static {
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", LogMode.getMode(ConfigVars.getVar(ConfigVars.LOG_MODE), LogMode.INFO).name().toLowerCase());
+    }
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+
+    private static final List<RadarrAPI> radarr = new ArrayList<>();
+
     public static void main(String[] args) {
+        LOGGER.info("Logging mode set to {}", LogMode.getMode(ConfigVars.getVar(ConfigVars.LOG_MODE), LogMode.INFO).name());
+
         setupUnirest();
+
+        for (int i = 0; i < 100; i++) {
+            setupRadarr(i);
+        }
     }
 
     private static void setupUnirest() {
@@ -43,5 +63,36 @@ public class Main {
         Unirest.config().verifySsl(verifyCerts);
 
         Unirest.config().retryAfter(true);
+    }
+
+    private static void setupRadarr(int num) {
+        String url = RadarrConfigVars.getVar(RadarrConfigVars.RADARR_URL, num);
+        String key = RadarrConfigVars.getVar(RadarrConfigVars.RADARR_API_KEY, num);
+
+        if (url == null && key == null) {
+            return;
+        }
+        if (url == null) {
+            LOGGER.warn("Radarr URL at {} missing", RadarrConfigVars.RADARR_URL.name(num));
+            return;
+        }
+        if (key == null) {
+            LOGGER.warn("Radarr API key at {} missing", RadarrConfigVars.RADARR_API_KEY.name(num));
+            return;
+        }
+
+        url = url.strip().replaceAll("/+$", "");
+        key = key.strip();
+
+        RadarrAPI api = new RadarrAPI(url, key);
+        if (!api.valid()) {
+            LOGGER.warn("Could not authenticate to Radarr instance configured at {} ({})", RadarrConfigVars.RADARR_URL.name(num), url);
+            return;
+        }
+
+        radarr.add(api);
+        LOGGER.info("Added Radarr instance at {}", url);
+
+        api.movies(); // TODO: Remove
     }
 }

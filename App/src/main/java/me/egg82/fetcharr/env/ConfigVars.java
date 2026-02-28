@@ -12,7 +12,10 @@ public enum ConfigVars {
     CONNECT_TIMEOUT(Integer.class, "HTTP connection timeout in milliseconds", false),
     REQUEST_TIMEOUT(Integer.class, "HTTP request timeout in milliseconds", false),
     CONNECT_TTL(Integer.class, "HTTP connection TTL in milliseconds", false),
-    VERIFY_CERTS(Boolean.class, "Verify SSL certificates", false);
+    VERIFY_CERTS(Boolean.class, "Verify SSL certificates", false),
+    USE_CACHE(Boolean.class, "Use internal caching mechanisms", false),
+    SHORT_CACHE_TIME(ParsedTime.class, "Expiration time for short-lived cached values", false),
+    LONG_CACHE_TIME(ParsedTime.class, "Expiration time for long-lived cached values", false);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigVars.class);
 
@@ -56,8 +59,9 @@ public enum ConfigVars {
         }
         try {
             return Integer.parseInt(v);
-        } catch (NumberFormatException ignored) { }
-        LOGGER.warn("Could not translate environment variable {} to integer: {}", var.name(), System.getenv(var.name()));
+        } catch (NumberFormatException ignored) {
+            LOGGER.warn("Could not transform environment variable {} to integer: {}", var.name(), System.getenv(var.name()));
+        }
         return def;
     }
 
@@ -97,7 +101,24 @@ public enum ConfigVars {
             return false;
         }
 
-        LOGGER.warn("Could not translate environment variable {} to boolean: {}", var.name(), System.getenv(var.name()));
+        LOGGER.warn("Could not transform environment variable {} to boolean: {}", var.name(), System.getenv(var.name()));
+        return def;
+    }
+
+    public static @NotNull ParsedTime getVar(@NotNull ConfigVars var, @NotNull ParsedTime def) {
+        return toParsedTime(var, def);
+    }
+
+    private static @NotNull ParsedTime toParsedTime(@NotNull ConfigVars var, @NotNull ParsedTime def) {
+        String v = System.getenv(var.name());
+        if (v == null) {
+            return def;
+        }
+        try {
+            return new ParsedTime(v);
+        } catch (TimeFormatException ignored) {
+            LOGGER.warn("Could not transform environment variable {} to time: {}", var.name(), System.getenv(var.name()));
+        }
         return def;
     }
 }
