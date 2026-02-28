@@ -4,6 +4,7 @@ import kong.unirest.core.Proxy;
 import kong.unirest.core.Unirest;
 import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.LogMode;
+import me.egg82.fetcharr.web.LoggingInterceptor;
 
 import java.util.concurrent.TimeUnit;
 
@@ -14,6 +15,7 @@ public class Main {
 
     private static void setupUnirest() {
         LogMode logMode = LogMode.getMode(ConfigVars.getVar(ConfigVars.LOG_MODE), LogMode.INFO);
+        Unirest.config().interceptor(new LoggingInterceptor(logMode));
 
         String proxyHost = ConfigVars.getVar(ConfigVars.PROXY_HOST);
         int proxyPort = ConfigVars.getVar(ConfigVars.PROXY_PORT, 0);

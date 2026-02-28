@@ -50,8 +50,12 @@ public enum ConfigVars {
     }
 
     private static int toInt(@NotNull ConfigVars var, int def) {
+        String v = System.getenv(var.name());
+        if (v == null) {
+            return def;
+        }
         try {
-            return Integer.parseInt(System.getenv(var.name()));
+            return Integer.parseInt(v);
         } catch (NumberFormatException ignored) { }
         LOGGER.warn("Could not translate environment variable {} to integer: {}", var.name(), System.getenv(var.name()));
         return def;
@@ -69,7 +73,12 @@ public enum ConfigVars {
     }
 
     private static boolean toBool(@NotNull ConfigVars var, boolean def) {
-        String v = System.getenv(var.name()).strip();
+        String v = System.getenv(var.name());
+        if (v == null) {
+            return def;
+        }
+
+        v = v.strip();
         int i = toIntInternal(v, -1);
 
         if (
