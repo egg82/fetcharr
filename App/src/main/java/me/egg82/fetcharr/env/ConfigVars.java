@@ -17,7 +17,7 @@ public enum ConfigVars {
     CONNECT_TTL(Integer.class, "HTTP connection TTL in milliseconds", -1),
     VERIFY_CERTS(Boolean.class, "Verify SSL certificates", true),
     USE_CACHE(Boolean.class, "Use internal caching mechanisms", true),
-    SHORT_CACHE_TIME(ParsedTime.class, "Expiration time for short-lived cached values", new ParsedTime(30L, TimeUnit.MINUTES)),
+    SHORT_CACHE_TIME(ParsedTime.class, "Expiration time for short-lived cached values", new ParsedTime(65, TimeUnit.MINUTES)),
     LONG_CACHE_TIME(ParsedTime.class, "Expiration time for long-lived cached values", new ParsedTime(6L, TimeUnit.HOURS)),
     DATA_DIR(File.class, "Data storage directory", new File("/data")),
     SSL_PATH(File.class, "File path containing custom SSL certs", new File("/etc/ssl/certs/ca-bundle.crt")),
