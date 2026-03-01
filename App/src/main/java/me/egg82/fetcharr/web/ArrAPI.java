@@ -4,12 +4,14 @@ import me.egg82.fetcharr.web.common.CustomFormat;
 import me.egg82.fetcharr.web.common.Language;
 import me.egg82.fetcharr.web.common.QualityProfile;
 import me.egg82.fetcharr.web.common.Tag;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface ArrAPI {
     boolean valid();
 
     int id();
+    @NotNull String url();
 
     default @Nullable QualityProfile qualityProfile(int id) { return qualityProfile(id, true); }
     @Nullable QualityProfile qualityProfile(int id, boolean cache);

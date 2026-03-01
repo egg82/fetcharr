@@ -25,6 +25,9 @@ public abstract class CommonAPI implements ArrAPI {
     @Override
     public int id() { return id; }
 
+    @Override
+    public @NotNull String url() { return url; }
+
     protected @Nullable JsonNode get(@NotNull String path) {
         return parseResponse(Unirest.get(url + path)
                 .header("X-Api-Key", key)

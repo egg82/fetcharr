@@ -7,6 +7,7 @@ import me.egg82.fetcharr.env.LogMode;
 import me.egg82.fetcharr.env.RadarrConfigVars;
 import me.egg82.fetcharr.web.LoggingInterceptor;
 import me.egg82.fetcharr.web.radarr.RadarrAPI;
+import me.egg82.fetcharr.work.radarr.RadarrUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +15,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.security.*;
 import java.security.cert.Certificate;
@@ -32,9 +32,8 @@ public class Main {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
-    private static final List<RadarrAPI> radarr = new ArrayList<>();
-
-    private static final ExecutorService workPool = Executors.newWorkStealingPool(Runtime.getRuntime().availableProcessors() / 2);
+    private static final ScheduledExecutorService workPool = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors() / 2);
+    private static final List<Runnable> radarr = new ArrayList<>();
 
     public static void main(String[] args) {
         LOGGER.info("Starting..");
@@ -61,6 +60,10 @@ public class Main {
         while (true) {
             try {
                 Thread.sleep(250);
+
+                for (Runnable r : radarr) {
+                    r.run();
+                }
             } catch (InterruptedException ignored) {
                 Thread.currentThread().interrupt();
                 break;
@@ -157,7 +160,7 @@ public class Main {
             return;
         }
 
-        radarr.add(api);
+        radarr.add(new RadarrUpdater(api));
         LOGGER.info("Added Radarr instance at {}", url);
     }
 }

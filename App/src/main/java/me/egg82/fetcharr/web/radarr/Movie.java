@@ -3,15 +3,19 @@ package me.egg82.fetcharr.web.radarr;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.env.ParsedDateTime;
 import me.egg82.fetcharr.file.JSONFile;
+import me.egg82.fetcharr.util.Weighted;
 import me.egg82.fetcharr.web.NullAPI;
 import me.egg82.fetcharr.web.common.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 import java.util.Set;
 
-public class Movie extends APIObject {
+public class Movie extends APIObject implements Weighted {
     public static final Movie UNKNOWN = new Movie();
 
     private final String title;
@@ -41,6 +45,8 @@ public class Movie extends APIObject {
     private final int id;
 
     private final RadarrAPI api;
+
+    private Instant lastSelected = Instant.EPOCH;
 
     public Movie(@NotNull JSONObject obj, @NotNull RadarrAPI api) {
         super(obj, api);
@@ -159,6 +165,25 @@ public class Movie extends APIObject {
     @Override
     public @NotNull APIMeta meta() {
         return new APIMeta();
+    }
+
+    @Override
+    public @NotNull Instant lastUpdated() {
+        LocalDateTime dt = lastSearch.dateTime();
+        if (dt == null) {
+            return Instant.EPOCH;
+        }
+        return dt.atZone(ZoneId.systemDefault()).toInstant();
+    }
+
+    @Override
+    public @NotNull Instant lastSelected() {
+        return lastSelected;
+    }
+
+    @Override
+    public void lastSelectedNow() {
+        lastSelected = Instant.now();
     }
 
     @Override

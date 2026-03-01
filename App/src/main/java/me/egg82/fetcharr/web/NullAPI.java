@@ -4,6 +4,7 @@ import me.egg82.fetcharr.web.common.CustomFormat;
 import me.egg82.fetcharr.web.common.Language;
 import me.egg82.fetcharr.web.common.QualityProfile;
 import me.egg82.fetcharr.web.common.Tag;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class NullAPI implements ArrAPI {
@@ -19,6 +20,11 @@ public class NullAPI implements ArrAPI {
     @Override
     public int id() {
         return -1;
+    }
+
+    @Override
+    public @NotNull String url() {
+        return "";
     }
 
     @Override
