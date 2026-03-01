@@ -295,10 +295,10 @@ public class RadarrAPI extends CommonAPI {
 
         JSONObject data = new JSONObject(Map.of(
                 "movieIds", List.of(m.id()),
-                "tags", List.of(t.id()),
+                "tags", new int[] { t.id() },
                 "applyTags", "add"
         ));
-        JsonNode response = put(url + "/api/v3/movie/editor", new JsonNode(data.toString()));
+        JsonNode response = put("/api/v3/movie/editor", new JsonNode(data.toString()));
         if (response == null) {
             logger.warn("Radarr instance returned invalid response for URL {}", url + "/api/v3/movie/editor");
             return;
@@ -332,16 +332,30 @@ public class RadarrAPI extends CommonAPI {
 
         JSONObject data = new JSONObject(Map.of(
                 "movieIds", List.of(m.id()),
-                "tags", List.of(t.id()),
+                "tags", new int[] { t.id() },
                 "applyTags", "remove"
         ));
-        JsonNode response = put(url + "/api/v3/movie/editor", new JsonNode(data.toString()));
+        JsonNode response = put("/api/v3/movie/editor", new JsonNode(data.toString()));
         if (response == null) {
             logger.warn("Radarr instance returned invalid response for URL {}", url + "/api/v3/movie/editor");
             return;
         }
 
         movie(itemId, false); // Force refresh cache
+    }
+
+    @Override
+    public void search(int... itemIds) {
+        logger.debug("Running search for IDs {}: {}", Arrays.toString(itemIds).replaceAll("\\[|\\]|\\s", ""), url);
+
+        JSONObject data = new JSONObject(Map.of(
+                "movieIds", itemIds,
+                "name", "MoviesSearch"
+        ));
+        JsonNode response = post("/api/v3/command", new JsonNode(data.toString()));
+        if (response == null) {
+            logger.warn("Radarr instance returned invalid response for URL {}", url + "/api/v3/command");
+        }
     }
 
     public @NotNull Set<@NotNull Movie> movies() {

@@ -7,6 +7,8 @@ import me.egg82.fetcharr.web.common.Tag;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
+
 public interface ArrAPI {
     boolean valid();
 
@@ -27,4 +29,16 @@ public interface ArrAPI {
 
     void addTag(int itemId, int tagId);
     void removeTag(int itemId, int tagId);
+
+    default void search(int itemId) { search(new int[] { itemId }); }
+    default void search(Collection<Integer> ids) {
+        int[] a = new int[ids.size()];
+        int i = 0;
+        for (int x : ids) {
+            a[i] = x;
+            i++;
+        }
+        search(a);
+    }
+    void search(int... itemIds);
 }

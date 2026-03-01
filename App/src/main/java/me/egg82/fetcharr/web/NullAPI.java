@@ -56,4 +56,9 @@ public class NullAPI implements ArrAPI {
     public void removeTag(int itemId, int tagId) {
 
     }
+
+    @Override
+    public void search(int... itemIds) {
+
+    }
 }
