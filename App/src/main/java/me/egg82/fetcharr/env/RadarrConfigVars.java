@@ -5,7 +5,9 @@ import org.jetbrains.annotations.Nullable;
 
 public enum RadarrConfigVars {
     RADARR_URL("RADARR_{}_URL"),
-    RADARR_API_KEY("RADARR_{}_API_KEY");
+    RADARR_API_KEY("RADARR_{}_API_KEY"),
+    RADARR_SEARCH_AMOUNT("RADARR_{}_SEARCH_AMOUNT"),
+    RADARR_SEARCH_INTERVAL("RADARR_{}_SEARCH_INTERVAL");
 
     private final String name;
 

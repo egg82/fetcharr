@@ -19,7 +19,10 @@ public enum ConfigVars {
     USE_CACHE(Boolean.class, "Use internal caching mechanisms", true),
     SHORT_CACHE_TIME(ParsedTime.class, "Expiration time for short-lived cached values", new ParsedTime(30L, TimeUnit.MINUTES)),
     LONG_CACHE_TIME(ParsedTime.class, "Expiration time for long-lived cached values", new ParsedTime(6L, TimeUnit.HOURS)),
-    DATA_DIR(File.class, "Data storage directory", new File("/data"));
+    DATA_DIR(File.class, "Data storage directory", new File("/data")),
+    SSL_PATH(File.class, "File path containing custom SSL certs", new File("/etc/ssl/certs/ca-bundle.crt")),
+    SEARCH_AMOUNT(Integer.class, "Number of items to search at each run", 5),
+    SEARCH_INTERVAL(ParsedTime.class, "How often to search", new ParsedTime(10L, TimeUnit.MINUTES));
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigVars.class);
 
