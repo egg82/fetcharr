@@ -10,7 +10,8 @@ public enum RadarrConfigVars {
     RADARR_API_KEY(String.class, "RADARR_{}_API_KEY", null),
     RADARR_SEARCH_AMOUNT(Integer.class, "RADARR_{}_SEARCH_AMOUNT", ConfigVars.SEARCH_AMOUNT.def()),
     RADARR_SEARCH_INTERVAL(ParsedTime.class, "RADARR_{}_SEARCH_INTERVAL", ConfigVars.SEARCH_INTERVAL.def()),
-    RADARR_MONITORED_ONLY(Boolean.class, "RADARR_{}_MONITORED_ONLY", ConfigVars.MONITORED_ONLY.def());
+    RADARR_MONITORED_ONLY(Boolean.class, "RADARR_{}_MONITORED_ONLY", ConfigVars.MONITORED_ONLY.def()),
+    RADARR_SKIP_TAGS(String.class, "RADARR_{}_SKIP_TAGS", ConfigVars.SKIP_TAGS.def());
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigVars.class);
 

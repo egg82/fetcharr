@@ -23,7 +23,8 @@ public enum ConfigVars {
     SSL_PATH(File.class, "File path containing custom SSL certs", new File("/etc/ssl/certs/ca-bundle.crt")),
     SEARCH_AMOUNT(Integer.class, "Number of items to search at each run", 5),
     SEARCH_INTERVAL(ParsedTime.class, "How often to search", new ParsedTime(1L, TimeUnit.HOURS)),
-    MONITORED_ONLY(Boolean.class, "True to select only monitored items, false to select all", true);
+    MONITORED_ONLY(Boolean.class, "True to select only monitored items, false to select all", true),
+    SKIP_TAGS(String.class, "Comma-separated list of tags to skip searching", null);
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigVars.class);
 
