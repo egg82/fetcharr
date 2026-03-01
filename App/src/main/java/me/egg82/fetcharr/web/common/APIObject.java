@@ -188,9 +188,15 @@ public abstract class APIObject {
     }
 
     protected @NotNull Set<@NotNull String> getStringSet(@NotNull Set<@NotNull String> def, @NotNull String... path) {
+        JSONObject o = traverseObj(obj);
+        if (!o.has(path[path.length - 1])) {
+            logger.debug("Could not traverse JSON path {} (failed at {})", String.join(".", path), String.join(".", path));
+            return def;
+        }
+
         JSONArray arr;
         try {
-            arr = traverseObj(obj).getJSONArray(path[path.length - 1]);
+            arr = o.getJSONArray(path[path.length - 1]);
         } catch (JSONException ex) {
             logger.warn("Could not transform {} to array", String.join(".", path), ex);
             return def;
@@ -323,7 +329,12 @@ public abstract class APIObject {
         Set<CustomFormat> v = new HashSet<>();
         for (int i = 0; i < arr.length(); i++) {
             try {
-                CustomFormat f = api.customFormat(arr.getJSONObject(i).getInt("id"));
+                CustomFormat f = null;
+                if (arr.getJSONObject(i).has("id")) {
+                    f = api.customFormat(arr.getJSONObject(i).getInt("id"));
+                } else if (arr.getJSONObject(i).has("format")) {
+                    f = api.customFormat(arr.getJSONObject(i).getInt("format"));
+                }
                 if (f != null) {
                     v.add(f);
                 }
