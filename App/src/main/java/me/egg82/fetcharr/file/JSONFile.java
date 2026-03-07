@@ -1,5 +1,6 @@
 package me.egg82.fetcharr.file;
 
+import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,11 +27,10 @@ public class JSONFile {
         return file.getAbsolutePath();
     }
 
-    public @NotNull JSONObject read() throws IOException {
-        JSONObject obj = readObject();
+    public @NotNull JsonNode read() throws IOException {
+        JsonNode obj = readNode();
         if (obj == null) {
-            obj = new JSONObject();
-            write(obj);
+            obj = new JsonNode(new JSONObject().toString());
         }
         return obj;
     }
@@ -54,7 +54,7 @@ public class JSONFile {
 
     public boolean exists() { return file.exists() && file.isFile(); }
 
-    private @Nullable JSONObject readObject() throws IOException {
+    private @Nullable JsonNode readNode() throws IOException {
         if (!file.exists() || (file.exists() && file.isDirectory())) {
             return null;
         }
@@ -66,10 +66,10 @@ public class JSONFile {
                 builder.append(line).append(System.lineSeparator());
             }
         }
-        return new JSONObject(builder.toString().trim());
+        return new JsonNode(builder.toString().trim());
     }
 
-    public void write(@NotNull JSONObject data) throws IOException {
+    public void write(@NotNull JsonNode data) throws IOException {
         File parent = file.getParentFile();
         if (parent.exists() && !parent.isDirectory()) {
             Files.delete(parent.toPath());
@@ -88,7 +88,11 @@ public class JSONFile {
         }
 
         try (FileWriter out = new FileWriter(file)) {
-            data.write(out);
+            if (data.isArray()) {
+                data.getArray().write(out);
+            } else {
+                data.getObject().write(out);
+            }
         }
 
         LOGGER.debug("Wrote {} bytes to {}", file.length(), file.getAbsolutePath());

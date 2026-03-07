@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.web.radarr;
+package me.egg82.fetcharr.web.sonarr;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -15,11 +15,11 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
-public class RadarrAPI extends AbstractArrAPI {
+public class SonarrAPI extends AbstractArrAPI {
     private final Cache<Class<? extends APIObject<?>>, Constructor<?>> constructors = Caffeine.newBuilder().build();
     private final Cache<Class<? extends APIObject<?>>, Object> unknowns = Caffeine.newBuilder().build();
 
-    public RadarrAPI(@NotNull String baseUrl, @NotNull String apiKey, int id) {
+    public SonarrAPI(@NotNull String baseUrl, @NotNull String apiKey, int id) {
         super(baseUrl, apiKey, id);
     }
 
@@ -32,12 +32,12 @@ public class RadarrAPI extends AbstractArrAPI {
     public boolean valid() {
         JsonNode response = get("/api");
         if (response == null) {
-            logger.warn("Radarr returned invalid response for URL {}: null", baseUrl + "/api");
+            logger.warn("Sonarr returned invalid response for URL {}: null", baseUrl + "/api");
             return false;
         }
         String current = response.getObject().getString("current");
         if (current == null || !current.equalsIgnoreCase("v3")) {
-            logger.warn("Radarr returned unexpected response for URL {}: {}", baseUrl + "/api", response.getObject().toString());
+            logger.warn("Sonarr returned unexpected response for URL {}: {}", baseUrl + "/api", response.getObject().toString());
             return false;
         }
         return true;
@@ -110,17 +110,17 @@ public class RadarrAPI extends AbstractArrAPI {
     @Override
     public void search(int... itemIds) {
         JSONObject data = new JSONObject(Map.of(
-                "movieIds", itemIds,
-                "name", "MoviesSearch"
+                "seriesId", itemIds,
+                "name", "SeriesSearch"
         ));
         JsonNode response = post("/api/v3/command", new JsonNode(data.toString()));
         if (response == null) {
-            logger.warn("Radarr returned invalid response for URL {}: null", baseUrl + "/api/v3/command");
+            logger.warn("Sonarr returned invalid response for URL {}: null", baseUrl + "/api/v3/command");
             return;
         }
         int id = NumberParser.parseInt(-1, response.getObject().getString("id"));
         if (id < 0) {
-            logger.warn("Radarr returned unexpected response for URL {}: {}", baseUrl + "/api/v3/command", response.getObject().toString());
+            logger.warn("Sonarr returned unexpected response for URL {}: {}", baseUrl + "/api/v3/command", response.getObject().toString());
         }
     }
 }

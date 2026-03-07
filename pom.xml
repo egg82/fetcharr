@@ -16,7 +16,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
 
-        <app.version>1.0.0</app.version>
+        <app.version>1.1.0</app.version>
         <api.version>1.0.1</api.version>
 
         <jetbrains.version>26.1.0</jetbrains.version>
@@ -25,6 +25,7 @@
         <slf4j.version>2.0.17</slf4j.version>
         <pcollections.version>5.0.0</pcollections.version>
         <caffeine.version>3.2.3</caffeine.version>
+        <fastutil.version>8.5.18</fastutil.version>
     </properties>
 
     <profiles>

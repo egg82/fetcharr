@@ -5,9 +5,12 @@ import kong.unirest.core.Unirest;
 import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.LogMode;
 import me.egg82.fetcharr.env.RadarrConfigVars;
+import me.egg82.fetcharr.env.SonarrConfigVars;
 import me.egg82.fetcharr.web.LoggingInterceptor;
 import me.egg82.fetcharr.web.radarr.RadarrAPI;
+import me.egg82.fetcharr.web.sonarr.SonarrAPI;
 import me.egg82.fetcharr.work.radarr.RadarrUpdater;
+import me.egg82.fetcharr.work.sonarr.SonarrUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,22 +30,24 @@ import java.util.concurrent.*;
 
 public class Main {
     static {
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", LogMode.getMode(ConfigVars.getVar(ConfigVars.LOG_MODE), ConfigVars.LOG_MODE.def()).name().toLowerCase());
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", ConfigVars.getLogMode(ConfigVars.LOG_MODE).name().toLowerCase());
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     private static final ScheduledExecutorService workPool = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors() / 2);
     private static final List<Runnable> radarr = new ArrayList<>();
+    private static final List<Runnable> sonarr = new ArrayList<>();
 
     public static void main(String[] args) {
         LOGGER.info("Starting..");
-        LOGGER.info("Logging mode set to {}", LogMode.getMode(ConfigVars.getVar(ConfigVars.LOG_MODE), ConfigVars.LOG_MODE.def()).name());
+        LOGGER.info("Logging mode set to {}", ConfigVars.getLogMode(ConfigVars.LOG_MODE).name());
 
         setupUnirest();
 
         for (int i = 0; i < 100; i++) {
             setupRadarr(i);
+            setupSonarr(i);
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -59,10 +64,13 @@ public class Main {
 
         while (true) {
             try {
-                Thread.sleep(250);
+                Thread.sleep(5_000);
 
                 for (Runnable r : radarr) {
-                    r.run();
+                    workPool.submit(r);
+                }
+                for (Runnable r : sonarr) {
+                    workPool.submit(r);
                 }
             } catch (InterruptedException ignored) {
                 Thread.currentThread().interrupt();
@@ -72,35 +80,35 @@ public class Main {
     }
 
     private static void setupUnirest() {
-        LogMode logMode = LogMode.getMode(ConfigVars.getVar(ConfigVars.LOG_MODE), ConfigVars.LOG_MODE.def());
+        LogMode logMode = ConfigVars.getLogMode(ConfigVars.LOG_MODE);
         Unirest.config().interceptor(new LoggingInterceptor(logMode));
 
-        String proxyHost = ConfigVars.getVar(ConfigVars.PROXY_HOST);
-        int proxyPort = ConfigVars.getVar(ConfigVars.PROXY_PORT, (int) ConfigVars.PROXY_PORT.def());
+        String proxyHost = ConfigVars.get(ConfigVars.PROXY_HOST);
+        int proxyPort = ConfigVars.getInt(ConfigVars.PROXY_PORT);
         if (proxyHost != null && proxyPort > 0) {
             Unirest.config().proxy(new Proxy(proxyHost, proxyPort));
         }
 
-        int connectTimeout = ConfigVars.getVar(ConfigVars.CONNECT_TIMEOUT, (int) ConfigVars.CONNECT_TIMEOUT.def());
+        int connectTimeout = ConfigVars.getInt(ConfigVars.CONNECT_TIMEOUT);
         if (connectTimeout > 0) {
             Unirest.config().connectTimeout(connectTimeout);
         }
 
-        int requestTimeout = ConfigVars.getVar(ConfigVars.REQUEST_TIMEOUT, (int) ConfigVars.REQUEST_TIMEOUT.def());
+        int requestTimeout = ConfigVars.getInt(ConfigVars.REQUEST_TIMEOUT);
         if (requestTimeout > 0) {
             Unirest.config().requestTimeout(requestTimeout);
         }
 
-        int connectTTL = ConfigVars.getVar(ConfigVars.CONNECT_TTL, (int) ConfigVars.CONNECT_TTL.def());
+        int connectTTL = ConfigVars.getInt(ConfigVars.CONNECT_TTL);
         if (connectTTL > -1) {
             Unirest.config().connectionTTL(connectTTL, TimeUnit.MILLISECONDS);
         }
 
-        boolean verifyCerts = ConfigVars.getVar(ConfigVars.VERIFY_CERTS, (boolean) ConfigVars.VERIFY_CERTS.def());
+        boolean verifyCerts = ConfigVars.getBool(ConfigVars.VERIFY_CERTS);
         Unirest.config().disableHostNameVerification(!verifyCerts);
         Unirest.config().verifySsl(verifyCerts);
 
-        File certsPath = ConfigVars.getVar(ConfigVars.SSL_PATH, (File) ConfigVars.SSL_PATH.def());
+        File certsPath = ConfigVars.getFile(ConfigVars.SSL_PATH);
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             Collection<? extends Certificate> certs = null;
@@ -136,18 +144,18 @@ public class Main {
     }
 
     private static void setupRadarr(int num) {
-        String url = RadarrConfigVars.getVar(RadarrConfigVars.RADARR_URL, num);
-        String key = RadarrConfigVars.getVar(RadarrConfigVars.RADARR_API_KEY, num);
+        String url = RadarrConfigVars.get(RadarrConfigVars.URL, num);
+        String key = RadarrConfigVars.get(RadarrConfigVars.API_KEY, num);
 
         if (url == null && key == null) {
             return;
         }
         if (url == null) {
-            LOGGER.warn("Radarr URL at {} missing", RadarrConfigVars.RADARR_URL.name(num));
+            LOGGER.warn("Radarr URL at {} missing", RadarrConfigVars.URL.envName(num));
             return;
         }
         if (key == null) {
-            LOGGER.warn("Radarr API key at {} missing", RadarrConfigVars.RADARR_API_KEY.name(num));
+            LOGGER.warn("Radarr API key at {} missing", RadarrConfigVars.API_KEY.envName(num));
             return;
         }
 
@@ -156,11 +164,40 @@ public class Main {
 
         RadarrAPI api = new RadarrAPI(url, key, num);
         if (!api.valid()) {
-            LOGGER.warn("Could not authenticate to Radarr instance configured at {} ({})", RadarrConfigVars.RADARR_URL.name(num), url);
+            LOGGER.warn("Could not authenticate to Radarr instance configured at {} ({})", RadarrConfigVars.URL.envName(num), url);
             return;
         }
 
         radarr.add(new RadarrUpdater(api));
         LOGGER.info("Added Radarr instance at {}", url);
+    }
+
+    private static void setupSonarr(int num) {
+        String url = SonarrConfigVars.get(SonarrConfigVars.URL, num);
+        String key = SonarrConfigVars.get(SonarrConfigVars.API_KEY, num);
+
+        if (url == null && key == null) {
+            return;
+        }
+        if (url == null) {
+            LOGGER.warn("Sonarr URL at {} missing", SonarrConfigVars.URL.envName(num));
+            return;
+        }
+        if (key == null) {
+            LOGGER.warn("Sonarr API key at {} missing", SonarrConfigVars.API_KEY.envName(num));
+            return;
+        }
+
+        url = url.strip().replaceAll("/+$", "");
+        key = key.strip();
+
+        SonarrAPI api = new SonarrAPI(url, key, num);
+        if (!api.valid()) {
+            LOGGER.warn("Could not authenticate to Sonarr instance configured at {} ({})", SonarrConfigVars.URL.envName(num), url);
+            return;
+        }
+
+        sonarr.add(new SonarrUpdater(api));
+        LOGGER.info("Added Sonarr instance at {}", url);
     }
 }

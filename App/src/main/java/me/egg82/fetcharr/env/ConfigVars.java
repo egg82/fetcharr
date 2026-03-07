@@ -1,9 +1,9 @@
 package me.egg82.fetcharr.env;
 
+import me.egg82.fetcharr.parse.*;
+import me.egg82.fetcharr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.concurrent.TimeUnit;
@@ -17,16 +17,14 @@ public enum ConfigVars {
     CONNECT_TTL(Integer.class, "HTTP connection TTL in milliseconds", -1),
     VERIFY_CERTS(Boolean.class, "Verify SSL certificates", true),
     USE_CACHE(Boolean.class, "Use internal caching mechanisms", true),
-    SHORT_CACHE_TIME(ParsedTime.class, "Expiration time for short-lived cached values", new ParsedTime(65, TimeUnit.MINUTES)),
-    LONG_CACHE_TIME(ParsedTime.class, "Expiration time for long-lived cached values", new ParsedTime(6L, TimeUnit.HOURS)),
+    SHORT_CACHE_TIME(TimeValue.class, "Expiration time for short-lived cached values", new TimeValue(65, TimeUnit.MINUTES)),
+    LONG_CACHE_TIME(TimeValue.class, "Expiration time for long-lived cached values", new TimeValue(6L, TimeUnit.HOURS)),
     DATA_DIR(File.class, "Data storage directory", new File("/data")),
     SSL_PATH(File.class, "File path containing custom SSL certs", new File("/etc/ssl/certs/ca-bundle.crt")),
     SEARCH_AMOUNT(Integer.class, "Number of items to search at each run", 5),
-    SEARCH_INTERVAL(ParsedTime.class, "How often to search", new ParsedTime(1L, TimeUnit.HOURS)),
+    SEARCH_INTERVAL(TimeValue.class, "How often to search", new TimeValue(1L, TimeUnit.HOURS)),
     MONITORED_ONLY(Boolean.class, "True to select only monitored items, false to select all", true),
-    SKIP_TAGS(String.class, "Comma-separated list of tags to skip searching", null);
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigVars.class);
+    SKIP_TAGS(String[].class, "Comma-separated list of tags to skip searching", new String[]{});
 
     private final Class<?> type;
     private final String description;
@@ -38,105 +36,61 @@ public enum ConfigVars {
         this.def = def;
     }
 
-    public @NotNull Class<?> type() { return this.type; }
+    public @NotNull Class<?> type() {
+        return this.type;
+    }
 
-    public @NotNull String description() { return this.description; }
+    public @NotNull String description() {
+        return this.description;
+    }
 
-    public <T> T def() { return (T) this.def; }
+    public <T> T def() {
+        return (T) this.def;
+    }
 
-    public static boolean hasVar(@NotNull ConfigVars var) {
+    public static boolean has(@NotNull ConfigVars var) {
         return System.getenv(var.name()) != null;
     }
 
-    public static @Nullable String getVar(@NotNull ConfigVars var) {
-        return System.getenv(var.name());
+    public static @Nullable String get(@NotNull ConfigVars var) {
+        String r = System.getenv(var.name());
+        return r != null ? r : var.def();
     }
 
-    public static @NotNull String getVar(@NotNull ConfigVars var, @NotNull String def) {
-        String val = System.getenv(var.name());
-        return val != null ? val : def;
+    public static @NotNull String @NotNull [] getArr(@NotNull ConfigVars var) {
+        String r = System.getenv(var.name());
+        return r != null ? r.split(",") : var.def();
     }
 
-    public static @NotNull LogMode getVar(@NotNull ConfigVars var, @NotNull LogMode def) {
-        return LogMode.getMode(System.getenv(var.name()), def);
+    public static @NotNull LogMode getLogMode(@NotNull ConfigVars var) {
+        return LogMode.parse(var.def(), System.getenv(var.name()));
     }
 
-    public static @NotNull File getVar(@NotNull ConfigVars var, @NotNull File def) {
-        String val = System.getenv(var.name());
-        return val != null ? new File(val) : def;
+    public static boolean getBool(@NotNull ConfigVars var) {
+        return BooleanParser.parse(var.def(), System.getenv(var.name()));
     }
 
-    public static int getVar(@NotNull ConfigVars var, int def) {
-        return toInt(var, def);
+    public static int getInt(@NotNull ConfigVars var) {
+        return NumberParser.parseInt(var.def(), System.getenv(var.name()));
     }
 
-    private static int toInt(@NotNull ConfigVars var, int def) {
-        String v = System.getenv(var.name());
-        if (v == null) {
-            return def;
-        }
-        try {
-            return Integer.parseInt(v);
-        } catch (NumberFormatException ignored) {
-            LOGGER.warn("Could not transform environment variable {} to integer: {}", var.name(), System.getenv(var.name()));
-        }
-        return def;
+    public static long getLong(@NotNull ConfigVars var) {
+        return NumberParser.parseLong(var.def(), System.getenv(var.name()));
     }
 
-    private static int toIntInternal(@NotNull String var, int def) {
-        try {
-            return Integer.parseInt(var);
-        } catch (NumberFormatException ignored) { }
-        return def;
+    public static float getFloat(@NotNull ConfigVars var) {
+        return NumberParser.parseFloat(var.def(), System.getenv(var.name()));
     }
 
-    public static boolean getVar(@NotNull ConfigVars var, boolean def) {
-        return toBool(var, def);
+    public static double getDouble(@NotNull ConfigVars var) {
+        return NumberParser.parseDouble(var.def(), System.getenv(var.name()));
     }
 
-    private static boolean toBool(@NotNull ConfigVars var, boolean def) {
-        String v = System.getenv(var.name());
-        if (v == null) {
-            return def;
-        }
-
-        v = v.strip();
-        int i = toIntInternal(v, -1);
-
-        if (
-                v.equalsIgnoreCase("true")
-                || v.equalsIgnoreCase("yes")
-                || i > 0
-        ) {
-            return true;
-        }
-
-        if (
-                v.equalsIgnoreCase("false")
-                || v.equalsIgnoreCase("no")
-                || i == 0
-        ) {
-            return false;
-        }
-
-        LOGGER.warn("Could not transform environment variable {} to boolean: {}", var.name(), System.getenv(var.name()));
-        return def;
+    public static @NotNull TimeValue getTimeValue(@NotNull ConfigVars var) {
+        return TimeValueParser.parse(var.def(), System.getenv(var.name()));
     }
 
-    public static @NotNull ParsedTime getVar(@NotNull ConfigVars var, @NotNull ParsedTime def) {
-        return toParsedTime(var, def);
-    }
-
-    private static @NotNull ParsedTime toParsedTime(@NotNull ConfigVars var, @NotNull ParsedTime def) {
-        String v = System.getenv(var.name());
-        if (v == null) {
-            return def;
-        }
-        try {
-            return new ParsedTime(v);
-        } catch (TimeFormatException ignored) {
-            LOGGER.warn("Could not transform environment variable {} to time: {}", var.name(), System.getenv(var.name()));
-        }
-        return def;
+    public static @NotNull File getFile(@NotNull ConfigVars var) {
+        return FileParser.parse(var.def(), System.getenv(var.name()));
     }
 }
