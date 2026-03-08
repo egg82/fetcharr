@@ -1,10 +1,17 @@
-package me.egg82.fetcharr.web.model.sonarr;
+package me.egg82.fetcharr.web.model.common;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public enum SonarrQualitySource {
+public enum QualitySource {
     UNKNOWN("unknown"),
+    CAM("can"),
+    TELESYNC("telesync"),
+    TELECINE("telecine"),
+    WORKPRINT("workprint"),
+    TV("tv"),
+    WEBDL("webdl"),
+    WEBRIP("webrip"),
     TELEVISION("television"),
     TELEVISION_RAW("televisionRaw"),
     WEB("web"),
@@ -14,7 +21,7 @@ public enum SonarrQualitySource {
     BLURAY_RAW("blurayRaw");
 
     private final String apiName;
-    SonarrQualitySource(@NotNull String apiName) {
+    QualitySource(@NotNull String apiName) {
         this.apiName = apiName;
     }
 
@@ -22,18 +29,18 @@ public enum SonarrQualitySource {
         return apiName;
     }
 
-    public static @NotNull SonarrQualitySource parse(@NotNull SonarrQualitySource def, @Nullable String val) {
-        SonarrQualitySource r = parse(val);
+    public static @NotNull QualitySource parse(@NotNull QualitySource def, @Nullable String val) {
+        QualitySource r = parse(val);
         return r != null ? r : def;
     }
 
-    public static @Nullable SonarrQualitySource parse(@Nullable String val) {
+    public static @Nullable QualitySource parse(@Nullable String val) {
         if (val == null || val.isBlank()) {
             return null;
         }
         val = val.trim();
 
-        for (SonarrQualitySource t : values()) {
+        for (QualitySource t : values()) {
             if (t.apiName.equalsIgnoreCase(val)) {
                 return t;
             }

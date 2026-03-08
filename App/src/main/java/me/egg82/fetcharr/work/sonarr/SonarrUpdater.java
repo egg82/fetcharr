@@ -52,9 +52,11 @@ public class SonarrUpdater extends AbstractUpdater {
             }
             api.update(s);
             if (monitoredOnly && !s.monitored()) {
+                logger.info("Skipping series {} (\"{}\") due to unmonitored status", s.id(), s.title());
                 continue;
             }
             if (skipTags.length > 0 && hasAnyTag(skipTags, s.tags())) {
+                logger.info("Skipping series {} (\"{}\") because skip-tag is set", s.id(), s.title());
                 continue;
             }
 

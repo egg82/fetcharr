@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.web.model.sonarr;
+package me.egg82.fetcharr.web.model.radarr;
 
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONArray;
@@ -7,7 +7,6 @@ import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.file.CacheMeta;
 import me.egg82.fetcharr.file.JSONFile;
 import me.egg82.fetcharr.parse.*;
-import me.egg82.fetcharr.unit.ResolutionValue;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.web.ArrAPI;
 import me.egg82.fetcharr.web.model.common.*;
@@ -16,42 +15,40 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
-    public static final EpisodeFile UNKNOWN = new EpisodeFile(ArrAPI.UNKNOWN, -1);
+public class MovieFile extends AbstractAPIObject<MovieFile> {
+    public static final MovieFile UNKNOWN = new MovieFile(ArrAPI.UNKNOWN, -1);
 
     private final int id;
 
+    private Movie movie;
+    private File relativePath;
+    private File path;
+    private long size;
+    private Instant dateAdded;
+    private String sceneName;
+    private String releaseGroup;
+    private String edition;
+    private final Set<@NotNull Language> languages = new HashSet<>();
+    private QualityModel quality;
     private final Set<@NotNull CustomFormat> customFormats = new HashSet<>();
     private int customFormatScore;
     private int indexerFlags;
-    private Instant dateAdded;
-    private final Set<@NotNull Language> languages = new HashSet<>();
     private MediaInfo mediaInfo;
-    private File path;
-    private QualityModel quality;
+    private File originalFilePath;
     private boolean qualityCutoffNotMet;
-    private File relativePath;
-    private String releaseGroup;
-    private SonarrReleaseType releaseType;
-    private String sceneName;
-    private int seasonNumber;
-    private Series series;
-    private long size;
 
-    public EpisodeFile(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/episodefile/" + id);
+    public MovieFile(@NotNull ArrAPI api, int id) {
+        super(api, "/api/v3/moviefile/" + id);
         this.id = id;
     }
 
     @Override
-    public EpisodeFile fetch(@NotNull String apiKey) {
+    public MovieFile fetch(@NotNull String apiKey) {
         if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
             return this;
         }
@@ -64,7 +61,7 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
             JSONFile data = cacheFile(id);
             try {
                 parse(data.read());
-                if (this.series != null) {
+                if (this.movie != null) {
                     this.fetched = meta.fetched();
                     this.fetching.set(false);
                     return this;
@@ -140,6 +137,24 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
             return;
         }
 
+        this.relativePath = FileParser.parse(StringParser.parse(obj, "relativePath"));
+        this.path = FileParser.parse(StringParser.parse(obj, "path"));
+        this.size = NumberParser.parseLong(-1L, StringParser.parse(obj, "size"));
+        this.dateAdded = InstantParser.parse(Instant.EPOCH, StringParser.parse(obj, "dateAdded"));
+        this.sceneName = StringParser.parse(obj, "sceneName");
+        this.releaseGroup = StringParser.parse(obj, "releaseGroup");
+        this.edition = StringParser.parse(obj, "edition");
+
+        this.languages.clear();
+        JSONArray languages = obj.has("languages") ? obj.getJSONArray("languages") : null;
+        if (languages != null) {
+            for (int i = 0; i < languages.length(); i++) {
+                this.languages.add(api.fetch(Language.class, id, false));
+            }
+        }
+
+        this.quality = obj.has("quality") ? new QualityModel(obj.getJSONObject("quality")) : null;
+
         this.customFormats.clear();
         JSONArray customFormats = obj.has("customFormats") ? obj.getJSONArray("customFormats") : null;
         if (customFormats != null) {
@@ -152,33 +167,56 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
         }
 
         this.customFormatScore = NumberParser.parseInt(-1, StringParser.parse(obj, "customFormatScore"));
-        this.dateAdded = InstantParser.parse(Instant.EPOCH, StringParser.parse(obj, "dateAdded"));
         this.indexerFlags = NumberParser.parseInt(-1, StringParser.parse(obj, "indexerFlags"));
-
-        this.languages.clear();
-        JSONArray languages = obj.has("languages") ? obj.getJSONArray("languages") : null;
-        if (languages != null) {
-            for (int i = 0; i < languages.length(); i++) {
-                this.languages.add(api.fetch(Language.class, id, false));
-            }
-        }
-
         this.mediaInfo = obj.has("mediaInfo") ? new MediaInfo(obj.getJSONObject("mediaInfo")) : null;
-        this.path = FileParser.parse(StringParser.parse(obj, "path"));
-        this.quality = obj.has("quality") ? new QualityModel(obj.getJSONObject("quality")) : null;
+        this.originalFilePath = FileParser.parse(StringParser.parse(obj, "originalFilePath"));
         this.qualityCutoffNotMet = BooleanParser.parse(false, StringParser.parse(obj, "qualityCutoffNotMet"));
-        this.relativePath = FileParser.parse(StringParser.parse(obj, "relativePath"));
-        this.releaseGroup = StringParser.parse(obj, "releaseGroup");
-        this.releaseType = SonarrReleaseType.parse(SonarrReleaseType.UNKNOWN, StringParser.parse(obj, "releaseType"));
-        this.sceneName = StringParser.parse(obj, "sceneName");
-        this.seasonNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "seasonNumber"));
-        this.size = NumberParser.parseLong(-1L, StringParser.parse(obj, "size"));
 
-        this.series = api.fetch(Series.class, NumberParser.parseInt(-1, StringParser.parse(obj, "seriesId")), true);
+        this.movie = api.fetch(Movie.class, NumberParser.parseInt(-1, StringParser.parse(obj, "movieId")), true);
     }
 
     public int id() {
         return id;
+    }
+
+    public @NotNull Movie movie() {
+        return movie;
+    }
+
+    public @Nullable File relativePath() {
+        return relativePath;
+    }
+
+    public @Nullable File path() {
+        return path;
+    }
+
+    public long size() {
+        return size;
+    }
+
+    public @Nullable Instant dateAdded() {
+        return dateAdded;
+    }
+
+    public @Nullable String sceneName() {
+        return sceneName;
+    }
+
+    public @Nullable String releaseGroup() {
+        return releaseGroup;
+    }
+
+    public @Nullable String edition() {
+        return edition;
+    }
+
+    public @NotNull Set<@NotNull Language> languages() {
+        return languages;
+    }
+
+    public @NotNull QualityModel quality() {
+        return quality;
     }
 
     public @NotNull Set<@NotNull CustomFormat> customFormats() {
@@ -193,62 +231,22 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
         return indexerFlags;
     }
 
-    public @NotNull Instant dateAdded() {
-        return dateAdded;
-    }
-
-    public @NotNull Set<@NotNull Language> languages() {
-        return languages;
-    }
-
-    public @Nullable MediaInfo mediaInfo() {
+    public @NotNull MediaInfo mediaInfo() {
         return mediaInfo;
     }
 
-    public @Nullable File path() {
-        return path;
-    }
-
-    public @Nullable QualityModel quality() {
-        return quality;
+    public @Nullable File originalFilePath() {
+        return originalFilePath;
     }
 
     public boolean qualityCutoffNotMet() {
         return qualityCutoffNotMet;
     }
 
-    public @Nullable File relativePath() {
-        return relativePath;
-    }
-
-    public @Nullable String releaseGroup() {
-        return releaseGroup;
-    }
-
-    public @NotNull SonarrReleaseType releaseType() {
-        return releaseType;
-    }
-
-    public @Nullable String sceneName() {
-        return sceneName;
-    }
-
-    public int seasonNumber() {
-        return seasonNumber;
-    }
-
-    public @NotNull Series series() {
-        return series;
-    }
-
-    public long size() {
-        return size;
-    }
-
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof EpisodeFile that)) return false;
-        return id == that.id;
+        if (!(o instanceof MovieFile movieFile)) return false;
+        return id == movieFile.id;
     }
 
     @Override
@@ -258,24 +256,27 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
 
     @Override
     public String toString() {
-        return "EpisodeFile{" +
+        return "MovieFile{" +
                 "id=" + id +
+                ", movie=" + movie +
+                ", relativePath=" + relativePath +
+                ", path=" + path +
+                ", size=" + size +
+                ", dateAdded=" + dateAdded +
+                ", sceneName='" + sceneName + '\'' +
+                ", releaseGroup='" + releaseGroup + '\'' +
+                ", edition='" + edition + '\'' +
+                ", languages=" + languages +
+                ", quality=" + quality +
                 ", customFormats=" + customFormats +
                 ", customFormatScore=" + customFormatScore +
                 ", indexerFlags=" + indexerFlags +
-                ", dateAdded=" + dateAdded +
-                ", languages=" + languages +
                 ", mediaInfo=" + mediaInfo +
-                ", path='" + path + '\'' +
-                ", quality=" + quality +
+                ", originalFilePath=" + originalFilePath +
                 ", qualityCutoffNotMet=" + qualityCutoffNotMet +
-                ", relativePath='" + relativePath + '\'' +
-                ", releaseGroup='" + releaseGroup + '\'' +
-                ", releaseType=" + releaseType +
-                ", sceneName='" + sceneName + '\'' +
-                ", seasonNumber=" + seasonNumber +
-                ", series=" + series +
-                ", size=" + size +
+                ", api=" + api +
+                ", apiPath='" + apiPath + '\'' +
+                ", fetched=" + fetched +
                 '}';
     }
 }

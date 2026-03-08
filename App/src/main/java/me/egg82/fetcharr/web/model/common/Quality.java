@@ -3,7 +3,6 @@ package me.egg82.fetcharr.web.model.common;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.parse.NumberParser;
 import me.egg82.fetcharr.parse.StringParser;
-import me.egg82.fetcharr.web.model.sonarr.SonarrQualitySource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,13 +13,15 @@ public class Quality {
 
     private final String name;
     private final int resolution;
-    private final SonarrQualitySource source;
+    private final QualitySource source;
+    private final QualityModifier modifier;
 
     public Quality(@NotNull JSONObject obj) {
         this.id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
         this.name = StringParser.parse(obj, "name");
         this.resolution = NumberParser.parseInt(-1, StringParser.parse(obj, "resolution"));
-        this.source = SonarrQualitySource.parse(SonarrQualitySource.UNKNOWN, StringParser.parse(obj, "source"));
+        this.source = QualitySource.parse(QualitySource.UNKNOWN, StringParser.parse(obj, "source"));
+        this.modifier = QualityModifier.parse(QualityModifier.NONE, StringParser.parse(obj, "modifier"));
     }
 
     public int id() {
@@ -35,8 +36,12 @@ public class Quality {
         return resolution;
     }
 
-    public @NotNull SonarrQualitySource source() {
+    public @NotNull QualitySource source() {
         return source;
+    }
+
+    public @NotNull QualityModifier modifier() {
+        return modifier;
     }
 
     @Override
@@ -57,6 +62,7 @@ public class Quality {
                 ", name='" + name + '\'' +
                 ", resolution=" + resolution +
                 ", source=" + source +
+                ", modifier=" + modifier +
                 '}';
     }
 }
