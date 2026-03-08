@@ -96,7 +96,7 @@ public class MovieFile extends AbstractAPIObject<MovieFile> {
 
         JsonNode node = get(apiKey);
         if (node == null) {
-            logger.warn("Could not read data from {}", url());
+            logger.debug("Could not read data from {}", url());
             // Not setting fetched = invalid
             this.fetching.set(false);
             return this;

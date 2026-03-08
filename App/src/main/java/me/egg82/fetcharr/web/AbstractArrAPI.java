@@ -51,15 +51,13 @@ public abstract class AbstractArrAPI implements ArrAPI {
 
     private @Nullable JsonNode parseResponse(@NotNull HttpResponse<JsonNode> response) {
         if (!response.isSuccess()) {
-            logger.warn("Got non-success response (code {}) for URL {}", response.getStatus(), response.getRequestSummary().getUrl());
-            response.getParsingError().ifPresent(v -> {
-                logger.warn("JSON parsing error for URL {}", response.getRequestSummary().getUrl(), v);
-            });
+            logger.debug("Got non-success response (code {}) for URL {}", response.getStatus(), response.getRequestSummary().getUrl());
+            response.getParsingError().ifPresent(v -> logger.debug("JSON parsing error for URL {}", response.getRequestSummary().getUrl(), v));
             return null;
         }
 
         if (response.getBody() == null) {
-            logger.warn("JSON body was null for URL {}", response.getRequestSummary().getUrl());
+            logger.debug("JSON body was null for URL {}", response.getRequestSummary().getUrl());
         }
 
         return response.getBody();
