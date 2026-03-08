@@ -5,10 +5,6 @@ set -Eeuo pipefail
 
 TERM_GRACE_PERIOD="${TERM_GRACE_PERIOD:-10}"
 
-if [ "$#" -eq 0 ]; then
-  set -- start
-fi
-
 _term() {
   printf "\nCaught SIGTERM, forwarding to app..\n" >&2
   kill -TERM "$child" 2>/dev/null || true

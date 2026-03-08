@@ -10,7 +10,7 @@ LABEL org.opencontainers.image.title="fetcharr" \
 ARG APP_USER=app
 ARG APP_UID=1000
 ARG APP_GID=1000
-ARG JAR_FILE=App/target/fetcharr-1.1.0.jar
+ARG JAR_FILE=App/target/fetcharr-1.1.1.jar
 
 USER root
 
@@ -18,9 +18,11 @@ RUN microdnf install -y \
       java-21-openjdk-headless \
       shadow-utils \
       tzdata \
+      glibc-langpack-en \
     && microdnf clean all \
     && rm -rf /var/cache/dnf \
-    && groupadd -g "${APP_GID}" "${APP_USER}" \
+
+RUN groupadd -g "${APP_GID}" "${APP_USER}" \
     && useradd -u "${APP_UID}" -g "${APP_GID}" -d /app -s /sbin/nologin -M "${APP_USER}" \
     && mkdir -p /app /data /tmp \
     && chown -R "${APP_UID}:${APP_GID}" /app /data /tmp \
