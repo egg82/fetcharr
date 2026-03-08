@@ -116,6 +116,9 @@ Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
 - DRY_RUN: True to run in dry-run mode, which doesn't perform searches
   - boolean: \<value\>
   - default: false
+- USE_CUTOFF: Skip items that have their profile cutoff met
+  - boolean: \<value\>
+  - default: false
 
 ### Radarr
 
@@ -139,6 +142,9 @@ Replace `X` with a number. This allows for up to 100 instances to be configured.
 - RADARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
     - string: \<tags\>
     - default: \<none\>
+- RADARR_X_USE_CUTOFF: Skip items that have their profile cutoff met
+  - boolean: \<value\>
+  - default: false
 
 ### Sonarr
 
@@ -162,6 +168,9 @@ Replace `X` with a number. This allows for up to 100 instances to be configured.
 - SONARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
     - string: \<tags\>
     - default: \<none\>
+- SONARR_X_USE_CUTOFF: Skip items that have their profile cutoff met
+  - boolean: \<value\>
+  - default: false
 
 ### Whisparr
 
@@ -185,3 +194,6 @@ Replace `X` with a number. This allows for up to 100 instances to be configured.
 - WHISPARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
   - string: \<tags\>
   - default: \<none\>
+- WHISPARR_X_USE_CUTOFF: Skip items that have their profile cutoff met
+  - boolean: \<value\>
+  - default: false

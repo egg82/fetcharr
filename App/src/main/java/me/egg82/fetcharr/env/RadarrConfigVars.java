@@ -13,7 +13,8 @@ public enum RadarrConfigVars {
     SEARCH_AMOUNT(Integer.class, "RADARR_{}_SEARCH_AMOUNT", ConfigVars.getInt(ConfigVars.SEARCH_AMOUNT)),
     SEARCH_INTERVAL(TimeValue.class, "RADARR_{}_SEARCH_INTERVAL", ConfigVars.getTimeValue(ConfigVars.SEARCH_INTERVAL)),
     MONITORED_ONLY(Boolean.class, "RADARR_{}_MONITORED_ONLY", ConfigVars.getBool(ConfigVars.MONITORED_ONLY)),
-    SKIP_TAGS(String[].class, "RADARR_{}_SKIP_TAGS", ConfigVars.getArr(ConfigVars.SKIP_TAGS));
+    SKIP_TAGS(String[].class, "RADARR_{}_SKIP_TAGS", ConfigVars.getArr(ConfigVars.SKIP_TAGS)),
+    USE_CUTOFF(Boolean.class, "RADARR_{}_USE_CUTOFF", ConfigVars.getBool(ConfigVars.USE_CUTOFF));
 
     private final Class<?> type;
     private final String envName;

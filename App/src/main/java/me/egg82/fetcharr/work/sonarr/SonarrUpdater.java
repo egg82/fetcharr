@@ -6,7 +6,9 @@ import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.SonarrConfigVars;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.util.WeightedRandom;
+import me.egg82.fetcharr.web.model.sonarr.AllEpisodes;
 import me.egg82.fetcharr.web.model.sonarr.AllSeries;
+import me.egg82.fetcharr.web.model.sonarr.Episode;
 import me.egg82.fetcharr.web.model.sonarr.Series;
 import me.egg82.fetcharr.web.sonarr.SonarrAPI;
 import me.egg82.fetcharr.work.AbstractUpdater;
@@ -40,6 +42,7 @@ public class SonarrUpdater extends AbstractUpdater {
         random.updateList(all.items());
 
         boolean monitoredOnly = SonarrConfigVars.getBool(SonarrConfigVars.MONITORED_ONLY, api.id());
+        boolean useCutoff = SonarrConfigVars.getBool(SonarrConfigVars.USE_CUTOFF, api.id());
         String[] skipTags = SonarrConfigVars.getArr(SonarrConfigVars.SKIP_TAGS, api.id());
 
         boolean dryRun = ConfigVars.getBool(ConfigVars.DRY_RUN);
@@ -57,6 +60,20 @@ public class SonarrUpdater extends AbstractUpdater {
             if (monitoredOnly && !s.monitored()) {
                 logger.info("Skipping series {} (\"{}\") due to unmonitored status", s.id(), s.title());
                 continue;
+            }
+            if (useCutoff) {
+                boolean qualityCutoffMet = true;
+                AllEpisodes a = api.fetch(AllEpisodes.class, false);
+                for (Episode e : a.items()) {
+                    if (!e.episodeFile().qualityCutoffNotMet()) {
+                        qualityCutoffMet = false;
+                        break;
+                    }
+                }
+                if (qualityCutoffMet) {
+                    logger.info("Skipping series {} (\"{}\") because it meets the quality cutoff", s.id(), s.title());
+                    continue;
+                }
             }
             if (skipTags.length > 0 && hasAnyTag(skipTags, s.tags())) {
                 logger.info("Skipping series {} (\"{}\") because skip-tag is set", s.id(), s.title());
