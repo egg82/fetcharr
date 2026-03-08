@@ -7,5 +7,6 @@ public interface APIObject<T extends APIObject<T>> {
 
     boolean valid();
     boolean unknown();
+
     void invalidate();
 }

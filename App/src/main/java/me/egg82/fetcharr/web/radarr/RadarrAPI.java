@@ -12,6 +12,7 @@ import me.egg82.fetcharr.web.ArrAPI;
 import me.egg82.fetcharr.web.ArrType;
 import me.egg82.fetcharr.web.model.common.APIObject;
 import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.NonNull;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -49,9 +50,16 @@ public class RadarrAPI extends AbstractArrAPI {
     }
 
     @Override
-    public @NotNull <T extends APIObject<T>> T fetch(Class<T> clazz) {
+    public <T extends APIObject<T>> void update(@NonNull T apiObject, boolean force) {
+        if (force || (!apiObject.valid() && !apiObject.unknown())) {
+            apiObject.fetch(apiKey);
+        }
+    }
+
+    @Override
+    public @NotNull <T extends APIObject<T>> T fetch(Class<T> clazz, boolean lazy) {
         T r = (T) cache.get(clazz, k -> fetchInternal(clazz));
-        if (!r.valid() && !r.unknown()) {
+        if (!lazy && !r.valid() && !r.unknown()) {
             r.fetch(apiKey);
         }
         return r;
@@ -81,10 +89,10 @@ public class RadarrAPI extends AbstractArrAPI {
     }
 
     @Override
-    public @NotNull <T extends APIObject<T>> T fetch(Class<T> clazz, int id) {
+    public @NotNull <T extends APIObject<T>> T fetch(Class<T> clazz, int id, boolean lazy) {
         Int2ObjectMap<Object> map = idCache.get(clazz, k -> new Int2ObjectArrayMap<>());
         T r = (T) map.computeIfAbsent(id, k -> fetchInternal(clazz, k));
-        if (!r.valid() && !r.unknown()) {
+        if (!lazy && !r.valid() && !r.unknown()) {
             r.fetch(apiKey);
         }
         return r;

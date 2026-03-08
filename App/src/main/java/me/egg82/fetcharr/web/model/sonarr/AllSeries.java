@@ -127,7 +127,7 @@ public class AllSeries extends AbstractAPIObject<AllSeries> {
 
             int id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
             if (id >= 0) {
-                this.items.add(api.fetch(Series.class, id));
+                this.items.add(api.fetch(Series.class, id, true));
             }
         }
     }

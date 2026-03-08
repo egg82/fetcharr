@@ -34,7 +34,12 @@ public class NullArrAPI implements ArrAPI {
     }
 
     @Override
-    public @NonNull <T extends APIObject<T>> T fetch(Class<T> clazz) {
+    public <T extends APIObject<T>> void update(@NonNull T apiObject, boolean force) {
+
+    }
+
+    @Override
+    public @NonNull <T extends APIObject<T>> T fetch(Class<T> clazz, boolean lazy) {
         return (T) unknowns.get(clazz, k -> {
             try {
                 return k.getField("UNKNOWN").get(null);
@@ -47,7 +52,7 @@ public class NullArrAPI implements ArrAPI {
     }
 
     @Override
-    public @NonNull <T extends APIObject<T>> T fetch(Class<T> clazz, int id) {
+    public @NonNull <T extends APIObject<T>> T fetch(Class<T> clazz, int id, boolean lazy) {
         return (T) unknowns.get(clazz, k -> {
             try {
                 return k.getField("UNKNOWN").get(null);

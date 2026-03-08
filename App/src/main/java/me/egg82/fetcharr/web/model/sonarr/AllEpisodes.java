@@ -2,10 +2,12 @@ package me.egg82.fetcharr.web.model.sonarr;
 
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONArray;
+import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.file.CacheMeta;
 import me.egg82.fetcharr.file.JSONFile;
 import me.egg82.fetcharr.parse.NumberParser;
+import me.egg82.fetcharr.parse.StringParser;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.web.ArrAPI;
 import me.egg82.fetcharr.web.model.common.AbstractAPIObject;
@@ -121,9 +123,9 @@ public class AllEpisodes extends AbstractAPIObject<AllEpisodes> {
         }
 
         for (int i = 0; i < arr.length(); i++) {
-            int id = NumberParser.parseInt(-1, arr.getJSONObject(i).getString("id"));
+            int id = NumberParser.parseInt(-1, StringParser.parse(arr.getJSONObject(i), "id"));
             if (id >= 0) {
-                this.items.add(api.fetch(Episode.class, id));
+                this.items.add(api.fetch(Episode.class, id, true));
             }
         }
     }

@@ -153,7 +153,7 @@ public class Episode extends AbstractAPIObject<Episode> {
         this.endTime = InstantParser.parse(StringParser.parse(obj, "endTime"));
 
         int id = NumberParser.parseInt(-1, StringParser.parse(obj, "episodeFileId"));
-        this.episodeFile = id >= 0 ? api.fetch(EpisodeFile.class, id) : EpisodeFile.UNKNOWN;
+        this.episodeFile = id >= 0 ? api.fetch(EpisodeFile.class, id, true) : EpisodeFile.UNKNOWN;
 
         this.episodeNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "episodeNumber"));
         this.finaleType = StringParser.parse(obj, "finaleType");
@@ -178,7 +178,7 @@ public class Episode extends AbstractAPIObject<Episode> {
         this.seasonNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "seasonNumber"));
 
         id = NumberParser.parseInt(-1, StringParser.parse(obj, "seriesId"));
-        this.series = id >= 0 ? api.fetch(Series.class, id) : Series.UNKNOWN;
+        this.series = id >= 0 ? api.fetch(Series.class, id, true) : Series.UNKNOWN;
 
         this.tvdbId = NumberParser.parseInt(-1, StringParser.parse(obj, "tvdbId"));
         this.unverifiedSceneNumbering = BooleanParser.parse(false, StringParser.parse(obj, "unverifiedSceneNumbering"));

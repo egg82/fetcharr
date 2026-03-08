@@ -230,7 +230,7 @@ public class QualityProfile extends AbstractAPIObject<QualityProfile> {
             this.id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
 
             int format = NumberParser.parseInt(-1, StringParser.parse(obj, "format"));
-            this.format = format >= 0 ? api.fetch(CustomFormat.class, format) : CustomFormat.UNKNOWN;
+            this.format = format >= 0 ? api.fetch(CustomFormat.class, format, false) : CustomFormat.UNKNOWN;
             this.score = NumberParser.parseInt(-1, StringParser.parse(obj, "score"));
 
             this.name = StringParser.parse(obj, "name");

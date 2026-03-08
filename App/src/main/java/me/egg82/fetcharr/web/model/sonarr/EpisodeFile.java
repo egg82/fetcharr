@@ -146,7 +146,7 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
             for (int i = 0; i < customFormats.length(); i++) {
                 int id = NumberParser.parseInt(-1, StringParser.parse(customFormats.getJSONObject(i), "id"));
                 if (id >= 0) {
-                    this.customFormats.add(api.fetch(CustomFormat.class, id));
+                    this.customFormats.add(api.fetch(CustomFormat.class, id, false));
                 }
             }
         }
@@ -159,7 +159,7 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
         JSONArray languages = obj.has("languages") ? obj.getJSONArray("languages") : null;
         if (languages != null) {
             for (int i = 0; i < languages.length(); i++) {
-                this.languages.add(api.fetch(Language.class, id));
+                this.languages.add(api.fetch(Language.class, id, false));
             }
         }
 
@@ -174,7 +174,7 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
         this.seasonNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "seasonNumber"));
         this.size = NumberParser.parseLong(-1L, StringParser.parse(obj, "size"));
 
-        this.series = api.fetch(Series.class, NumberParser.parseInt(-1, StringParser.parse(obj, "seriesId")));
+        this.series = api.fetch(Series.class, NumberParser.parseInt(-1, StringParser.parse(obj, "seriesId")), true);
     }
 
     public int id() {

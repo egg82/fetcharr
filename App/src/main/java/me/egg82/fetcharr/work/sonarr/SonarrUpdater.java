@@ -36,7 +36,7 @@ public class SonarrUpdater extends AbstractUpdater {
 
         logger.info("Updating up to {} items for for SONARR_{}: {}", searchAmount, api.id(), api.baseUrl());
 
-        AllSeries all = api.fetch(AllSeries.class);
+        AllSeries all = api.fetch(AllSeries.class, false);
         random.updateList(all.items());
 
         boolean monitoredOnly = SonarrConfigVars.getBool(SonarrConfigVars.MONITORED_ONLY, api.id());
@@ -51,6 +51,7 @@ public class SonarrUpdater extends AbstractUpdater {
             if (s == null) {
                 continue;
             }
+            api.update(s);
             if (monitoredOnly && !s.monitored()) {
                 continue;
             }

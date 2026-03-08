@@ -212,7 +212,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         this.nextAiring = InstantParser.parse(StringParser.parse(obj, "nextAiring"));
 
         int id = NumberParser.parseInt(-1, StringParser.parse(obj, "originalLanguage"));
-        this.originalLanguage = id >= 0 ? api.fetch(Language.class, id) : Language.UNKNOWN;
+        this.originalLanguage = id >= 0 ? api.fetch(Language.class, id, false) : Language.UNKNOWN;
 
         this.overview = StringParser.parse(obj, "overview");
         this.path = FileParser.parse(StringParser.parse(obj, "path"));
@@ -220,7 +220,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         this.profileName = StringParser.parse(obj, "profileName");
 
         id = NumberParser.parseInt(-1, StringParser.parse(obj, "qualityProfile"));
-        this.qualityProfile = id >= 0 ? api.fetch(QualityProfile.class, id) : QualityProfile.UNKNOWN;
+        this.qualityProfile = id >= 0 ? api.fetch(QualityProfile.class, id, false) : QualityProfile.UNKNOWN;
 
         this.ratings = obj.has("ratings") ? new Ratings(obj.getJSONObject("ratings")) : null;
         this.remotePoster = StringParser.parse(obj, "remotePoster");
@@ -247,7 +247,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
             for (int i = 0; i < tags.length(); i++) {
                 id = NumberParser.parseInt(-1, tags.getString(i));
                 if (id >= 0) {
-                    this.tags.add(api.fetch(Tag.class, id));
+                    this.tags.add(api.fetch(Tag.class, id, false));
                 }
             }
         }
@@ -443,7 +443,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
     public @NotNull Instant lastUpdated() {
         Instant r = Instant.EPOCH;
 
-        AllEpisodes all = api.fetch(AllEpisodes.class, this.id);
+        AllEpisodes all = api.fetch(AllEpisodes.class, this.id, false);
         for (Episode e : all.items()) {
             Instant t = e.lastSearchTime();
             if (t != null && t.isAfter(r)) {
