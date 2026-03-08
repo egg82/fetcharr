@@ -24,6 +24,23 @@ Currently supports the following:
 - Sonarr
 - Whisparr
 
+### Huntarr? What?
+
+[The Huntarr saga](https://www.reddit.com/r/selfhosted/comments/1rckopd/huntarr_your_passwords_and_your_entire_arr_stacks/) is an interesting one
+if you're curious, but if you're not familiar with the history then here's the short of what Fetcharr does:
+
+The idea is that you’ll occasionally want to go through all your media and make sure it’s the best quality available and that nothing’s missing.
+New releases get published, remuxes sometimes fix issues, etc. This little CLI container goes through and periodically searches every *arr app you connect
+it to, so you don’t have to sacrifice hours of your weekend doing (as much) manual hunting.
+
+Now, it's worth mentioning that Sonarr, Radarr, etc have had a built-in system that does this for a while now, but I've never gotten
+them to work reliably. Maybe it's just bad luck or some strange misconfiguration, but I've always had a need for apps like
+Scoutarr (Upgradinatorr), Huntarr, etc. Considering the popularity of these apps it feels like I am not the only one.
+
+If the concept sounds interesting to you, give Fetcharr a try. See if it finds anything. If my experience while developing this is anything
+to go by, you'll get some results almost immediately. Likely within a few hours, and maybe even within a few seconds. See if it helps
+and if you want to add it to your stack.
+
 ## How do I use it?
 
 Docker, kubernetes, whatever container system you currently use.
