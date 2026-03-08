@@ -445,6 +445,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
 
         AllEpisodes all = api.fetch(AllEpisodes.class, this.id, false);
         for (Episode e : all.items()) {
+            api.update(e);
             Instant t = e.lastSearchTime();
             if (t != null && t.isAfter(r)) {
                 r = t;
