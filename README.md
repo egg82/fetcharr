@@ -18,10 +18,11 @@ I think I hit that nail on the head.
 Currently supports the following:
 - Radarr
 - Sonarr
+- Whisparr
 
 ## How do I use it?
 
-Docker, kubernetes, whatever container system you currently use. Supports up to 100 instances of each type.
+Docker, kubernetes, whatever container system you currently use.
 
 ```bash
 docker run egg82/fetcharr:latest \
@@ -47,93 +48,116 @@ Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
   - string: trace, debug, info, warn, error
   - default: info
 - PROXY_HOST: HTTP proxy host
-  - string: <URL>
+  - string: \<URL\>
   - default: null
 - PROXY_PORT: HTTP proxy port
-  - int: <port>
+  - int: \<port\>
   - default: 0
 - CONNECT_TIMEOUT: HTTP connection timeout in milliseconds
-  - int: <ms>
+  - int: \<ms\>
   - default: 10,000
 - REQUEST_TIMEOUT: HTTP request timeout in milliseconds
-  - int: <ms>
+  - int: \<ms\>
   - default: 10,000
 - CONNECT_TTL: HTTP connection TTL in milliseconds
-  - int: <ms>
+  - int: \<ms\>
   - default: 10,000
 - VERIFY_CERTS: Verify SSL certificates
-  - bool: <value>
+  - bool: \<value\>
   - default: true
 - USE_CACHE: Use internal caching mechanisms
-  - bool: <value>
+  - bool: \<value\>
   - default: true
 - SHORT_CACHE_TIME: Expiration time for short-lived cached values
-  - string: <time>
+  - string: \<time\>
   - default: 65minutes
 - LONG_CACHE_TIME: Expiration time for long-lived cached values
-  - string: <time>
+  - string: \<time\>
   - default: 6hours
 - DATA_DIR: Data storage directory
-  - string: <file>
+  - string: \<file\>
   - default: /data
 - SSL_PATH: File path containing custom SSL certs
-  - string: <file>
+  - string: \<file\>
   - default: /etc/ssl/certs/ca-bundle.crt
 - SEARCH_AMOUNT: Number of items to search at each run
-  - int: <amount>
+  - int: \<amount\>
   - default: 5
 - SEARCH_INTERVAL: How often to search
-  - string: <time>
+  - string: \<time\>
   - 1hour
 - MONITORED_ONLY: True to select only monitored items, false to select all
-  - bool: <value>
+  - bool: \<value\>
   - default: true
 - SKIP_TAGS: Comma-separated list of tags to skip searching
-  - string: <tags>
-  - default: <none>
+  - string: \<tags\>
+  - default: \<none\>
 
 ### Radarr
 
-Replace `X` with a number. This allows for multiple instances to be configured.
+Replace `X` with a number. This allows for up to 100 instances to be configured.
 
 - RADARR_X_URL: Base URL
-  - string: <url>
+  - string: \<url\>
   - default: null
 - RADARR_X_API_KEY: API key
-  - string: <key>
+  - string: \<key\>
   - default: null
 - RADARR_X_SEARCH_AMOUNT: Number of items to search at each run
-    - int: <amount>
+    - int: \<amount\>
     - default: 5
 - RADARR_X_SEARCH_INTERVAL: How often to search
-    - string: <time>
+    - string: \<time\>
     - 1hour
 - RADARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
-    - bool: <value>
+    - bool: \<value\>
     - default: true
 - RADARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
-    - string: <tags>
-    - default: <none>
+    - string: \<tags\>
+    - default: \<none\>
 
 ### Sonarr
 
-Replace `X` with a number. This allows for multiple instances to be configured.
+Replace `X` with a number. This allows for up to 100 instances to be configured.
 
 - SONARR_X_URL: Base URL
-    - string: <url>
+    - string: \<url\>
     - default: null
 - SONARR_X_API_KEY: API key
-    - string: <key>
+    - string: \<key\>
     - default: null
 - SONARR_X_SEARCH_AMOUNT: Number of items to search at each run
-    - int: <amount>
+    - int: \<amount\>
     - default: 5
 - SONARR_X_SEARCH_INTERVAL: How often to search
-    - string: <time>
+    - string: \<time\>
     - 1hour
 - SONARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
-    - bool: <value>
+    - bool: \<value\>
     - default: true
 - SONARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
-    - string: <tags>
-    - default: <none>
+    - string: \<tags\>
+    - default: \<none\>
+
+### Whisparr
+
+Replace `X` with a number. This allows for up to 100 instances to be configured.
+
+- WHISPARR_X_URL: Base URL
+  - string: \<url\>
+  - default: null
+- WHISPARR_X_API_KEY: API key
+  - string: \<key\>
+  - default: null
+- WHISPARR_X_SEARCH_AMOUNT: Number of items to search at each run
+  - int: \<amount\>
+  - default: 5
+- WHISPARR_X_SEARCH_INTERVAL: How often to search
+  - string: \<time\>
+  - 1hour
+- WHISPARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
+  - bool: \<value\>
+  - default: true
+- WHISPARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
+  - string: \<tags\>
+  - default: \<none\>

@@ -2,15 +2,14 @@ package me.egg82.fetcharr;
 
 import kong.unirest.core.Proxy;
 import kong.unirest.core.Unirest;
-import me.egg82.fetcharr.env.ConfigVars;
-import me.egg82.fetcharr.env.LogMode;
-import me.egg82.fetcharr.env.RadarrConfigVars;
-import me.egg82.fetcharr.env.SonarrConfigVars;
+import me.egg82.fetcharr.env.*;
 import me.egg82.fetcharr.web.LoggingInterceptor;
 import me.egg82.fetcharr.web.radarr.RadarrAPI;
 import me.egg82.fetcharr.web.sonarr.SonarrAPI;
+import me.egg82.fetcharr.web.whisparr.WhisparrAPI;
 import me.egg82.fetcharr.work.radarr.RadarrUpdater;
 import me.egg82.fetcharr.work.sonarr.SonarrUpdater;
+import me.egg82.fetcharr.work.whisparr.WhisparrUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +37,7 @@ public class Main {
     private static final ScheduledExecutorService workPool = Executors.newScheduledThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
     private static final List<Runnable> radarr = new ArrayList<>();
     private static final List<Runnable> sonarr = new ArrayList<>();
+    private static final List<Runnable> whisparr = new ArrayList<>();
 
     public static void main(String[] args) {
         LOGGER.info("Starting..");
@@ -49,6 +49,7 @@ public class Main {
         for (int i = 0; i < 100; i++) {
             setupRadarr(i);
             setupSonarr(i);
+            setupWhisparr(i);
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -71,6 +72,9 @@ public class Main {
                     workPool.submit(r);
                 }
                 for (Runnable r : sonarr) {
+                    workPool.submit(r);
+                }
+                for (Runnable r : whisparr) {
                     workPool.submit(r);
                 }
             } catch (InterruptedException ignored) {
@@ -200,5 +204,34 @@ public class Main {
 
         sonarr.add(new SonarrUpdater(api));
         LOGGER.info("Added Sonarr instance at {}", url);
+    }
+
+    private static void setupWhisparr(int num) {
+        String url = WhisparrConfigVars.get(WhisparrConfigVars.URL, num);
+        String key = WhisparrConfigVars.get(WhisparrConfigVars.API_KEY, num);
+
+        if (url == null && key == null) {
+            return;
+        }
+        if (url == null) {
+            LOGGER.warn("Whisparr URL at {} missing", WhisparrConfigVars.URL.envName(num));
+            return;
+        }
+        if (key == null) {
+            LOGGER.warn("Whisparr API key at {} missing", WhisparrConfigVars.API_KEY.envName(num));
+            return;
+        }
+
+        url = url.strip().replaceAll("/+$", "");
+        key = key.strip();
+
+        WhisparrAPI api = new WhisparrAPI(url, key, num);
+        if (!api.valid()) {
+            LOGGER.warn("Could not authenticate to Whisparr instance configured at {} ({})", WhisparrConfigVars.URL.envName(num), url);
+            return;
+        }
+
+        whisparr.add(new WhisparrUpdater(api));
+        LOGGER.info("Added Whisparr instance at {}", url);
     }
 }
