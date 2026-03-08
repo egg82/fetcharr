@@ -2,6 +2,7 @@ package me.egg82.fetcharr.work.sonarr;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.SonarrConfigVars;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.util.WeightedRandom;
@@ -41,6 +42,8 @@ public class SonarrUpdater extends AbstractUpdater {
         boolean monitoredOnly = SonarrConfigVars.getBool(SonarrConfigVars.MONITORED_ONLY, api.id());
         String[] skipTags = SonarrConfigVars.getArr(SonarrConfigVars.SKIP_TAGS, api.id());
 
+        boolean dryRun = ConfigVars.getBool(ConfigVars.DRY_RUN);
+
         IntList ids = new IntArrayList();
         int attempts = 100;
         while (attempts > 0 && ids.size() < searchAmount) {
@@ -60,12 +63,16 @@ public class SonarrUpdater extends AbstractUpdater {
                 continue;
             }
 
-            logger.info("Updating series {} (\"{}\")", s.id(), s.title());
+            if (dryRun) {
+                logger.info("Would update series {} (\"{}\") if not in dry-run mode", s.id(), s.title());
+            } else {
+                logger.info("Updating series {} (\"{}\")", s.id(), s.title());
+            }
             ids.add(s.id());
             s.invalidate(); // Force refresh on next
         }
 
-        if (!ids.isEmpty()) {
+        if (!dryRun && !ids.isEmpty()) {
             api.search(ids);
         }
 

@@ -2,6 +2,7 @@ package me.egg82.fetcharr.work.radarr;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.RadarrConfigVars;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.util.WeightedRandom;
@@ -41,6 +42,8 @@ public class RadarrUpdater extends AbstractUpdater {
         boolean monitoredOnly = RadarrConfigVars.getBool(RadarrConfigVars.MONITORED_ONLY, api.id());
         String[] skipTags = RadarrConfigVars.getArr(RadarrConfigVars.SKIP_TAGS, api.id());
 
+        boolean dryRun = ConfigVars.getBool(ConfigVars.DRY_RUN);
+
         IntList ids = new IntArrayList();
         int attempts = 100;
         while (attempts > 0 && ids.size() < searchAmount) {
@@ -60,12 +63,16 @@ public class RadarrUpdater extends AbstractUpdater {
                 continue;
             }
 
-            logger.info("Updating movie {} (\"{}\")", m.id(), m.title());
+            if (dryRun) {
+                logger.info("Would update movie {} (\"{}\") if not in dry-run mode", m.id(), m.title());
+            } else {
+                logger.info("Updating movie {} (\"{}\")", m.id(), m.title());
+            }
             ids.add(m.id());
             m.invalidate(); // Force refresh on next
         }
 
-        if (!ids.isEmpty()) {
+        if (!dryRun && !ids.isEmpty()) {
             api.search(ids);
         }
 

@@ -113,6 +113,9 @@ Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
 - SKIP_TAGS: Comma-separated list of tags to skip searching
   - string: \<tags\>
   - default: \<none\>
+- DRY_RUN: True to run in dry-run mode, which doesn't perform searches
+  - boolean: \<value\>
+  - default: false
 
 ### Radarr
 
