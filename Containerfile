@@ -20,7 +20,7 @@ RUN microdnf install -y \
       tzdata \
       glibc-langpack-en \
     && microdnf clean all \
-    && rm -rf /var/cache/dnf \
+    && rm -rf /var/cache/dnf
 
 RUN groupadd -g "${APP_GID}" "${APP_USER}" \
     && useradd -u "${APP_UID}" -g "${APP_GID}" -d /app -s /sbin/nologin -M "${APP_USER}" \
