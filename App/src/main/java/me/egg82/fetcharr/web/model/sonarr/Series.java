@@ -153,6 +153,11 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
 
     @Override
     public void invalidate() {
+        AllEpisodes all = api.fetch(AllEpisodes.class, this.id, false);
+        for (Episode e : all.items()) {
+            e.invalidate();
+        }
+
         try {
             cacheFile(id).delete();
             metaFile(id).delete();

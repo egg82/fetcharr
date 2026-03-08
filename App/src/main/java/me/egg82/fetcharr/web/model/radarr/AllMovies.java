@@ -127,7 +127,7 @@ public class AllMovies extends AbstractAPIObject<AllMovies> {
 
             int id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
             if (id >= 0) {
-                this.items.add(api.fetch(Movie.class, id, true));
+                this.items.add(new Movie(api, id, obj));
             }
         }
     }

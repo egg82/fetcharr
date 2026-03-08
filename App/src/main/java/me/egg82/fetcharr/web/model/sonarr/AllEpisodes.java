@@ -123,9 +123,14 @@ public class AllEpisodes extends AbstractAPIObject<AllEpisodes> {
         }
 
         for (int i = 0; i < arr.length(); i++) {
-            int id = NumberParser.parseInt(-1, StringParser.parse(arr.getJSONObject(i), "id"));
+            JSONObject obj = arr.getJSONObject(i);
+            if (obj == null || obj.isEmpty()) {
+                continue;
+            }
+
+            int id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
             if (id >= 0) {
-                this.items.add(api.fetch(Episode.class, id, true));
+                this.items.add(new Episode(api, id, obj));
             }
         }
     }

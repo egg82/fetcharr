@@ -83,6 +83,29 @@ public class Movie extends AbstractAPIObject<Movie> implements Weighted {
         this.id = id;
     }
 
+    public Movie(@NotNull ArrAPI api, int id, @NotNull JSONObject obj) {
+        this(api, id);
+
+        CacheMeta meta = new CacheMeta(metaFile(id));
+
+        JsonNode node = new JsonNode(obj.toString());
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", obj, ex);
+            return;
+        }
+
+        this.fetched = Instant.now();
+        try {
+            cacheFile(id).write(node);
+        } catch (IOException ex) {
+            logger.warn("Could not write data to {}", cacheFile(id).path(), ex);
+        }
+        meta.setFetched(this.fetched);
+        meta.write();
+    }
+
     @Override
     public Movie fetch(@NotNull String apiKey) {
         if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
@@ -220,7 +243,8 @@ public class Movie extends AbstractAPIObject<Movie> implements Weighted {
         this.hasFile = BooleanParser.parse(false, StringParser.parse(obj, "hasFile"));
 
         id = NumberParser.parseInt(-1, StringParser.parse(obj, "movieFileId"));
-        this.movieFile = id >= 0 ? api.fetch(MovieFile.class, id, true) : MovieFile.UNKNOWN;
+        JSONObject o = obj.has("movieFile") ? obj.getJSONObject("movieFile") : null;
+        this.movieFile = id >= 0 && o != null ? new MovieFile(api, id, o) : MovieFile.UNKNOWN;
 
         this.monitored = BooleanParser.parse(false, StringParser.parse(obj, "monitored"));
         this.minimumAvailability = RadarrMovieStatus.parse(RadarrMovieStatus.ANNOUNCED, StringParser.parse(obj, "minimumAvailability"));
@@ -375,7 +399,7 @@ public class Movie extends AbstractAPIObject<Movie> implements Weighted {
         return hasFile;
     }
 
-    public @Nullable MovieFile movieFile() {
+    public @NotNull MovieFile movieFile() {
         return movieFile;
     }
 

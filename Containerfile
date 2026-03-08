@@ -10,7 +10,7 @@ LABEL org.opencontainers.image.title="fetcharr" \
 ARG APP_USER=app
 ARG APP_UID=1000
 ARG APP_GID=1000
-ARG JAR_FILE=App/target/fetcharr-1.1.4.jar
+ARG JAR_FILE=App/target/fetcharr-1.1.5.jar
 
 USER root
 

@@ -57,6 +57,29 @@ public class Episode extends AbstractAPIObject<Episode> {
         this.id = id;
     }
 
+    public Episode(@NotNull ArrAPI api, int id, @NotNull JSONObject obj) {
+        this(api, id);
+
+        CacheMeta meta = new CacheMeta(metaFile(id));
+
+        JsonNode node = new JsonNode(obj.toString());
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", obj, ex);
+            return;
+        }
+
+        this.fetched = Instant.now();
+        try {
+            cacheFile(id).write(node);
+        } catch (IOException ex) {
+            logger.warn("Could not write data to {}", cacheFile(id).path(), ex);
+        }
+        meta.setFetched(this.fetched);
+        meta.write();
+    }
+
     @Override
     public Episode fetch(@NotNull String apiKey) {
         if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
@@ -153,7 +176,8 @@ public class Episode extends AbstractAPIObject<Episode> {
         this.endTime = InstantParser.parse(StringParser.parse(obj, "endTime"));
 
         int id = NumberParser.parseInt(-1, StringParser.parse(obj, "episodeFileId"));
-        this.episodeFile = id >= 0 ? api.fetch(EpisodeFile.class, id, true) : EpisodeFile.UNKNOWN;
+        JSONObject o = obj.has("episodeFile") ? obj.getJSONObject("episodeFile") : null;
+        this.episodeFile =  id >= 0 && o != null ? new EpisodeFile(api, id, o) : EpisodeFile.UNKNOWN;
 
         this.episodeNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "episodeNumber"));
         this.finaleType = StringParser.parse(obj, "finaleType");
