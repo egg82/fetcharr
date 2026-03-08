@@ -35,13 +35,14 @@ public class Main {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
-    private static final ScheduledExecutorService workPool = Executors.newScheduledThreadPool(Runtime.getRuntime().availableProcessors() / 2);
+    private static final ScheduledExecutorService workPool = Executors.newScheduledThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
     private static final List<Runnable> radarr = new ArrayList<>();
     private static final List<Runnable> sonarr = new ArrayList<>();
 
     public static void main(String[] args) {
         LOGGER.info("Starting..");
         LOGGER.info("Logging mode set to {}", ConfigVars.getLogMode(ConfigVars.LOG_MODE).name());
+        LOGGER.info("Thread pool size set to {}", Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
 
         setupUnirest();
 
