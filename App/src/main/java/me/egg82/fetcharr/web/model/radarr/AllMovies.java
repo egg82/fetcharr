@@ -104,7 +104,6 @@ public class AllMovies extends AbstractAPIObject<AllMovies> {
     public void invalidate() {
         try {
             cacheFile().delete();
-            metaFile().delete();
         } catch (IOException ex) {
             logger.warn("Could not delete cache files for {}-{} {}", api.type().name().toLowerCase(), api.id(), getClass().getSimpleName(), ex);
         }

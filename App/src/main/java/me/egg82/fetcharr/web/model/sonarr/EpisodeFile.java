@@ -149,7 +149,6 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
     public void invalidate() {
         try {
             cacheFile(id).delete();
-            metaFile(id).delete();
         } catch (IOException ex) {
             logger.warn("Could not delete cache files for {}-{} {}-{}", api.type().name().toLowerCase(), api.id(), getClass().getSimpleName(), id, ex);
         }
