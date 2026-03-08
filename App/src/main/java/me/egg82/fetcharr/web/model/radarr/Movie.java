@@ -186,6 +186,7 @@ public class Movie extends AbstractAPIObject<Movie> implements Weighted {
         } catch (IOException ex) {
             logger.warn("Could not delete cache files for {}-{} {}-{}", api.type().name().toLowerCase(), api.id(), getClass().getSimpleName(), id, ex);
         }
+        this.fetched = null;
     }
 
     @Override

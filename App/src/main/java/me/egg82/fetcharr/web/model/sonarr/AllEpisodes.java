@@ -105,11 +105,16 @@ public class AllEpisodes extends AbstractAPIObject<AllEpisodes> {
 
     @Override
     public void invalidate() {
+        for (Episode e : items) {
+            e.invalidate();
+        }
+
         try {
             cacheFile(id).delete();
         } catch (IOException ex) {
             logger.warn("Could not delete cache files for {}-{} {}-{}", api.type().name().toLowerCase(), api.id(), getClass().getSimpleName(), id, ex);
         }
+        this.fetched = null;
     }
 
     @Override

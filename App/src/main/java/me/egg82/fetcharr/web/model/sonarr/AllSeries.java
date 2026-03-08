@@ -102,11 +102,16 @@ public class AllSeries extends AbstractAPIObject<AllSeries> {
 
     @Override
     public void invalidate() {
+        for (Series s : items) {
+            s.invalidate();
+        }
+
         try {
             cacheFile().delete();
         } catch (IOException ex) {
             logger.warn("Could not delete cache files for {}-{} {}", api.type().name().toLowerCase(), api.id(), getClass().getSimpleName(), ex);
         }
+        this.fetched = null;
     }
 
     @Override

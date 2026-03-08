@@ -106,6 +106,7 @@ public class Tag extends AbstractAPIObject<Tag> {
         } catch (IOException ex) {
             logger.warn("Could not delete cache files for {}-{} {}-{}", api.type().name().toLowerCase(), api.id(), getClass().getSimpleName(), id, ex);
         }
+        this.fetched = null;
     }
 
     @Override
