@@ -1,5 +1,9 @@
 # Fetcharr
 
+<img src="fetcharr-temp-icon.png" width="60"/>
+
+###### Icon is LLM-generated and temporary until one from an artist can be sourced.
+
 ## What is it?
 
 Since Huntarr died, I still needed an application that scanned and upgraded my media.
