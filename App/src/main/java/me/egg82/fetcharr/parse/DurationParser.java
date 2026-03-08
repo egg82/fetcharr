@@ -42,7 +42,7 @@ public class DurationParser {
             return Duration.parse(val);
         } catch (DateTimeParseException ex) {
             int minutes = NumberParser.parseInt(-1, val);
-            if (minutes > 0) {
+            if (minutes >= 0) {
                 return Duration.ofMinutes(minutes);
             }
 
