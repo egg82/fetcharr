@@ -22,7 +22,7 @@ public class RadarrUpdater extends AbstractUpdater {
     }
 
     @Override
-    public void run() {
+    protected void doWork() {
         TimeValue searchInterval = RadarrConfigVars.getTimeValue(RadarrConfigVars.SEARCH_INTERVAL, api.id());
         long intervalSeconds = searchInterval.unit().toSeconds(searchInterval.time());
         Instant now = Instant.now();

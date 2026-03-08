@@ -26,6 +26,17 @@ public abstract class AbstractUpdater implements Runnable {
         this.lastUpdate = meta.last();
     }
 
+    @Override
+    public void run() {
+        try {
+            doWork();
+        } catch (Exception ex) {
+            logger.warn("Exception in {} doWork method", getClass().getSimpleName(), ex);
+        }
+    }
+
+    abstract protected void doWork();
+
     private @NotNull File getBasePath() {
         File base = ConfigVars.getFile(ConfigVars.DATA_DIR);
         File arr = new File(base, api.type().name().toLowerCase() + "-" + api.id());

@@ -22,7 +22,7 @@ public class SonarrUpdater extends AbstractUpdater {
     }
 
     @Override
-    public void run() {
+    protected void doWork() {
         TimeValue searchInterval = SonarrConfigVars.getTimeValue(SonarrConfigVars.SEARCH_INTERVAL, api.id());
         long intervalSeconds = searchInterval.unit().toSeconds(searchInterval.time());
         Instant now = Instant.now();
