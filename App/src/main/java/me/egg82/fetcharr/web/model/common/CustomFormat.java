@@ -8,6 +8,7 @@ import me.egg82.fetcharr.file.CacheMeta;
 import me.egg82.fetcharr.file.JSONFile;
 import me.egg82.fetcharr.parse.BooleanParser;
 import me.egg82.fetcharr.parse.NumberParser;
+import me.egg82.fetcharr.parse.StringParser;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.web.ArrAPI;
 import org.jetbrains.annotations.NotNull;
@@ -35,7 +36,7 @@ public class CustomFormat extends AbstractAPIObject<CustomFormat> {
 
     @Override
     public CustomFormat fetch(@NotNull String apiKey) {
-        if (this.id < 0) {
+        if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
             return this;
         }
 
@@ -49,10 +50,11 @@ public class CustomFormat extends AbstractAPIObject<CustomFormat> {
                 parse(data.read());
                 if (this.name != null && !this.name.isBlank()) {
                     this.fetched = meta.fetched();
+                    this.fetching.set(false);
                     return this;
                 }
             } catch (Exception ex) {
-                logger.warn("Could not read data from {}: ", data.path(), ex);
+                logger.warn("Could not read data from {}", data.path(), ex);
             }
         }
 
@@ -60,10 +62,18 @@ public class CustomFormat extends AbstractAPIObject<CustomFormat> {
         if (node == null) {
             logger.warn("Could not read data from {}", url());
             // Not setting fetched = invalid
+            this.fetching.set(false);
             return this;
         }
 
-        parse(node);
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", url(), ex);
+            this.fetching.set(false);
+            return this;
+        }
+
         this.fetched = Instant.now();
         try {
             cacheFile(id).write(node);
@@ -72,6 +82,7 @@ public class CustomFormat extends AbstractAPIObject<CustomFormat> {
         }
         meta.setFetched(this.fetched);
         meta.write();
+        this.fetching.set(false);
         return this;
     }
 
@@ -113,17 +124,17 @@ public class CustomFormat extends AbstractAPIObject<CustomFormat> {
             return;
         }
 
-        this.includeCustomFormatWhenRenaming = BooleanParser.parse(false, obj.getString("includeCustomFormatWhenRenaming"));
+        this.includeCustomFormatWhenRenaming = BooleanParser.parse(false, StringParser.parse(obj, "includeCustomFormatWhenRenaming"));
 
         this.specifications.clear();
-        JSONArray specifications = obj.getJSONArray("specifications");
+        JSONArray specifications = obj.has("specifications") ? obj.getJSONArray("specifications") : null;
         if (specifications != null) {
             for (int i = 0; i < specifications.length(); i++) {
                 this.specifications.add(new CustomFormatSpecificationSchema(specifications.getJSONObject(i)));
             }
         }
 
-        this.name = obj.getString("name");
+        this.name = StringParser.parse(obj, "name");
     }
 
     public int id() {
@@ -179,29 +190,29 @@ public class CustomFormat extends AbstractAPIObject<CustomFormat> {
         private final boolean required;
 
         public CustomFormatSpecificationSchema(@NotNull JSONObject obj) {
-            this.id = NumberParser.parseInt(-1, obj.getString("id"));
+            this.id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
 
-            JSONArray fields = obj.getJSONArray("fields");
+            JSONArray fields = obj.has("fields") ? obj.getJSONArray("fields") : null;
             if (fields != null) {
                 for (int i = 0; i < fields.length(); i++) {
                     this.fields.add(new Field(fields.getJSONObject(i)));
                 }
             }
 
-            this.implementation = obj.getString("implementation");
-            this.implementationName = obj.getString("implementationName");
-            this.infoLink = obj.getString("infoLink");
-            this.name = obj.getString("name");
-            this.negate = BooleanParser.parse(false, obj.getString("negate"));
+            this.implementation = StringParser.parse(obj, "implementation");
+            this.implementationName = StringParser.parse(obj, "implementationName");
+            this.infoLink = StringParser.parse(obj, "infoLink");
+            this.name = StringParser.parse(obj, "name");
+            this.negate = BooleanParser.parse(false, StringParser.parse(obj, "negate"));
 
-            JSONArray presets = obj.getJSONArray("presets");
+            JSONArray presets = obj.has("presets") ? obj.getJSONArray("presets") : null;
             if (presets != null) {
                 for (int i = 0; i < presets.length(); i++) {
                     this.presets.add(new CustomFormatSpecificationSchema(presets.getJSONObject(i)));
                 }
             }
 
-            this.required = BooleanParser.parse(false, obj.getString("required"));
+            this.required = BooleanParser.parse(false, StringParser.parse(obj, "required"));
         }
 
         public int id() {
@@ -286,30 +297,30 @@ public class CustomFormat extends AbstractAPIObject<CustomFormat> {
             private final String value;
 
             public Field(@NotNull JSONObject obj) {
-                this.advanced = BooleanParser.parse(false, obj.getString("advanced"));
-                this.helpLink = obj.getString("helpLink");
-                this.helpText = obj.getString("helpText");
-                this.helpTextWarning = obj.getString("helpTextWarning");
-                this.hidden = obj.getString("hidden");
-                this.isFloat = BooleanParser.parse(false, obj.getString("isFloat"));
-                this.label = obj.getString("label");
-                this.name = obj.getString("name");
-                this.order = NumberParser.parseInt(-1, obj.getString("order"));
-                this.placeholder = obj.getString("placeholder");
-                this.privacy = PrivacyLevel.parse(PrivacyLevel.NORMAL, obj.getString("privacy"));
-                this.section = obj.getString("section");
+                this.advanced = BooleanParser.parse(false, StringParser.parse(obj, "advanced"));
+                this.helpLink = StringParser.parse(obj, "helpLink");
+                this.helpText = StringParser.parse(obj, "helpText");
+                this.helpTextWarning = StringParser.parse(obj, "helpTextWarning");
+                this.hidden = StringParser.parse(obj, "hidden");
+                this.isFloat = BooleanParser.parse(false, StringParser.parse(obj, "isFloat"));
+                this.label = StringParser.parse(obj, "label");
+                this.name = StringParser.parse(obj, "name");
+                this.order = NumberParser.parseInt(-1, StringParser.parse(obj, "order"));
+                this.placeholder = StringParser.parse(obj, "placeholder");
+                this.privacy = PrivacyLevel.parse(PrivacyLevel.NORMAL, StringParser.parse(obj, "privacy"));
+                this.section = StringParser.parse(obj, "section");
 
-                JSONArray selectOptions = obj.getJSONArray("selectOptions");
+                JSONArray selectOptions = obj.has("selectOptions") ? obj.getJSONArray("selectOptions") : null;
                 if (selectOptions != null) {
                     for (int i = 0; i < selectOptions.length(); i++) {
                         this.selectOptions.add(new SelectOption(selectOptions.getJSONObject(i)));
                     }
                 }
 
-                this.selectOptionsProviderAction = obj.getString("selectOptionsProviderAction");
-                this.type = obj.getString("type");
-                this.unit = obj.getString("unit");
-                this.value = obj.getString("value");
+                this.selectOptionsProviderAction = StringParser.parse(obj, "selectOptionsProviderAction");
+                this.type = StringParser.parse(obj, "type");
+                this.unit = StringParser.parse(obj, "unit");
+                this.value = StringParser.parse(obj, "value"); // TODO: doc says "nullable" but doesn't specify type
             }
 
             public boolean advanced() {
@@ -421,10 +432,10 @@ public class CustomFormat extends AbstractAPIObject<CustomFormat> {
                 private final int value;
 
                 public SelectOption(@NotNull JSONObject obj) {
-                    this.hint = obj.getString("hint");
-                    this.name = obj.getString("name");
-                    this.order = NumberParser.parseInt(-1, obj.getString("order"));
-                    this.value = NumberParser.parseInt(-1, obj.getString("value"));
+                    this.hint = StringParser.parse(obj, "hint");
+                    this.name = StringParser.parse(obj, "name");
+                    this.order = NumberParser.parseInt(-1, StringParser.parse(obj, "order"));
+                    this.value = NumberParser.parseInt(-1, StringParser.parse(obj, "value"));
                 }
 
                 public @Nullable String hint() {

@@ -80,7 +80,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
 
     @Override
     public Series fetch(@NotNull String apiKey) {
-        if (this.id < 0) {
+        if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
             return this;
         }
 
@@ -95,10 +95,11 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
                 if (this.title != null && !this.title.isBlank()) {
                     this.fetched = meta.fetched();
                     this.lastSelected = meta.selected();
+                    this.fetching.set(false);
                     return this;
                 }
             } catch (Exception ex) {
-                logger.warn("Could not read data from {}: ", data.path(), ex);
+                logger.warn("Could not read data from {}", data.path(), ex);
             }
         }
 
@@ -106,10 +107,18 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         if (node == null) {
             logger.warn("Could not read data from {}", url());
             // Not setting fetched = invalid
+            this.fetching.set(false);
             return this;
         }
 
-        parse(node);
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", url(), ex);
+            this.fetching.set(false);
+            return this;
+        }
+
         this.fetched = Instant.now();
         try {
             cacheFile(id).write(node);
@@ -118,6 +127,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         }
         meta.setFetched(this.fetched);
         meta.write();
+        this.fetching.set(false);
         return this;
     }
 
@@ -159,27 +169,27 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
             return;
         }
 
-        this.added = InstantParser.parse(Instant.now(), obj.getString("added"));
-        this.addOptions = new AddSeriesOptions(obj.getJSONObject("addOptions"));
-        this.airTime = DurationParser.parse(obj.getString("airTime"));
+        this.added = InstantParser.parse(Instant.now(), StringParser.parse(obj, "added"));
+        this.addOptions = obj.has("addOptions") ? new AddSeriesOptions(obj.getJSONObject("addOptions")) : null;
+        this.airTime = DurationParser.parse(StringParser.parse(obj, "airTime"));
 
         this.alternateTitles.clear();
-        JSONArray alternateTitles = obj.getJSONArray("alternateTitles");
+        JSONArray alternateTitles = obj.has("alternateTitles") ? obj.getJSONArray("alternateTitles") : null;
         if (alternateTitles != null) {
             for (int i = 0; i < alternateTitles.length(); i++) {
                 this.alternateTitles.add(new AlternateTitle(alternateTitles.getJSONObject(i)));
             }
         }
 
-        this.certification = obj.getString("certification");
-        this.cleanTitle = obj.getString("cleanTitle");
-        this.ended = BooleanParser.parse(false, obj.getString("ended"));
-        this.episodesChanged = BooleanParser.parse(false, obj.getString("episodesChanged"));
-        this.firstAired = InstantParser.parse(obj.getString("firstAired"));
-        this.folder = FileParser.parse(obj.getString("folder"));
+        this.certification = StringParser.parse(obj, "certification");
+        this.cleanTitle = StringParser.parse(obj, "cleanTitle");
+        this.ended = BooleanParser.parse(false, StringParser.parse(obj, "ended"));
+        this.episodesChanged = BooleanParser.parse(false, StringParser.parse(obj, "episodesChanged"));
+        this.firstAired = InstantParser.parse(StringParser.parse(obj, "firstAired"));
+        this.folder = FileParser.parse(StringParser.parse(obj, "folder"));
 
         this.genres.clear();
-        JSONArray genres = obj.getJSONArray("genres");
+        JSONArray genres = obj.has("genres") ? obj.getJSONArray("genres") : null;
         if (genres != null) {
             for (int i = 0; i < genres.length(); i++) {
                 this.genres.add(genres.getString(i));
@@ -187,52 +197,52 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         }
 
         this.images.clear();
-        JSONArray images = obj.getJSONArray("images");
+        JSONArray images = obj.has("images") ? obj.getJSONArray("images") : null;
         if (images != null) {
             for (int i = 0; i < images.length(); i++) {
                 this.images.add(new MediaCover(images.getJSONObject(i)));
             }
         }
 
-        this.imdbId = obj.getString("imdbId");
-        this.lastAired = InstantParser.parse(obj.getString("lastAired"));
-        this.monitored = BooleanParser.parse(false, obj.getString("monitored"));
-        this.monitorNewItems = SonarrMonitorType.parse(SonarrMonitorType.NONE, obj.getString("monitorNewItems"));
-        this.network = obj.getString("network");
-        this.nextAiring = InstantParser.parse(obj.getString("nextAiring"));
+        this.imdbId = StringParser.parse(obj, "imdbId");
+        this.lastAired = InstantParser.parse(StringParser.parse(obj, "lastAired"));
+        this.monitored = BooleanParser.parse(false, StringParser.parse(obj, "monitored"));
+        this.monitorNewItems = SonarrMonitorType.parse(SonarrMonitorType.NONE, StringParser.parse(obj, "monitorNewItems"));
+        this.network = StringParser.parse(obj, "network");
+        this.nextAiring = InstantParser.parse(StringParser.parse(obj, "nextAiring"));
 
-        int id = NumberParser.parseInt(-1, obj.getString("originalLanguage"));
+        int id = NumberParser.parseInt(-1, StringParser.parse(obj, "originalLanguage"));
         this.originalLanguage = id >= 0 ? api.fetch(Language.class, id) : Language.UNKNOWN;
 
-        this.overview = obj.getString("overview");
-        this.path = FileParser.parse(obj.getString("path"));
-        this.previousAiring = InstantParser.parse(obj.getString("previousAiring"));
-        this.profileName = obj.getString("profileName");
+        this.overview = StringParser.parse(obj, "overview");
+        this.path = FileParser.parse(StringParser.parse(obj, "path"));
+        this.previousAiring = InstantParser.parse(StringParser.parse(obj, "previousAiring"));
+        this.profileName = StringParser.parse(obj, "profileName");
 
-        id = NumberParser.parseInt(-1, obj.getString("qualityProfile"));
+        id = NumberParser.parseInt(-1, StringParser.parse(obj, "qualityProfile"));
         this.qualityProfile = id >= 0 ? api.fetch(QualityProfile.class, id) : QualityProfile.UNKNOWN;
 
-        this.ratings = new Ratings(obj.getJSONObject("ratings"));
-        this.remotePoster = obj.getString("remotePoster");
-        this.rootFolderPath = FileParser.parse(obj.getString("rootFolderPath"));
-        this.runtime = Duration.ofSeconds(NumberParser.parseInt(-1, obj.getString("runtime")));
-        this.seasonFolder = BooleanParser.parse(false, obj.getString("seasonFolder"));
+        this.ratings = obj.has("ratings") ? new Ratings(obj.getJSONObject("ratings")) : null;
+        this.remotePoster = StringParser.parse(obj, "remotePoster");
+        this.rootFolderPath = FileParser.parse(StringParser.parse(obj, "rootFolderPath"));
+        this.runtime = Duration.ofSeconds(NumberParser.parseInt(-1, StringParser.parse(obj, "runtime")));
+        this.seasonFolder = BooleanParser.parse(false, StringParser.parse(obj, "seasonFolder"));
 
         this.seasons.clear();
-        JSONArray seasons = obj.getJSONArray("seasons");
+        JSONArray seasons = obj.has("seasons") ? obj.getJSONArray("seasons") : null;
         if (seasons != null) {
             for (int i = 0; i < seasons.length(); i++) {
                 this.seasons.add(new Season(seasons.getJSONObject(i)));
             }
         }
 
-        this.seriesType = SonarrSeriesType.parse(SonarrSeriesType.DAILY, obj.getString("seriesType"));
-        this.sortTitle = obj.getString("sortTitle");
-        this.statistics = new Statistics(obj.getJSONObject("statistics"));
-        this.status = SonarrSeriesStatus.parse(SonarrSeriesStatus.DELETED, obj.getString("status"));
+        this.seriesType = SonarrSeriesType.parse(SonarrSeriesType.DAILY, StringParser.parse(obj, "seriesType"));
+        this.sortTitle = StringParser.parse(obj, "sortTitle");
+        this.statistics = obj.has("statistics") ? new Statistics(obj.getJSONObject("statistics")) : null;
+        this.status = SonarrSeriesStatus.parse(SonarrSeriesStatus.DELETED, StringParser.parse(obj, "status"));
 
         this.tags.clear();
-        JSONArray tags = obj.getJSONArray("tags");
+        JSONArray tags = obj.has("tags") ? obj.getJSONArray("tags") : null;
         if (tags != null) {
             for (int i = 0; i < tags.length(); i++) {
                 id = NumberParser.parseInt(-1, tags.getString(i));
@@ -242,15 +252,15 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
             }
         }
 
-        this.titleSlug = obj.getString("titleSlug");
-        this.tmdbId = NumberParser.parseInt(-1, obj.getString("tmdbId"));
-        this.tvdbId = NumberParser.parseInt(-1, obj.getString("tvdbId"));
-        this.tvMazeId = NumberParser.parseInt(-1, obj.getString("tvMazeId"));
-        this.tvRageId = NumberParser.parseInt(-1, obj.getString("tvRageId"));
-        this.useSceneNumbering = BooleanParser.parse(false, obj.getString("useSceneNumbering"));
-        this.year = NumberParser.parseInt(-1, obj.getString("year"));
+        this.titleSlug = StringParser.parse(obj, "titleSlug");
+        this.tmdbId = NumberParser.parseInt(-1, StringParser.parse(obj, "tmdbId"));
+        this.tvdbId = NumberParser.parseInt(-1, StringParser.parse(obj, "tvdbId"));
+        this.tvMazeId = NumberParser.parseInt(-1, StringParser.parse(obj, "tvMazeId"));
+        this.tvRageId = NumberParser.parseInt(-1, StringParser.parse(obj, "tvRageId"));
+        this.useSceneNumbering = BooleanParser.parse(false, StringParser.parse(obj, "useSceneNumbering"));
+        this.year = NumberParser.parseInt(-1, StringParser.parse(obj, "year"));
 
-        this.title = obj.getString("title");
+        this.title = StringParser.parse(obj, "title");
     }
 
     public int id() {
@@ -261,7 +271,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         return added;
     }
 
-    public @NotNull AddSeriesOptions addOptions() {
+    public @Nullable AddSeriesOptions addOptions() {
         return addOptions;
     }
 
@@ -353,7 +363,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         return qualityProfile;
     }
 
-    public @NotNull Ratings ratings() {
+    public @Nullable Ratings ratings() {
         return ratings;
     }
 
@@ -385,7 +395,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         return sortTitle;
     }
 
-    public @NotNull Statistics statistics() {
+    public @Nullable Statistics statistics() {
         return statistics;
     }
 
@@ -529,11 +539,11 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         private final boolean searchForMissingEpisodes;
 
         public AddSeriesOptions(@NotNull JSONObject obj) {
-            this.ignoreEpisodesWithFiles = BooleanParser.parse(false, obj.getString("ignoreEpisodesWithFiles"));
-            this.ignoreEpisodesWithoutFiles = BooleanParser.parse(false, obj.getString("ignoreEpisodesWithoutFiles"));
-            this.monitor = SonarrMonitorType.parse(SonarrMonitorType.UNKNOWN, obj.getString("monitor"));
-            this.searchForCutoffUnmetEpisodes = BooleanParser.parse(false, obj.getString("searchForCutoffUnmetEpisodes"));
-            this.searchForMissingEpisodes = BooleanParser.parse(false, obj.getString("searchForMissingEpisodes"));
+            this.ignoreEpisodesWithFiles = BooleanParser.parse(false, StringParser.parse(obj, "ignoreEpisodesWithFiles"));
+            this.ignoreEpisodesWithoutFiles = BooleanParser.parse(false, StringParser.parse(obj, "ignoreEpisodesWithoutFiles"));
+            this.monitor = SonarrMonitorType.parse(SonarrMonitorType.UNKNOWN, StringParser.parse(obj, "monitor"));
+            this.searchForCutoffUnmetEpisodes = BooleanParser.parse(false, StringParser.parse(obj, "searchForCutoffUnmetEpisodes"));
+            this.searchForMissingEpisodes = BooleanParser.parse(false, StringParser.parse(obj, "searchForMissingEpisodes"));
         }
 
         public boolean ignoreEpisodesWithFiles() {
@@ -587,11 +597,11 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         private final String title;
 
         public AlternateTitle(@NotNull JSONObject obj) {
-            this.comment = obj.getString("comment");
-            this.sceneOrigin = obj.getString("sceneOrigin");
-            this.sceneSeasonNumber = NumberParser.parseInt(-1, obj.getString("sceneSeasonNumber"));
-            this.seasonNumber = NumberParser.parseInt(-1, obj.getString("seasonNumber"));
-            this.title = obj.getString("title");
+            this.comment = StringParser.parse(obj, "comment");
+            this.sceneOrigin = StringParser.parse(obj, "sceneOrigin");
+            this.sceneSeasonNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "sceneSeasonNumber"));
+            this.seasonNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "seasonNumber"));
+            this.title = StringParser.parse(obj, "title");
         }
 
         public @Nullable String comment() {
@@ -642,8 +652,8 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         private final int votes;
 
         public Ratings(@NotNull JSONObject obj) {
-            this.value = NumberParser.parseFloat(-1.0F, obj.getString("value"));
-            this.votes = NumberParser.parseInt(-1, obj.getString("votes"));
+            this.value = NumberParser.parseFloat(-1.0F, StringParser.parse(obj, "value"));
+            this.votes = NumberParser.parseInt(-1, StringParser.parse(obj, "votes"));
         }
 
         public float value() {
@@ -681,16 +691,16 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         private final Statistics statistics;
 
         public Season(@NotNull JSONObject obj) {
-            JSONArray images = obj.getJSONArray("images");
+            JSONArray images = obj.has("images") ? obj.getJSONArray("images") : null;
             if (images != null) {
                 for (int i = 0; i < images.length(); i++) {
                     this.images.add(new MediaCover(images.getJSONObject(i)));
                 }
             }
 
-            this.monitored = BooleanParser.parse(false, obj.getString("monitored"));
-            this.seasonNumber = NumberParser.parseInt(-1, obj.getString("seasonNumber"));
-            this.statistics = new Statistics(obj.getJSONObject("statistics"));
+            this.monitored = BooleanParser.parse(false, StringParser.parse(obj, "monitored"));
+            this.seasonNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "seasonNumber"));
+            this.statistics = obj.has("statistics") ? new Statistics(obj.getJSONObject("statistics")) : null;
         }
 
         public @NotNull Set<@NotNull MediaCover> images() {
@@ -705,7 +715,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
             return seasonNumber;
         }
 
-        public @NotNull Statistics statistics() {
+        public @Nullable Statistics statistics() {
             return statistics;
         }
 
@@ -741,21 +751,21 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
             private final int totalEpisodeCount;
 
             public Statistics(@NotNull JSONObject obj) {
-                this.episodeCount = NumberParser.parseInt(-1, obj.getString("episodeCount"));
-                this.episodeFileCount = NumberParser.parseInt(-1, obj.getString("episodeFileCount"));
-                this.nextAiring = InstantParser.parse(obj.getString("nextAiring"));
-                this.percentOfEpisodes = NumberParser.parseFloat(-1.0F, obj.getString("percentOfEpisodes"));
-                this.previousAiring = InstantParser.parse(obj.getString("previousAiring"));
+                this.episodeCount = NumberParser.parseInt(-1, StringParser.parse(obj, "episodeCount"));
+                this.episodeFileCount = NumberParser.parseInt(-1, StringParser.parse(obj, "episodeFileCount"));
+                this.nextAiring = InstantParser.parse(StringParser.parse(obj, "nextAiring"));
+                this.percentOfEpisodes = NumberParser.parseFloat(-1.0F, StringParser.parse(obj, "percentOfEpisodes"));
+                this.previousAiring = InstantParser.parse(StringParser.parse(obj, "previousAiring"));
 
-                JSONArray releaseGroups = obj.getJSONArray("releaseGroups");
+                JSONArray releaseGroups = obj.has("releaseGroups") ? obj.getJSONArray("releaseGroups") : null;
                 if (releaseGroups != null) {
                     for (int i = 0; i < releaseGroups.length(); i++) {
                         this.releaseGroups.add(releaseGroups.getString(i));
                     }
                 }
 
-                this.sizeOnDisk = NumberParser.parseLong(-1L, obj.getString("sizeOnDisk"));
-                this.totalEpisodeCount = NumberParser.parseInt(-1, obj.getString("totalEpisodeCount"));
+                this.sizeOnDisk = NumberParser.parseLong(-1L, StringParser.parse(obj, "sizeOnDisk"));
+                this.totalEpisodeCount = NumberParser.parseInt(-1, StringParser.parse(obj, "totalEpisodeCount"));
             }
 
             public int episodeCount() {
@@ -827,20 +837,20 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
         private final int totalEpisodeCount;
 
         public Statistics(@NotNull JSONObject obj) {
-            this.episodeCount = NumberParser.parseInt(-1, obj.getString("episodeCount"));
-            this.episodeFileCount = NumberParser.parseInt(-1, obj.getString("episodeFileCount"));
-            this.percentOfEpisodes = NumberParser.parseFloat(-1, obj.getString("percentOfEpisodes"));
+            this.episodeCount = NumberParser.parseInt(-1, StringParser.parse(obj, "episodeCount"));
+            this.episodeFileCount = NumberParser.parseInt(-1, StringParser.parse(obj, "episodeFileCount"));
+            this.percentOfEpisodes = NumberParser.parseFloat(-1, StringParser.parse(obj, "percentOfEpisodes"));
 
-            JSONArray releaseGroups = obj.getJSONArray("releaseGroups");
+            JSONArray releaseGroups = obj.has("releaseGroups") ? obj.getJSONArray("releaseGroups") : null;
             if (releaseGroups != null) {
                 for (int i = 0; i < releaseGroups.length(); i++) {
                     this.releaseGroups.add(releaseGroups.getString(i));
                 }
             }
 
-            this.seasonCount = NumberParser.parseInt(-1, obj.getString("seasonCount"));
-            this.sizeOnDisk = NumberParser.parseLong(-1L, obj.getString("sizeOnDisk"));
-            this.totalEpisodeCount = NumberParser.parseInt(-1, obj.getString("totalEpisodeCount"));
+            this.seasonCount = NumberParser.parseInt(-1, StringParser.parse(obj, "seasonCount"));
+            this.sizeOnDisk = NumberParser.parseLong(-1L, StringParser.parse(obj, "sizeOnDisk"));
+            this.totalEpisodeCount = NumberParser.parseInt(-1, StringParser.parse(obj, "totalEpisodeCount"));
         }
 
         public int episodeCount() {

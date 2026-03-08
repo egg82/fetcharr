@@ -6,6 +6,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 
 public class InstantParser {
@@ -17,15 +19,19 @@ public class InstantParser {
     }
 
     public static @Nullable Instant parse(@Nullable String val) {
-        if (val == null) {
+        if (val == null || val.isBlank()) {
             return null;
         }
 
         try {
             return Instant.parse(val);
-        } catch (DateTimeParseException ex) {
-            LOGGER.warn("Could not parse instant from string value \"{}\"", val, ex);
-            return null;
+        } catch (DateTimeParseException ignored) {
+            try {
+                return LocalDate.parse(val).atStartOfDay(ZoneId.systemDefault()).toInstant();
+            } catch (DateTimeParseException ex) {
+                LOGGER.warn("Could not parse instant from string value \"{}\"", val, ex);
+                return null;
+            }
         }
     }
 

@@ -1,6 +1,7 @@
 package me.egg82.fetcharr.web.model.common;
 
 import kong.unirest.core.json.JSONObject;
+import me.egg82.fetcharr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -12,9 +13,9 @@ public class MediaCover {
     private final String url;
 
     public MediaCover(@NotNull JSONObject obj) {
-        this.coverType = MediaCoverType.parse(MediaCoverType.UNKNOWN, obj.getString("coverType"));
-        this.remoteUrl = obj.getString("remoteUrl");
-        this.url = obj.getString("url");
+        this.coverType = MediaCoverType.parse(MediaCoverType.UNKNOWN, StringParser.parse(obj, "coverType"));
+        this.remoteUrl = StringParser.parse(obj, "remoteUrl");
+        this.url = StringParser.parse(obj, "url");
     }
 
     public @NotNull MediaCoverType coverType() {

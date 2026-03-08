@@ -8,7 +8,7 @@ public class NumberParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(NumberParser.class);
 
     public static int parseInt(int def, @Nullable String val) {
-        if (val == null) {
+        if (val == null || val.isBlank()) {
             return def;
         }
 

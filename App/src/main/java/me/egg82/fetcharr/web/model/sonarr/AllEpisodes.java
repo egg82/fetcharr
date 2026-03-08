@@ -31,7 +31,7 @@ public class AllEpisodes extends AbstractAPIObject<AllEpisodes> {
 
     @Override
     public AllEpisodes fetch(@NotNull String apiKey) {
-        if (this.id < 0) {
+        if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
             return this;
         }
 
@@ -45,6 +45,7 @@ public class AllEpisodes extends AbstractAPIObject<AllEpisodes> {
                 parse(data.read());
                 if (!this.items.isEmpty()) {
                     this.fetched = meta.fetched();
+                    this.fetching.set(false);
                     return this;
                 }
             } catch (Exception ex) {
@@ -56,10 +57,18 @@ public class AllEpisodes extends AbstractAPIObject<AllEpisodes> {
         if (node == null) {
             logger.warn("Could not read data from {}", url());
             // Not setting fetched = invalid
+            this.fetching.set(false);
             return this;
         }
 
-        parse(node);
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", url(), ex);
+            this.fetching.set(false);
+            return this;
+        }
+
         this.fetched = Instant.now();
         try {
             cacheFile(id).write(node);
@@ -68,6 +77,7 @@ public class AllEpisodes extends AbstractAPIObject<AllEpisodes> {
         }
         meta.setFetched(this.fetched);
         meta.write();
+        this.fetching.set(false);
         return this;
     }
 

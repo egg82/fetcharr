@@ -21,7 +21,7 @@ public class ResolutionParser {
     }
 
     public static @Nullable ResolutionValue parse(@Nullable String val) {
-        if (val == null) {
+        if (val == null || val.isBlank()) {
             return null;
         }
 

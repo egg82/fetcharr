@@ -5,6 +5,7 @@ import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.file.CacheMeta;
 import me.egg82.fetcharr.file.JSONFile;
+import me.egg82.fetcharr.parse.StringParser;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.web.ArrAPI;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +30,7 @@ public class Language extends AbstractAPIObject<Language> {
 
     @Override
     public Language fetch(@NotNull String apiKey) {
-        if (this.id < 0) {
+        if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
             return this;
         }
 
@@ -43,10 +44,11 @@ public class Language extends AbstractAPIObject<Language> {
                 parse(data.read());
                 if (this.name != null && !this.name.isBlank()) {
                     this.fetched = meta.fetched();
+                    this.fetching.set(false);
                     return this;
                 }
             } catch (Exception ex) {
-                logger.warn("Could not read data from {}: ", data.path(), ex);
+                logger.warn("Could not read data from {}", data.path(), ex);
             }
         }
 
@@ -54,10 +56,18 @@ public class Language extends AbstractAPIObject<Language> {
         if (node == null) {
             logger.warn("Could not read data from {}", url());
             // Not setting fetched = invalid
+            this.fetching.set(false);
             return this;
         }
 
-        parse(node);
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", url(), ex);
+            this.fetching.set(false);
+            return this;
+        }
+
         this.fetched = Instant.now();
         try {
             cacheFile(id).write(node);
@@ -66,6 +76,7 @@ public class Language extends AbstractAPIObject<Language> {
         }
         meta.setFetched(this.fetched);
         meta.write();
+        this.fetching.set(false);
         return this;
     }
 
@@ -107,9 +118,9 @@ public class Language extends AbstractAPIObject<Language> {
             return;
         }
 
-        this.nameLower = obj.getString("nameLower");
+        this.nameLower = StringParser.parse(obj, "nameLower");
 
-        this.name = obj.getString("name");
+        this.name = StringParser.parse(obj, "name");
     }
 
     public int id() {

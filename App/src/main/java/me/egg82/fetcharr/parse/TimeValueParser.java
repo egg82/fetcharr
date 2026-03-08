@@ -22,7 +22,7 @@ public class TimeValueParser {
     }
 
     public static @Nullable TimeValue parse(@Nullable String val) {
-        if (val == null) {
+        if (val == null || val.isBlank()) {
             return null;
         }
 

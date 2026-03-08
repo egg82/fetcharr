@@ -2,6 +2,7 @@ package me.egg82.fetcharr.web.model.common;
 
 import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.parse.NumberParser;
+import me.egg82.fetcharr.parse.StringParser;
 import me.egg82.fetcharr.web.model.sonarr.SonarrQualitySource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,10 +17,10 @@ public class Quality {
     private final SonarrQualitySource source;
 
     public Quality(@NotNull JSONObject obj) {
-        this.id = NumberParser.parseInt(-1, obj.getString("id"));
-        this.name = obj.getString("name");
-        this.resolution = NumberParser.parseInt(-1, obj.getString("resolution"));
-        this.source = SonarrQualitySource.parse(SonarrQualitySource.UNKNOWN, obj.getString("source"));
+        this.id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
+        this.name = StringParser.parse(obj, "name");
+        this.resolution = NumberParser.parseInt(-1, StringParser.parse(obj, "resolution"));
+        this.source = SonarrQualitySource.parse(SonarrQualitySource.UNKNOWN, StringParser.parse(obj, "source"));
     }
 
     public int id() {

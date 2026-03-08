@@ -9,6 +9,7 @@ import me.egg82.fetcharr.file.JSONFile;
 import me.egg82.fetcharr.parse.BooleanParser;
 import me.egg82.fetcharr.parse.InstantParser;
 import me.egg82.fetcharr.parse.NumberParser;
+import me.egg82.fetcharr.parse.StringParser;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.web.ArrAPI;
 import me.egg82.fetcharr.web.model.common.AbstractAPIObject;
@@ -58,7 +59,7 @@ public class Episode extends AbstractAPIObject<Episode> {
 
     @Override
     public Episode fetch(@NotNull String apiKey) {
-        if (this.id < 0) {
+        if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
             return this;
         }
 
@@ -72,10 +73,11 @@ public class Episode extends AbstractAPIObject<Episode> {
                 parse(data.read());
                 if (this.title != null && !this.title.isBlank()) {
                     this.fetched = meta.fetched();
+                    this.fetching.set(false);
                     return this;
                 }
             } catch (Exception ex) {
-                logger.warn("Could not read data from {}: ", data.path(), ex);
+                logger.warn("Could not read data from {}", data.path(), ex);
             }
         }
 
@@ -83,10 +85,18 @@ public class Episode extends AbstractAPIObject<Episode> {
         if (node == null) {
             logger.warn("Could not read data from {}", url());
             // Not setting fetched = invalid
+            this.fetching.set(false);
             return this;
         }
 
-        parse(node);
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", url(), ex);
+            this.fetching.set(false);
+            return this;
+        }
+
         this.fetched = Instant.now();
         try {
             cacheFile(id).write(node);
@@ -95,6 +105,7 @@ public class Episode extends AbstractAPIObject<Episode> {
         }
         meta.setFetched(this.fetched);
         meta.write();
+        this.fetching.set(false);
         return this;
     }
 
@@ -136,43 +147,43 @@ public class Episode extends AbstractAPIObject<Episode> {
             return;
         }
 
-        this.absoluteEpisodeNumber = NumberParser.parseInt(-1, obj.getString("absoluteEpisodeNumber"));
-        this.airDate = InstantParser.parse(obj.getString("airDate"));
-        this.airDateUtc = InstantParser.parse(obj.getString("airDateUtc"));
-        this.endTime = InstantParser.parse(obj.getString("endTime"));
+        this.absoluteEpisodeNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "absoluteEpisodeNumber"));
+        this.airDate = InstantParser.parse(StringParser.parse(obj, "airDate"));
+        this.airDateUtc = InstantParser.parse(StringParser.parse(obj, "airDateUtc"));
+        this.endTime = InstantParser.parse(StringParser.parse(obj, "endTime"));
 
-        int id = NumberParser.parseInt(-1, obj.getString("episodeFileId"));
+        int id = NumberParser.parseInt(-1, StringParser.parse(obj, "episodeFileId"));
         this.episodeFile = id >= 0 ? api.fetch(EpisodeFile.class, id) : EpisodeFile.UNKNOWN;
 
-        this.episodeNumber = NumberParser.parseInt(-1, obj.getString("episodeNumber"));
-        this.finaleType = obj.getString("finaleType");
-        this.grabDate = InstantParser.parse(obj.getString("grabDate"));
-        this.hasFile = BooleanParser.parse(false, obj.getString("hasFile"));
+        this.episodeNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "episodeNumber"));
+        this.finaleType = StringParser.parse(obj, "finaleType");
+        this.grabDate = InstantParser.parse(StringParser.parse(obj, "grabDate"));
+        this.hasFile = BooleanParser.parse(false, StringParser.parse(obj, "hasFile"));
 
         this.images.clear();
-        JSONArray images = obj.getJSONArray("images");
+        JSONArray images = obj.has("images") ? obj.getJSONArray("images") : null;
         if (images != null) {
             for (int i = 0; i < images.length(); i++) {
                 this.images.add(new MediaCover(images.getJSONObject(i)));
             }
         }
 
-        this.lastSearchTime = InstantParser.parse(obj.getString("lastSearchTime"));
-        this.monitored = BooleanParser.parse(false, obj.getString("monitored"));
-        this.overview = overview;
-        this.runtime = Duration.ofSeconds(NumberParser.parseInt(-1, obj.getString("runtime")));
-        this.sceneAbsoluteEpisodeNumber = NumberParser.parseInt(-1, obj.getString("sceneAbsoluteEpisodeNumber"));
-        this.sceneEpisodeNumber = NumberParser.parseInt(-1, obj.getString("sceneEpisodeNumber"));
-        this.sceneSeasonNumber = NumberParser.parseInt(-1, obj.getString("sceneSeasonNumber"));
-        this.seasonNumber = NumberParser.parseInt(-1, obj.getString("seasonNumber"));
+        this.lastSearchTime = InstantParser.parse(StringParser.parse(obj, "lastSearchTime"));
+        this.monitored = BooleanParser.parse(false, StringParser.parse(obj, "monitored"));
+        this.overview = StringParser.parse(obj, "overview");
+        this.runtime = Duration.ofSeconds(NumberParser.parseInt(-1, StringParser.parse(obj, "runtime")));
+        this.sceneAbsoluteEpisodeNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "sceneAbsoluteEpisodeNumber"));
+        this.sceneEpisodeNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "sceneEpisodeNumber"));
+        this.sceneSeasonNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "sceneSeasonNumber"));
+        this.seasonNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "seasonNumber"));
 
-        id = NumberParser.parseInt(-1, obj.getString("seriesId"));
+        id = NumberParser.parseInt(-1, StringParser.parse(obj, "seriesId"));
         this.series = id >= 0 ? api.fetch(Series.class, id) : Series.UNKNOWN;
 
-        this.tvdbId = NumberParser.parseInt(-1, obj.getString("tvdbId"));
-        this.unverifiedSceneNumbering = BooleanParser.parse(false, obj.getString("unverifiedSceneNumbering"));
+        this.tvdbId = NumberParser.parseInt(-1, StringParser.parse(obj, "tvdbId"));
+        this.unverifiedSceneNumbering = BooleanParser.parse(false, StringParser.parse(obj, "unverifiedSceneNumbering"));
 
-        this.title = obj.getString("title");
+        this.title = StringParser.parse(obj, "title");
     }
 
     public int id() {

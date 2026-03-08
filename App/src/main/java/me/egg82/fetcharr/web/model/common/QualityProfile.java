@@ -8,6 +8,7 @@ import me.egg82.fetcharr.file.CacheMeta;
 import me.egg82.fetcharr.file.JSONFile;
 import me.egg82.fetcharr.parse.BooleanParser;
 import me.egg82.fetcharr.parse.NumberParser;
+import me.egg82.fetcharr.parse.StringParser;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.web.ArrAPI;
 import org.jetbrains.annotations.NotNull;
@@ -40,7 +41,7 @@ public class QualityProfile extends AbstractAPIObject<QualityProfile> {
 
     @Override
     public QualityProfile fetch(@NotNull String apiKey) {
-        if (this.id < 0) {
+        if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
             return this;
         }
 
@@ -54,10 +55,11 @@ public class QualityProfile extends AbstractAPIObject<QualityProfile> {
                 parse(data.read());
                 if (this.name != null && !this.name.isBlank()) {
                     this.fetched = meta.fetched();
+                    this.fetching.set(false);
                     return this;
                 }
             } catch (Exception ex) {
-                logger.warn("Could not read data from {}: ", data.path(), ex);
+                logger.warn("Could not read data from {}", data.path(), ex);
             }
         }
 
@@ -65,10 +67,18 @@ public class QualityProfile extends AbstractAPIObject<QualityProfile> {
         if (node == null) {
             logger.warn("Could not read data from {}", url());
             // Not setting fetched = invalid
+            this.fetching.set(false);
             return this;
         }
 
-        parse(node);
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", url(), ex);
+            this.fetching.set(false);
+            return this;
+        }
+
         this.fetched = Instant.now();
         try {
             cacheFile(id).write(node);
@@ -77,6 +87,7 @@ public class QualityProfile extends AbstractAPIObject<QualityProfile> {
         }
         meta.setFetched(this.fetched);
         meta.write();
+        this.fetching.set(false);
         return this;
     }
 
@@ -118,11 +129,11 @@ public class QualityProfile extends AbstractAPIObject<QualityProfile> {
             return;
         }
 
-        this.cutoff = NumberParser.parseInt(-1, obj.getString("cutoff"));
-        this.cutoffFormatScore = NumberParser.parseInt(-1, obj.getString("cutoffFormatScore"));
+        this.cutoff = NumberParser.parseInt(-1, StringParser.parse(obj, "cutoff"));
+        this.cutoffFormatScore = NumberParser.parseInt(-1, StringParser.parse(obj, "cutoffFormatScore"));
 
         this.formatItems.clear();
-        JSONArray formatItems = obj.getJSONArray("formatItems");
+        JSONArray formatItems = obj.has("formatItems") ? obj.getJSONArray("formatItems") : null;
         if (formatItems != null) {
             for (int i = 0; i < formatItems.length(); i++) {
                 this.formatItems.add(new Format(formatItems.getJSONObject(i)));
@@ -130,17 +141,17 @@ public class QualityProfile extends AbstractAPIObject<QualityProfile> {
         }
 
         this.items.clear();
-        JSONArray items = obj.getJSONArray("items");
+        JSONArray items = obj.has("items") ? obj.getJSONArray("items") : null;
         if (items != null) {
             for (int i = 0; i < items.length(); i++) {
                 this.items.add(new QualityResource(items.getJSONObject(i)));
             }
         }
 
-        this.minFormatScore = NumberParser.parseInt(-1, obj.getString("minFormatScore"));
-        this.minUpgradeFormatScore = NumberParser.parseInt(-1, obj.getString("minUpgradeFormatScore"));
-        this.name = obj.getString("name");
-        this.upgradeAllowed = BooleanParser.parse(false, obj.getString("upgradeAllowed"));
+        this.minFormatScore = NumberParser.parseInt(-1, StringParser.parse(obj, "minFormatScore"));
+        this.minUpgradeFormatScore = NumberParser.parseInt(-1, StringParser.parse(obj, "minUpgradeFormatScore"));
+        this.name = StringParser.parse(obj, "name");
+        this.upgradeAllowed = BooleanParser.parse(false, StringParser.parse(obj, "upgradeAllowed"));
     }
 
     public int id() {
@@ -216,13 +227,13 @@ public class QualityProfile extends AbstractAPIObject<QualityProfile> {
         private final int score;
 
         public Format(@NotNull JSONObject obj) {
-            this.id = NumberParser.parseInt(-1, obj.getString("id"));
+            this.id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
 
-            int format = NumberParser.parseInt(-1, obj.getString("format"));
+            int format = NumberParser.parseInt(-1, StringParser.parse(obj, "format"));
             this.format = format >= 0 ? api.fetch(CustomFormat.class, format) : CustomFormat.UNKNOWN;
-            this.score = NumberParser.parseInt(-1, obj.getString("score"));
+            this.score = NumberParser.parseInt(-1, StringParser.parse(obj, "score"));
 
-            this.name = obj.getString("name");
+            this.name = StringParser.parse(obj, "name");
         }
 
         public int id() {
@@ -272,18 +283,18 @@ public class QualityProfile extends AbstractAPIObject<QualityProfile> {
         private final Quality quality;
 
         public QualityResource(@NotNull JSONObject obj) {
-            this.id = NumberParser.parseInt(-1, obj.getString("id"));
-            this.allowed = BooleanParser.parse(false, obj.getString("allowed"));
+            this.id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
+            this.allowed = BooleanParser.parse(false, StringParser.parse(obj, "allowed"));
 
-            JSONArray items = obj.getJSONArray("items");
+            JSONArray items = obj.has("items") ? obj.getJSONArray("items") : null;
             if (items != null) {
                 for (int i = 0; i < items.length(); i++) {
                     this.items.add(new QualityResource(items.getJSONObject(i)));
                 }
             }
 
-            this.name = obj.getString("name");
-            this.quality = new Quality(obj.getJSONObject("quality"));
+            this.name = StringParser.parse(obj, "name");
+            this.quality = obj.has("quality") ? new Quality(obj.getJSONObject("quality")) : null;
         }
 
         public int id() {
@@ -302,7 +313,7 @@ public class QualityProfile extends AbstractAPIObject<QualityProfile> {
             return name;
         }
 
-        public @NotNull Quality quality() {
+        public @Nullable Quality quality() {
             return quality;
         }
 

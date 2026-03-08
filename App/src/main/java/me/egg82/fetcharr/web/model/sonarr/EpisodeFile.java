@@ -52,7 +52,7 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
 
     @Override
     public EpisodeFile fetch(@NotNull String apiKey) {
-        if (this.id < 0) {
+        if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
             return this;
         }
 
@@ -66,10 +66,11 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
                 parse(data.read());
                 if (this.series != null) {
                     this.fetched = meta.fetched();
+                    this.fetching.set(false);
                     return this;
                 }
             } catch (Exception ex) {
-                logger.warn("Could not read data from {}: ", data.path(), ex);
+                logger.warn("Could not read data from {}", data.path(), ex);
             }
         }
 
@@ -77,10 +78,18 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
         if (node == null) {
             logger.warn("Could not read data from {}", url());
             // Not setting fetched = invalid
+            this.fetching.set(false);
             return this;
         }
 
-        parse(node);
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", url(), ex);
+            this.fetching.set(false);
+            return this;
+        }
+
         this.fetched = Instant.now();
         try {
             cacheFile(id).write(node);
@@ -89,6 +98,7 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
         }
         meta.setFetched(this.fetched);
         meta.write();
+        this.fetching.set(false);
         return this;
     }
 
@@ -131,40 +141,40 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
         }
 
         this.customFormats.clear();
-        JSONArray customFormats = obj.getJSONArray("customFormats");
+        JSONArray customFormats = obj.has("customFormats") ? obj.getJSONArray("customFormats") : null;
         if (customFormats != null) {
             for (int i = 0; i < customFormats.length(); i++) {
-                int id = NumberParser.parseInt(-1, customFormats.getJSONObject(i).getString("id"));
+                int id = NumberParser.parseInt(-1, StringParser.parse(customFormats.getJSONObject(i), "id"));
                 if (id >= 0) {
                     this.customFormats.add(api.fetch(CustomFormat.class, id));
                 }
             }
         }
 
-        this.customFormatScore = NumberParser.parseInt(-1, obj.getString("customFormatScore"));
-        this.dateAdded = InstantParser.parse(Instant.EPOCH, obj.getString("dateAdded"));
-        this.indexerFlags = NumberParser.parseInt(-1, obj.getString("indexerFlags"));
+        this.customFormatScore = NumberParser.parseInt(-1, StringParser.parse(obj, "customFormatScore"));
+        this.dateAdded = InstantParser.parse(Instant.EPOCH, StringParser.parse(obj, "dateAdded"));
+        this.indexerFlags = NumberParser.parseInt(-1, StringParser.parse(obj, "indexerFlags"));
 
         this.languages.clear();
-        JSONArray languages = obj.getJSONArray("languages");
+        JSONArray languages = obj.has("languages") ? obj.getJSONArray("languages") : null;
         if (languages != null) {
             for (int i = 0; i < languages.length(); i++) {
                 this.languages.add(api.fetch(Language.class, id));
             }
         }
 
-        this.mediaInfo = new MediaInfoResource(obj.getJSONObject("mediaInfo"));
-        this.path = FileParser.parse(obj.getString("path"));
-        this.quality = new QualityModel(obj.getJSONObject("quality"));
-        this.qualityCutoffNotMet = BooleanParser.parse(false, obj.getString("qualityCutoffNotMet"));
-        this.relativePath = FileParser.parse(obj.getString("relativePath"));
-        this.releaseGroup = obj.getString("releaseGroup");
-        this.releaseType = SonarrReleaseType.parse(SonarrReleaseType.UNKNOWN, obj.getString("releaseType"));
-        this.sceneName = obj.getString("sceneName");
-        this.seasonNumber = NumberParser.parseInt(-1, obj.getString("seasonNumber"));
-        this.size = NumberParser.parseLong(-1L, obj.getString("size"));
+        this.mediaInfo = obj.has("mediaInfo") ? new MediaInfoResource(obj.getJSONObject("mediaInfo")) : null;
+        this.path = FileParser.parse(StringParser.parse(obj, "path"));
+        this.quality = obj.has("quality") ? new QualityModel(obj.getJSONObject("quality")) : null;
+        this.qualityCutoffNotMet = BooleanParser.parse(false, StringParser.parse(obj, "qualityCutoffNotMet"));
+        this.relativePath = FileParser.parse(StringParser.parse(obj, "relativePath"));
+        this.releaseGroup = StringParser.parse(obj, "releaseGroup");
+        this.releaseType = SonarrReleaseType.parse(SonarrReleaseType.UNKNOWN, StringParser.parse(obj, "releaseType"));
+        this.sceneName = StringParser.parse(obj, "sceneName");
+        this.seasonNumber = NumberParser.parseInt(-1, StringParser.parse(obj, "seasonNumber"));
+        this.size = NumberParser.parseLong(-1L, StringParser.parse(obj, "size"));
 
-        this.series = api.fetch(Series.class, NumberParser.parseInt(-1, obj.getString("seriesId")));
+        this.series = api.fetch(Series.class, NumberParser.parseInt(-1, StringParser.parse(obj, "seriesId")));
     }
 
     public int id() {
@@ -191,7 +201,7 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
         return languages;
     }
 
-    public @NotNull MediaInfoResource mediaInfo() {
+    public @Nullable MediaInfoResource mediaInfo() {
         return mediaInfo;
     }
 
@@ -199,7 +209,7 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
         return path;
     }
 
-    public @NotNull QualityModel quality() {
+    public @Nullable QualityModel quality() {
         return quality;
     }
 
@@ -289,32 +299,32 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
         private final float videoFps;
 
         public MediaInfoResource(@NotNull JSONObject obj) {
-            this.id = NumberParser.parseInt(-1, obj.getString("id"));
-            this.audioBitrate = NumberParser.parseLong(-1L, obj.getString("audioBitrate"));
-            this.audioChannels = NumberParser.parseFloat(-1.0F, obj.getString("audioChannels"));
-            this.audioCodec = obj.getString("audioCodec");
+            this.id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
+            this.audioBitrate = NumberParser.parseLong(-1L, StringParser.parse(obj, "audioBitrate"));
+            this.audioChannels = NumberParser.parseFloat(-1.0F, StringParser.parse(obj, "audioChannels"));
+            this.audioCodec = StringParser.parse(obj, "audioCodec");
 
-            String audioLanguages = obj.getString("audioLanguages");
+            String audioLanguages = StringParser.parse(obj, "audioLanguages");
             if (audioLanguages != null) {
                 this.audioLanguages.addAll(Arrays.asList(audioLanguages.trim().split(",")));
             }
 
-            this.audioStreamCount = NumberParser.parseInt(-1, obj.getString("audioStreamCount"));
-            this.resolution = ResolutionParser.parse(obj.getString("resolution"));
-            this.runTime = DurationParser.parse("runTime");
-            this.scanType = ScanType.parse(obj.getString("scanType"));
+            this.audioStreamCount = NumberParser.parseInt(-1, StringParser.parse(obj, "audioStreamCount"));
+            this.resolution = ResolutionParser.parse(StringParser.parse(obj, "resolution"));
+            this.runTime = DurationParser.parse(StringParser.parse(obj, "runTime"));
+            this.scanType = ScanType.parse(StringParser.parse(obj, "scanType"));
 
-            String subtitles = obj.getString("subtitles");
+            String subtitles = StringParser.parse(obj, "subtitles");
             if (subtitles != null) {
                 this.subtitles.addAll(Arrays.asList(subtitles.trim().split(",")));
             }
 
-            this.videoBitDepth = NumberParser.parseInt(-1, obj.getString("videoBitDepth"));
-            this.videoBitrate = NumberParser.parseLong(-1L, obj.getString("videoBitrate"));
-            this.videoCodec = obj.getString("videoCodec");
-            this.videoDynamicRange = obj.getString("videoDynamicRange");
-            this.videoDynamicRangeType = obj.getString("videoDynamicRangeType");
-            this.videoFps = NumberParser.parseFloat(-1.0F, obj.getString("videoFps"));
+            this.videoBitDepth = NumberParser.parseInt(-1, StringParser.parse(obj, "videoBitDepth"));
+            this.videoBitrate = NumberParser.parseLong(-1L, StringParser.parse(obj, "videoBitrate"));
+            this.videoCodec = StringParser.parse(obj, "videoCodec");
+            this.videoDynamicRange = StringParser.parse(obj, "videoDynamicRange");
+            this.videoDynamicRangeType = StringParser.parse(obj, "videoDynamicRangeType");
+            this.videoFps = NumberParser.parseFloat(-1.0F, StringParser.parse(obj, "videoFps"));
         }
 
         public int id() {
@@ -420,15 +430,15 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
         private final Revision revision;
 
         public QualityModel(@NotNull JSONObject obj) {
-            this.quality = new Quality(obj.getJSONObject("quality"));
-            this.revision = new Revision(obj.getJSONObject("revision"));
+            this.quality = obj.has("quality") ? new Quality(obj.getJSONObject("quality")) : null;
+            this.revision = obj.has("revision") ? new Revision(obj.getJSONObject("revision")) : null;
         }
 
-        public @NotNull Quality quality() {
+        public @Nullable Quality quality() {
             return quality;
         }
 
-        public @NotNull Revision revision() {
+        public @Nullable Revision revision() {
             return revision;
         }
 
@@ -457,9 +467,9 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
             private final int version;
 
             public Revision(@NotNull JSONObject obj) {
-                this.isRepack = BooleanParser.parse(false, obj.getString("isRepack"));
-                this.real = NumberParser.parseInt(-1, obj.getString("real"));
-                this.version = NumberParser.parseInt(-1, obj.getString("version"));
+                this.isRepack = BooleanParser.parse(false, StringParser.parse(obj, "isRepack"));
+                this.real = NumberParser.parseInt(-1, StringParser.parse(obj, "real"));
+                this.version = NumberParser.parseInt(-1, StringParser.parse(obj, "version"));
             }
 
             public boolean isRepack() {

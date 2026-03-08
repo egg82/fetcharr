@@ -17,7 +17,7 @@ public class FileParser {
     }
 
     public static @Nullable File parse(@Nullable String val) {
-        if (val == null) {
+        if (val == null || val.isBlank()) {
             return null;
         }
 

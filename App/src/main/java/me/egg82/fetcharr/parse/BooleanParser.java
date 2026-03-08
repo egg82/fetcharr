@@ -9,7 +9,7 @@ public class BooleanParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(BooleanParser.class);
 
     public static boolean parse(boolean def, @Nullable String val) {
-        if (val == null) {
+        if (val == null || val.isBlank()) {
             return def;
         }
 

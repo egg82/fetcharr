@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class AbstractAPIObject<T extends AbstractAPIObject<T>> implements APIObject<T> {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -21,6 +22,8 @@ public abstract class AbstractAPIObject<T extends AbstractAPIObject<T>> implemen
     protected final String apiPath;
 
     protected Instant fetched = null;
+
+    protected final AtomicBoolean fetching = new AtomicBoolean(false);
 
     protected AbstractAPIObject(@NotNull ArrAPI api, @NotNull String apiPath) {
         this.api = api;

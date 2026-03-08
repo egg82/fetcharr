@@ -2,6 +2,8 @@ package me.egg82.fetcharr.web.radarr;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import it.unimi.dsi.fastutil.ints.Int2ObjectArrayMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.parse.NumberParser;
@@ -18,6 +20,9 @@ import java.util.Map;
 public class RadarrAPI extends AbstractArrAPI {
     private final Cache<Class<? extends APIObject<?>>, Constructor<?>> constructors = Caffeine.newBuilder().build();
     private final Cache<Class<? extends APIObject<?>>, Object> unknowns = Caffeine.newBuilder().build();
+
+    private final Cache<Class<? extends APIObject<?>>, Object> cache = Caffeine.newBuilder().build();
+    private final Cache<Class<? extends APIObject<?>>, Int2ObjectMap<Object>> idCache = Caffeine.newBuilder().build();
 
     public RadarrAPI(@NotNull String baseUrl, @NotNull String apiKey, int id) {
         super(baseUrl, apiKey, id);
@@ -45,7 +50,7 @@ public class RadarrAPI extends AbstractArrAPI {
 
     @Override
     public @NotNull <T extends APIObject<T>> T fetch(Class<T> clazz) {
-        T r = fetchInternal(clazz);
+        T r = (T) cache.get(clazz, k -> fetchInternal(clazz));
         if (!r.valid() && !r.unknown()) {
             r.fetch(apiKey);
         }
@@ -77,7 +82,8 @@ public class RadarrAPI extends AbstractArrAPI {
 
     @Override
     public @NotNull <T extends APIObject<T>> T fetch(Class<T> clazz, int id) {
-        T r = fetchInternal(clazz, id);
+        Int2ObjectMap<Object> map = idCache.get(clazz, k -> new Int2ObjectArrayMap<>());
+        T r = (T) map.computeIfAbsent(id, k -> fetchInternal(clazz, k));
         if (!r.valid() && !r.unknown()) {
             r.fetch(apiKey);
         }

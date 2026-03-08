@@ -7,6 +7,7 @@ import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.file.CacheMeta;
 import me.egg82.fetcharr.file.JSONFile;
 import me.egg82.fetcharr.parse.NumberParser;
+import me.egg82.fetcharr.parse.StringParser;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.web.ArrAPI;
 import me.egg82.fetcharr.web.model.common.AbstractAPIObject;
@@ -29,6 +30,10 @@ public class AllSeries extends AbstractAPIObject<AllSeries> {
 
     @Override
     public AllSeries fetch(@NotNull String apiKey) {
+        if (!this.fetching.compareAndSet(false, true)) {
+            return this;
+        }
+
         CacheMeta meta = new CacheMeta(metaFile());
         boolean useCache = ConfigVars.getBool(ConfigVars.USE_CACHE);
         TimeValue cacheTime = ConfigVars.getTimeValue(ConfigVars.SHORT_CACHE_TIME);
@@ -39,6 +44,7 @@ public class AllSeries extends AbstractAPIObject<AllSeries> {
                 parse(data.read());
                 if (!this.items.isEmpty()) {
                     this.fetched = meta.fetched();
+                    this.fetching.set(false);
                     return this;
                 }
             } catch (Exception ex) {
@@ -50,10 +56,18 @@ public class AllSeries extends AbstractAPIObject<AllSeries> {
         if (node == null) {
             logger.warn("Could not read data from {}", url());
             // Not setting fetched = invalid
+            this.fetching.set(false);
             return this;
         }
 
-        parse(node);
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", url(), ex);
+            this.fetching.set(false);
+            return this;
+        }
+
         this.fetched = Instant.now();
         try {
             cacheFile().write(node);
@@ -62,6 +76,7 @@ public class AllSeries extends AbstractAPIObject<AllSeries> {
         }
         meta.setFetched(this.fetched);
         meta.write();
+        this.fetching.set(false);
         return this;
     }
 
@@ -110,7 +125,7 @@ public class AllSeries extends AbstractAPIObject<AllSeries> {
                 continue;
             }
 
-            int id = NumberParser.parseInt(-1, obj.getString("id"));
+            int id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
             if (id >= 0) {
                 this.items.add(api.fetch(Series.class, id));
             }
