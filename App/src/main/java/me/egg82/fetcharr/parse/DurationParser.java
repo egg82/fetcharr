@@ -41,6 +41,11 @@ public class DurationParser {
         try {
             return Duration.parse(val);
         } catch (DateTimeParseException ex) {
+            int minutes = NumberParser.parseInt(-1, val);
+            if (minutes > 0) {
+                return Duration.ofMinutes(minutes);
+            }
+
             LOGGER.warn("Could not parse duration from string value \"{}\"", val, ex);
             return null;
         }

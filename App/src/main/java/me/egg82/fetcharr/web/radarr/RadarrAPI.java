@@ -32,7 +32,7 @@ public class RadarrAPI extends AbstractArrAPI {
 
     @Override
     public @NotNull ArrType type() {
-        return ArrType.SONARR;
+        return ArrType.RADARR;
     }
 
     @Override
