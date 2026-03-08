@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.time.Instant;
 import java.util.Collection;
 
 public abstract class AbstractUpdater implements Runnable {
@@ -17,10 +18,12 @@ public abstract class AbstractUpdater implements Runnable {
 
     protected final ArrAPI api;
     protected final UpdateMeta meta;
+    protected Instant lastUpdate;
 
     public AbstractUpdater(@NotNull ArrAPI api) {
         this.api = api;
-        this.meta = new UpdateMeta(new JSONFile(new File(getBasePath(), "updater.meta.json")));
+        this.meta = new UpdateMeta(new JSONFile(new File(getBasePath(), "base.meta.json")));
+        this.lastUpdate = meta.last();
     }
 
     private @NotNull File getBasePath() {

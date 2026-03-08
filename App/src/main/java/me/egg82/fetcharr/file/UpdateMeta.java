@@ -27,15 +27,15 @@ public class UpdateMeta {
         try {
             JSONObject obj = file.read().getObject();
             if (obj == null || obj.isEmpty()) {
-                this.last = Instant.now();
+                this.last = Instant.EPOCH;
                 return;
             }
 
-            this.last = InstantParser.parse(Instant.now(), obj.getString("last"));
+            this.last = InstantParser.parse(Instant.EPOCH, obj.getString("last"));
         } catch (Exception ex) {
             logger.warn("Could not read meta from {}: ", file.path(), ex);
 
-            this.last = Instant.now();
+            this.last = Instant.EPOCH;
         }
     }
 
@@ -55,7 +55,7 @@ public class UpdateMeta {
         return last;
     }
 
-    public void setLast(@NotNull Instant last) {
+    public void last(@NotNull Instant last) {
         this.last = last;
     }
 

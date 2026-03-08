@@ -16,7 +16,6 @@ import java.time.Instant;
 
 public class SonarrUpdater extends AbstractUpdater {
     private final WeightedRandom<Series> random = new WeightedRandom<>();
-    private Instant lastUpdate = Instant.EPOCH;
 
     public SonarrUpdater(@NotNull SonarrAPI api) {
         super(api);
@@ -27,10 +26,10 @@ public class SonarrUpdater extends AbstractUpdater {
         TimeValue searchInterval = SonarrConfigVars.getTimeValue(SonarrConfigVars.SEARCH_INTERVAL, api.id());
         long intervalSeconds = searchInterval.unit().toSeconds(searchInterval.time());
         Instant now = Instant.now();
-        if (Duration.between(lastUpdate, now).getSeconds() < intervalSeconds) {
+        if (Duration.between(this.lastUpdate, now).getSeconds() < intervalSeconds) {
             return;
         }
-        lastUpdate = now;
+        this.lastUpdate = now;
 
         int searchAmount = SonarrConfigVars.getInt(SonarrConfigVars.SEARCH_AMOUNT, api.id());
 
@@ -67,5 +66,8 @@ public class SonarrUpdater extends AbstractUpdater {
         if (!ids.isEmpty()) {
             api.search(ids);
         }
+
+        this.meta.last(lastUpdate);
+        this.meta.write();
     }
 }

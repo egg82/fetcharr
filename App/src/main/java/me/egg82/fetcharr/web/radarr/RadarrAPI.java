@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.parse.NumberParser;
+import me.egg82.fetcharr.parse.StringParser;
 import me.egg82.fetcharr.web.AbstractArrAPI;
 import me.egg82.fetcharr.web.ArrAPI;
 import me.egg82.fetcharr.web.ArrType;
@@ -132,7 +133,7 @@ public class RadarrAPI extends AbstractArrAPI {
             logger.warn("Radarr returned invalid response for URL {}: null", baseUrl + "/api/v3/command");
             return;
         }
-        int id = NumberParser.parseInt(-1, response.getObject().getString("id"));
+        int id = NumberParser.parseInt(-1, StringParser.parse(response.getObject(), "id"));
         if (id < 0) {
             logger.warn("Radarr returned unexpected response for URL {}: {}", baseUrl + "/api/v3/command", response.getObject().toString());
         }

@@ -7,6 +7,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.parse.NumberParser;
+import me.egg82.fetcharr.parse.StringParser;
 import me.egg82.fetcharr.web.AbstractArrAPI;
 import me.egg82.fetcharr.web.ArrAPI;
 import me.egg82.fetcharr.web.ArrType;
@@ -123,18 +124,20 @@ public class SonarrAPI extends AbstractArrAPI {
 
     @Override
     public void search(int... itemIds) {
-        JSONObject data = new JSONObject(Map.of(
-                "seriesId", itemIds,
-                "name", "SeriesSearch"
-        ));
-        JsonNode response = post("/api/v3/command", new JsonNode(data.toString()));
-        if (response == null) {
-            logger.warn("Sonarr returned invalid response for URL {}: null", baseUrl + "/api/v3/command");
-            return;
-        }
-        int id = NumberParser.parseInt(-1, response.getObject().getString("id"));
-        if (id < 0) {
-            logger.warn("Sonarr returned unexpected response for URL {}: {}", baseUrl + "/api/v3/command", response.getObject().toString());
+        for (int itemId : itemIds) {
+            JSONObject data = new JSONObject(Map.of(
+                    "seriesId", itemId,
+                    "name", "SeriesSearch"
+            ));
+            JsonNode response = post("/api/v3/command", new JsonNode(data.toString()));
+            if (response == null) {
+                logger.warn("Sonarr returned invalid response for URL {}: null", baseUrl + "/api/v3/command");
+                return;
+            }
+            int id = NumberParser.parseInt(-1, StringParser.parse(response.getObject(), "id"));
+            if (id < 0) {
+                logger.warn("Sonarr returned unexpected response for URL {}: {}", baseUrl + "/api/v3/command", response.getObject().toString());
+            }
         }
     }
 }
