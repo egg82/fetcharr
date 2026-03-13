@@ -63,7 +63,7 @@ public class SonarrUpdater extends AbstractUpdater {
             }
             if (useCutoff) {
                 boolean qualityCutoffMet = true;
-                AllEpisodes a = api.fetch(AllEpisodes.class, false);
+                AllEpisodes a = api.fetch(AllEpisodes.class, s.id(), false);
                 for (Episode e : a.items()) {
                     if (!e.episodeFile().qualityCutoffNotMet()) {
                         qualityCutoffMet = false;
