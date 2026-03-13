@@ -98,6 +98,9 @@ Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
 - DATA_DIR: Data storage directory
   - string: \<file\>
   - default: /data
+- CACHE_DIR: Cache storage directory
+  - string: \<file\>
+  - default: /cache
 - SSL_PATH: File path containing custom SSL certs
   - string: \<file\>
   - default: /etc/ssl/certs/ca-bundle.crt

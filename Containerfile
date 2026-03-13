@@ -43,6 +43,6 @@ RUN chown "${APP_UID}:${APP_GID}" /app/entrypoint.sh /app/fetcharr.jar \
 
 USER ${APP_UID}:${APP_GID}
 
-VOLUME ["/data"]
+VOLUME ["/data", "/cache"]
 
 ENTRYPOINT ["/app/entrypoint.sh"]

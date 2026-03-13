@@ -20,6 +20,7 @@ public enum ConfigVars {
     SHORT_CACHE_TIME(TimeValue.class, "Expiration time for short-lived cached values", new TimeValue(65, TimeUnit.MINUTES)),
     LONG_CACHE_TIME(TimeValue.class, "Expiration time for long-lived cached values", new TimeValue(6L, TimeUnit.HOURS)),
     DATA_DIR(File.class, "Data storage directory", new File("/data")),
+    CACHE_DIR(File.class, "Cache storage directory", new File("/cache")),
     SSL_PATH(File.class, "File path containing custom SSL certs", new File("/etc/ssl/certs/ca-bundle.crt")),
     SEARCH_AMOUNT(Integer.class, "Number of items to search at each run", 5),
     SEARCH_INTERVAL(TimeValue.class, "How often to search", new TimeValue(1L, TimeUnit.HOURS)),

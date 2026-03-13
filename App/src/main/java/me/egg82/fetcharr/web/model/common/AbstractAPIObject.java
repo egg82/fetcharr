@@ -49,7 +49,7 @@ public abstract class AbstractAPIObject<T extends AbstractAPIObject<T>> implemen
     }
 
     private @NotNull File getBasePath() {
-        File base = ConfigVars.getFile(ConfigVars.DATA_DIR);
+        File base = ConfigVars.getFile(ConfigVars.CACHE_DIR);
         File arr = new File(base, api.type().name().toLowerCase() + "-" + api.id());
         return new File(arr, getClass().getSimpleName());
     }
