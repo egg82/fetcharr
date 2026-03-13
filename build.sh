@@ -9,6 +9,8 @@ DOCKERHUB_USER="${DOCKERHUB_USER:-}"
 CONTAINERFILE="${CONTAINERFILE:-./Containerfile}"
 PLATFORMS="${PLATFORMS:-linux/amd64,linux/arm64,linux/ppc64le}"
 
+sudo podman run --privileged --rm docker.io/tonistiigi/binfmt --install all
+
 candidates=()
 for f in ./App/target/*.jar; do
   name="$(basename "$f")"
@@ -64,31 +66,31 @@ if [[ -n "$DOCKERHUB_USER" ]]; then
   REMOTE_VERSIONED="docker.io/${DOCKERHUB_USER}/${IMAGE_NAME}:${VERSION}"
   REMOTE_LATEST="docker.io/${DOCKERHUB_USER}/${IMAGE_NAME}:latest"
 
-  echo "Building multi-arch manifest for Docker Hub..."
-  echo "Platforms: $PLATFORMS"
+  LOCAL_MANIFEST_VERSIONED="${IMAGE_NAME}-manifest:${VERSION}"
+  LOCAL_MANIFEST_LATEST="${IMAGE_NAME}-manifest:latest"
 
   # clean up any old local manifests with the same names
-  podman manifest rm "$REMOTE_VERSIONED" 2>/dev/null || true
-  podman manifest rm "$REMOTE_LATEST" 2>/dev/null || true
+  podman manifest rm "$LOCAL_MANIFEST_VERSIONED" 2>/dev/null || true
+  podman manifest rm "$LOCAL_MANIFEST_LATEST" 2>/dev/null || true
 
   # build versioned multi-arch image
   podman build \
     --pull=always \
     --platform "$PLATFORMS" \
-    --manifest "$REMOTE_VERSIONED" \
+    --manifest "$LOCAL_MANIFEST_VERSIONED" \
     --build-arg "JAR_FILE=$JAR_FILE" \
     -f "$CONTAINERFILE" \
     .
 
   echo "Pushing versioned manifest..."
-  podman manifest push --all "$REMOTE_VERSIONED" "docker://$REMOTE_VERSIONED"
+  podman manifest push --all "$LOCAL_MANIFEST_VERSIONED" "docker://$REMOTE_VERSIONED"
 
   echo "Creating latest manifest..."
-  podman manifest create "$REMOTE_LATEST"
-  podman manifest add --all "$REMOTE_LATEST" "docker://$REMOTE_VERSIONED"
+  podman manifest create "$LOCAL_MANIFEST_LATEST"
+  podman manifest add --all "$LOCAL_MANIFEST_LATEST" "docker://$REMOTE_VERSIONED"
 
   echo "Pushing latest manifest..."
-  podman manifest push --all "$REMOTE_LATEST" "docker://$REMOTE_LATEST"
+  podman manifest push --all "$LOCAL_MANIFEST_LATEST" "docker://$REMOTE_LATEST"
 fi
 
 echo
