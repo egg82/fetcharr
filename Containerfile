@@ -2,9 +2,11 @@ FROM registry.access.redhat.com/ubi9-minimal
 
 # ChatGPT had a hand in this. Was about 50/50
 
-LABEL org.opencontainers.image.title="fetcharr" \
-      org.opencontainers.image.description="Fetches upgrades for existing media" \
-      org.opencontainers.image.source="local" \
+LABEL org.opencontainers.image.title="Fetcharr" \
+      org.opencontainers.image.description="Hunts for missing or upgradable media in your *arr stack" \
+      org.opencontainers.image.source="https://github.com/egg82/fetcharr" \
+      org.opencontainers.image.documentation="https://github.com/egg82/fetcharr/blob/main/README.md" \
+      org.opencontainers.image.authors=["egg82"] \
       org.opencontainers.image.licenses="MIT"
 
 ARG APP_USER=app
