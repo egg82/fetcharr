@@ -75,7 +75,7 @@ public class RadarrAPI extends AbstractArrAPI {
                     throw new RuntimeException("Could not find API constructor for class " + k.getName(), ex);
                 }
             }).newInstance(this);
-        } catch (InvocationTargetException | InstantiationException | IllegalAccessException ex) {
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
             logger.error("Could not instantiate new {}", clazz.getName(), ex);
             return (T) unknowns.get(clazz, k -> {
                 try {
@@ -108,7 +108,7 @@ public class RadarrAPI extends AbstractArrAPI {
                     throw new RuntimeException("Could not find API constructor for class " + k.getName(), ex);
                 }
             }).newInstance(this, id);
-        } catch (InvocationTargetException | InstantiationException | IllegalAccessException ex) {
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
             logger.error("Could not instantiate new {}", clazz.getName(), ex);
             return (T) unknowns.get(clazz, k -> {
                 try {
