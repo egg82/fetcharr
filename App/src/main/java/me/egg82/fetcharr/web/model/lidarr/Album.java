@@ -11,6 +11,7 @@ import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.web.ArrAPI;
 import me.egg82.fetcharr.web.model.common.AbstractAPIObject;
 import me.egg82.fetcharr.web.model.common.MediaCover;
+import me.egg82.fetcharr.web.model.common.QualityProfile;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,7 +34,7 @@ public class Album extends AbstractAPIObject<Album> {
     private String foreignAlbumId;
     private boolean monitored;
     private boolean anyReleaseOk;
-    private Profile profile;
+    private QualityProfile profile;
     private Duration duration;
     private String albumType;
     private final Set<@NotNull String> secondaryTypes = new HashSet<>();
@@ -156,7 +157,7 @@ public class Album extends AbstractAPIObject<Album> {
         this.anyReleaseOk = BooleanParser.parse(false, StringParser.parse(obj, "anyReleaseOk"));
 
         id = NumberParser.parseInt(-1, StringParser.parse(obj, "profileId"));
-        this.profile = id >= 0 ? api.fetch(Profile.class, id, true) : null;
+        this.profile = id >= 0 ? api.fetch(QualityProfile.class, id, true) : null;
 
         this.duration = DurationParser.parse(StringParser.parse(obj, "duration"));
         this.albumType = StringParser.parse(obj, "albumType");
@@ -256,7 +257,7 @@ public class Album extends AbstractAPIObject<Album> {
         return anyReleaseOk;
     }
 
-    public @Nullable Profile profile() {
+    public @Nullable QualityProfile profile() {
         return profile;
     }
 

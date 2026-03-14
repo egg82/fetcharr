@@ -34,6 +34,11 @@ public class NullArrAPI implements ArrAPI {
     }
 
     @Override
+    public @NotNull String version() {
+        return "";
+    }
+
+    @Override
     public <T extends APIObject<T>> void update(@NonNull T apiObject, boolean force) {
 
     }
