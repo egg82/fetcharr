@@ -12,6 +12,7 @@ public interface ArrAPI {
     int id();
     @NotNull String baseUrl();
     @NotNull ArrType type();
+    @NotNull String version();
 
     default <T extends APIObject<T>> T fetch(Class<T> clazz) { return fetch(clazz, true); }
     @NotNull <T extends APIObject<T>> T fetch(Class<T> clazz, boolean lazy);

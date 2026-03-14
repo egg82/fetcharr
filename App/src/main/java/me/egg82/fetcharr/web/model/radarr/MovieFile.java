@@ -43,7 +43,7 @@ public class MovieFile extends AbstractAPIObject<MovieFile> {
     private boolean qualityCutoffNotMet;
 
     public MovieFile(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/moviefile/" + id);
+        super(api, "/api/" + api.version() + "/moviefile/" + id);
         this.id = id;
     }
 

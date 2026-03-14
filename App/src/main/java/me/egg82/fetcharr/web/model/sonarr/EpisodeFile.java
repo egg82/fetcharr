@@ -46,7 +46,7 @@ public class EpisodeFile extends AbstractAPIObject<EpisodeFile> {
     private long size;
 
     public EpisodeFile(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/episodefile/" + id);
+        super(api, "/api/" + api.version() + "/episodefile/" + id);
         this.id = id;
     }
 

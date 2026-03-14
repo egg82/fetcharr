@@ -8,6 +8,8 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
 public abstract class AbstractArrAPI implements ArrAPI {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -29,10 +31,15 @@ public abstract class AbstractArrAPI implements ArrAPI {
         return this.baseUrl;
     }
 
-    protected final @Nullable JsonNode get(@NotNull String apiPath) {
+    protected @Nullable JsonNode get(@NotNull String apiPath) {
+        return get(apiPath, null);
+    }
+
+    protected final @Nullable JsonNode get(@NotNull String apiPath, @Nullable Map<String, @NotNull Object> params) {
         return parseResponse(Unirest.get(baseUrl + apiPath)
                 .header("X-Api-Key", apiKey)
                 .accept("application/json")
+                .queryString(params)
                 .asJson());
     }
 

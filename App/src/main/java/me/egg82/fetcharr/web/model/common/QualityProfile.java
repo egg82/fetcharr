@@ -35,7 +35,7 @@ public class QualityProfile extends AbstractAPIObject<QualityProfile> {
     private boolean upgradeAllowed;
 
     public QualityProfile(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/qualityprofile/" + id);
+        super(api, "/api/" + api.version() + "/qualityprofile/" + id);
         this.id = id;
     }
 

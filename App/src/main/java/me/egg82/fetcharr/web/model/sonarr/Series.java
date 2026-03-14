@@ -56,7 +56,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
     private File rootFolderPath;
     private Duration runtime;
     private boolean seasonFolder;
-    private Set<@NotNull Season> seasons = new HashSet<>();
+    private final Set<@NotNull Season> seasons = new HashSet<>();
     private SonarrSeriesType seriesType;
     private String sortTitle;
     private Statistics statistics;
@@ -74,7 +74,7 @@ public class Series extends AbstractAPIObject<Series> implements Weighted {
     private Instant lastSelected = Instant.EPOCH;
 
     public Series(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/series/" + id);
+        super(api, "/api/" + api.version() + "/series/" + id);
         this.id = id;
     }
 

@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.web.model.radarr;
+package me.egg82.fetcharr.web.model.lidarr;
 
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONArray;
@@ -16,30 +16,34 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class AllMovies extends AbstractAPIObject<AllMovies> {
-    public static AllMovies UNKNOWN = new AllMovies(ArrAPI.UNKNOWN);
+public class AllTracks extends AbstractAPIObject<AllTracks> {
+    public static AllTracks UNKNOWN = new AllTracks(ArrAPI.UNKNOWN, -1);
 
-    private final Set<@NotNull Movie> items = new HashSet<>();
+    private final int id;
 
-    public AllMovies(@NotNull ArrAPI api) {
-        super(api, "/api/" + api.version() + "/movie");
+    private final Set<@NotNull Track> items = new HashSet<>();
+
+    public AllTracks(@NotNull ArrAPI api, int id) {
+        super(api, "/api/" + api.version() + "/track");
+        this.id = id;
     }
 
     @Override
-    public AllMovies fetch(@NotNull String apiKey) {
+    public AllTracks fetch(@NotNull String apiKey) {
         if (!this.fetching.compareAndSet(false, true)) {
             return this;
         }
 
-        CacheMeta meta = new CacheMeta(metaFile());
+        CacheMeta meta = new CacheMeta(metaFile(id));
         boolean useCache = ConfigVars.getBool(ConfigVars.USE_CACHE);
         TimeValue cacheTime = ConfigVars.getTimeValue(ConfigVars.SHORT_CACHE_TIME);
 
         if (useCache && meta.fetched().plus(cacheTime.duration()).isAfter(Instant.now())) {
-            JSONFile data = cacheFile();
+            JSONFile data = cacheFile(id);
             try {
                 parse(data.read());
                 if (!this.items.isEmpty()) {
@@ -52,7 +56,7 @@ public class AllMovies extends AbstractAPIObject<AllMovies> {
             }
         }
 
-        JsonNode node = get(apiKey);
+        JsonNode node = get(apiKey, Map.of("albumId", id));
         if (node == null) {
             logger.debug("Could not read data from {}", url());
             // Not setting fetched = invalid
@@ -102,8 +106,8 @@ public class AllMovies extends AbstractAPIObject<AllMovies> {
 
     @Override
     public void invalidate() {
-        for (Movie m : items) {
-            m.invalidate();
+        for (Track t : items) {
+            t.invalidate();
         }
 
         try {
@@ -131,30 +135,35 @@ public class AllMovies extends AbstractAPIObject<AllMovies> {
 
             int id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
             if (id >= 0) {
-                this.items.add(new Movie(api, id, obj));
+                this.items.add(new Track(api, id, obj));
             }
         }
     }
 
-    public @NotNull Set<@NotNull Movie> items() {
+    public int id() {
+        return id;
+    }
+
+    public @NotNull Set<@NotNull Track> items() {
         return items;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AllMovies allMovies)) return false;
-        return Objects.equals(items, allMovies.items);
+        if (!(o instanceof AllTracks allTracks)) return false;
+        return id == allTracks.id;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(items);
+        return Objects.hashCode(id);
     }
 
     @Override
     public String toString() {
-        return "AllMovies{" +
-                "items=" + items +
+        return "AllTracks{" +
+                "id=" + id +
+                ", items=" + items +
                 ", api=" + api +
                 ", apiPath='" + apiPath + '\'' +
                 ", fetched=" + fetched +

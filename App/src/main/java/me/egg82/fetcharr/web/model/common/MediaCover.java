@@ -11,11 +11,13 @@ public class MediaCover {
     private final MediaCoverType coverType;
     private final String remoteUrl;
     private final String url;
+    private final String extension;
 
     public MediaCover(@NotNull JSONObject obj) {
         this.coverType = MediaCoverType.parse(MediaCoverType.UNKNOWN, StringParser.parse(obj, "coverType"));
         this.remoteUrl = StringParser.parse(obj, "remoteUrl");
         this.url = StringParser.parse(obj, "url");
+        this.extension = StringParser.parse(obj, "extension");
     }
 
     public @NotNull MediaCoverType coverType() {
@@ -30,15 +32,19 @@ public class MediaCover {
         return url;
     }
 
+    public @Nullable String extension() {
+        return extension;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof MediaCover that)) return false;
-        return coverType == that.coverType && Objects.equals(url, that.url);
+        return coverType == that.coverType && Objects.equals(remoteUrl, that.remoteUrl) && Objects.equals(url, that.url) && Objects.equals(extension, that.extension);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(coverType, url);
+        return Objects.hash(coverType, remoteUrl, url, extension);
     }
 
     @Override
@@ -47,6 +53,7 @@ public class MediaCover {
                 "coverType=" + coverType +
                 ", remoteUrl='" + remoteUrl + '\'' +
                 ", url='" + url + '\'' +
+                ", extension='" + extension + '\'' +
                 '}';
     }
 }

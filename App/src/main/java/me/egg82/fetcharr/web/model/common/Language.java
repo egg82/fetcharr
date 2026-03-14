@@ -16,7 +16,7 @@ import java.time.Instant;
 import java.util.Objects;
 
 public class Language extends AbstractAPIObject<Language> {
-    public static Language UNKNOWN = new Language(ArrAPI.UNKNOWN, -1);
+    public static final Language UNKNOWN = new Language(ArrAPI.UNKNOWN, -1);
 
     private final int id;
 
@@ -24,7 +24,7 @@ public class Language extends AbstractAPIObject<Language> {
     private String nameLower;
 
     public Language(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/language/" + id);
+        super(api, "/api/" + api.version() + "/language/" + id);
         this.id = id;
     }
 

@@ -22,6 +22,7 @@ I think I hit that nail on the head.
 Currently supports the following:
 - Radarr
 - Sonarr
+- Lidarr
 - Whisparr
 
 ### Huntarr? What?
@@ -172,6 +173,32 @@ Replace `X` with a number. This allows for up to 100 instances to be configured.
     - string: \<tags\>
     - default: \<none\>
 - SONARR_X_USE_CUTOFF: Skip items that have their profile cutoff met
+  - boolean: \<value\>
+  - default: false
+
+### Lidarr
+
+Replace `X` with a number. This allows for up to 100 instances to be configured.
+
+- LIDARR_X_URL: Base URL
+  - string: \<url\>
+  - default: null
+- LIDARR_X_API_KEY: API key
+  - string: \<key\>
+  - default: null
+- LIDARR_X_SEARCH_AMOUNT: Number of items to search at each run
+  - int: \<amount\>
+  - default: 5
+- LIDARR_X_SEARCH_INTERVAL: How often to search
+  - string: \<time\>
+  - 1hour
+- LIDARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
+  - bool: \<value\>
+  - default: true
+- LIDARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
+  - string: \<tags\>
+  - default: \<none\>
+- LIDARR_X_USE_CUTOFF: Skip items that have their profile cutoff met
   - boolean: \<value\>
   - default: false
 

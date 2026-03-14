@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.web.radarr;
+package me.egg82.fetcharr.web.lidarr;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -19,37 +19,37 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
 
-public class RadarrAPI extends AbstractArrAPI {
+public class LidarrAPI extends AbstractArrAPI {
     private final Cache<Class<? extends APIObject<?>>, Constructor<?>> constructors = Caffeine.newBuilder().build();
     private final Cache<Class<? extends APIObject<?>>, Object> unknowns = Caffeine.newBuilder().build();
 
     private final Cache<Class<? extends APIObject<?>>, Object> cache = Caffeine.newBuilder().build();
     private final Cache<Class<? extends APIObject<?>>, Int2ObjectMap<Object>> idCache = Caffeine.newBuilder().build();
 
-    public RadarrAPI(@NotNull String baseUrl, @NotNull String apiKey, int id) {
+    public LidarrAPI(@NotNull String baseUrl, @NotNull String apiKey, int id) {
         super(baseUrl, apiKey, id);
     }
 
     @Override
     public @NotNull ArrType type() {
-        return ArrType.RADARR;
+        return ArrType.LIDARR;
     }
 
     @Override
     public @NotNull String version() {
-        return "v3";
+        return "v1";
     }
 
     @Override
     public boolean valid() {
         JsonNode response = get("/api");
         if (response == null) {
-            logger.warn("Radarr returned invalid response for URL {}: null", baseUrl + "/api");
+            logger.warn("Lidarr returned invalid response for URL {}: null", baseUrl + "/api");
             return false;
         }
         String current = response.getObject().getString("current");
         if (current == null || !current.equalsIgnoreCase(version())) {
-            logger.warn("Radarr returned unexpected response for URL {}: {}", baseUrl + "/api", response.getObject().toString());
+            logger.warn("Lidarr returned unexpected response for URL {}: {}", baseUrl + "/api", response.getObject().toString());
             return false;
         }
         return true;
@@ -129,18 +129,20 @@ public class RadarrAPI extends AbstractArrAPI {
 
     @Override
     public void search(int... itemIds) {
-        JSONObject data = new JSONObject(Map.of(
-                "movieIds", itemIds,
-                "name", "MoviesSearch"
-        ));
-        JsonNode response = post("/api/" + version() + "/command", new JsonNode(data.toString()));
-        if (response == null) {
-            logger.warn("Radarr returned invalid response for URL {}: null", baseUrl + "/api/" + version() + "/command");
-            return;
-        }
-        int id = NumberParser.parseInt(-1, StringParser.parse(response.getObject(), "id"));
-        if (id < 0) {
-            logger.warn("Radarr returned unexpected response for URL {}: {}", baseUrl + "/api/" + version() + "/command", response.getObject().toString());
+        for (int itemId : itemIds) {
+            JSONObject data = new JSONObject(Map.of(
+                    "artistId", itemId,
+                    "name", "ArtistSearch"
+            ));
+            JsonNode response = post("/api/" + version() + "/command", new JsonNode(data.toString()));
+            if (response == null) {
+                logger.warn("Lidarr returned invalid response for URL {}: null", baseUrl + "/api/" + version() + "/command");
+                return;
+            }
+            int id = NumberParser.parseInt(-1, StringParser.parse(response.getObject(), "id"));
+            if (id < 0) {
+                logger.warn("Lidarr returned unexpected response for URL {}: {}", baseUrl + "/api/" + version() + "/command", response.getObject().toString());
+            }
         }
     }
 }

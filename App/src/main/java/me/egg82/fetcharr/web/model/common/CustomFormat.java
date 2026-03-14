@@ -30,7 +30,7 @@ public class CustomFormat extends AbstractAPIObject<CustomFormat> {
     private final Set<@NotNull CustomFormatSpecificationSchema> specifications = new HashSet<>();
 
     public CustomFormat(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/customformat/" + id);
+        super(api, "/api/" + api.version() + "/customformat/" + id);
         this.id = id;
     }
 

@@ -10,6 +10,9 @@ public enum MediaCoverType {
     FAN_ART("fanart"),
     SCREENSHOT("screenshot"),
     HEADSHOT("headshot"),
+    COVER("cover"),
+    DISK("disk"),
+    LOGO("logo"),
     CLEAR_LOGO("clearlogo");
 
     private final String apiName;
