@@ -40,6 +40,7 @@ public class WhisparrUpdater extends AbstractUpdater {
         random.updateList(all.items());
 
         boolean monitoredOnly = WhisparrConfigVars.getBool(WhisparrConfigVars.MONITORED_ONLY, api.id());
+        boolean missingOnly = WhisparrConfigVars.getBool(WhisparrConfigVars.MISSING_ONLY, api.id());
         boolean useCutoff = WhisparrConfigVars.getBool(WhisparrConfigVars.USE_CUTOFF, api.id());
         String[] skipTags = WhisparrConfigVars.getArr(WhisparrConfigVars.SKIP_TAGS, api.id());
 
@@ -57,6 +58,10 @@ public class WhisparrUpdater extends AbstractUpdater {
             api.update(m);
             if (monitoredOnly && !m.monitored()) {
                 logger.info("Skipping scene/movie {} (\"{}\") due to unmonitored status", m.id(), m.title());
+                continue;
+            }
+            if (missingOnly && m.hasFile()) {
+                logger.info("Skipping scene/movie {} (\"{}\") because it is not missing a scene/movie file", m.id(), m.title());
                 continue;
             }
             if (useCutoff && !m.movieFile().qualityCutoffNotMet()) {

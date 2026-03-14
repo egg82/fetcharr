@@ -25,6 +25,7 @@ public enum ConfigVars {
     SEARCH_AMOUNT(Integer.class, "Number of items to search at each run", 5),
     SEARCH_INTERVAL(TimeValue.class, "How often to search", new TimeValue(1L, TimeUnit.HOURS)),
     MONITORED_ONLY(Boolean.class, "True to select only monitored items, false to select all", true),
+    MISSING_ONLY(Boolean.class, "True to select only missing items, false to select upgrades as well", false),
     SKIP_TAGS(String[].class, "Comma-separated list of tags to skip searching", new String[]{}),
     USE_CUTOFF(Boolean.class, "Skip items that have their profile cutoff met", false),
     DRY_RUN(Boolean.class, "Run in dry-run mode, which doesn't perform searches", false);

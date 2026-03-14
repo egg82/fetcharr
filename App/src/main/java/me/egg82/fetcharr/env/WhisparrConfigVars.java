@@ -16,6 +16,7 @@ public enum WhisparrConfigVars {
     SEARCH_AMOUNT(Integer.class, "WHISPARR_{}_SEARCH_AMOUNT", ConfigVars.getInt(ConfigVars.SEARCH_AMOUNT)),
     SEARCH_INTERVAL(TimeValue.class, "WHISPARR_{}_SEARCH_INTERVAL", ConfigVars.getTimeValue(ConfigVars.SEARCH_INTERVAL)),
     MONITORED_ONLY(Boolean.class, "WHISPARR_{}_MONITORED_ONLY", ConfigVars.getBool(ConfigVars.MONITORED_ONLY)),
+    MISSING_ONLY(Boolean.class, "WHISPARR_{}_MISSING_ONLY", ConfigVars.getBool(ConfigVars.MISSING_ONLY)),
     SKIP_TAGS(String[].class, "WHISPARR_{}_SKIP_TAGS", ConfigVars.getArr(ConfigVars.SKIP_TAGS)),
     USE_CUTOFF(Boolean.class, "WHISPARR_{}_USE_CUTOFF", ConfigVars.getBool(ConfigVars.USE_CUTOFF));
 
