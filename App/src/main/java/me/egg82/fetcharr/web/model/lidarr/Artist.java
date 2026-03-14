@@ -67,6 +67,29 @@ public class Artist extends AbstractAPIObject<Artist> implements Weighted {
         this.id = id;
     }
 
+    public Artist(@NotNull ArrAPI api, int id, @NotNull JSONObject obj) {
+        this(api, id);
+
+        CacheMeta meta = new CacheMeta(metaFile(id));
+
+        JsonNode node = new JsonNode(obj.toString());
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", obj, ex);
+            return;
+        }
+
+        this.fetched = Instant.now();
+        try {
+            cacheFile(id).write(node);
+        } catch (IOException ex) {
+            logger.warn("Could not write data to {}", cacheFile(id).path(), ex);
+        }
+        meta.setFetched(this.fetched);
+        meta.write();
+    }
+
     @Override
     public Artist fetch(@NotNull String apiKey) {
         if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
@@ -182,11 +205,8 @@ public class Artist extends AbstractAPIObject<Artist> implements Weighted {
             }
         }
 
-        int id = obj.has("nextAlbum") ? NumberParser.parseInt(-1, StringParser.parse(obj.getJSONObject("nextAlbum"), "id")) : -1;
-        this.nextAlbum = id >= 0 ? api.fetch(Album.class, id, false) : null;
-
-        id = obj.has("lastAlbum") ? NumberParser.parseInt(-1, StringParser.parse(obj.getJSONObject("lastAlbum"), "id")) : -1;
-        this.lastAlbum = id >= 0 ? api.fetch(Album.class, id, false) : null;
+        this.nextAlbum = obj.has("nextAlbum") ? new Album(api, NumberParser.parseInt(-1, StringParser.parse(obj.getJSONObject("nextAlbum"), "id")), obj.getJSONObject("nextAlbum")) : null;
+        this.lastAlbum = obj.has("lastAlbum") ? new Album(api, NumberParser.parseInt(-1, StringParser.parse(obj.getJSONObject("nextAlbum"), "id")), obj.getJSONObject("lastAlbum")) : null;
 
         this.images.clear();
         JSONArray images = obj.has("images") ? obj.getJSONArray("images") : null;
@@ -199,7 +219,7 @@ public class Artist extends AbstractAPIObject<Artist> implements Weighted {
         this.remotePoster = StringParser.parse(obj, "remotePoster");
         this.path = FileParser.parse(StringParser.parse(obj, "path"));
 
-        id = NumberParser.parseInt(-1, StringParser.parse(obj, "qualityProfileId"));
+        int id = NumberParser.parseInt(-1, StringParser.parse(obj, "qualityProfileId"));
         this.qualityProfile = id >= 0 ? api.fetch(QualityProfile.class, id, false) : null;
 
         id = NumberParser.parseInt(-1, StringParser.parse(obj, "metadataProfileId"));

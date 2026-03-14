@@ -44,6 +44,29 @@ public class Track extends AbstractAPIObject<Track> {
         this.id = id;
     }
 
+    public Track(@NotNull ArrAPI api, int id, @NotNull JSONObject obj) {
+        this(api, id);
+
+        CacheMeta meta = new CacheMeta(metaFile(id));
+
+        JsonNode node = new JsonNode(obj.toString());
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", obj, ex);
+            return;
+        }
+
+        this.fetched = Instant.now();
+        try {
+            cacheFile(id).write(node);
+        } catch (IOException ex) {
+            logger.warn("Could not write data to {}", cacheFile(id).path(), ex);
+        }
+        meta.setFetched(this.fetched);
+        meta.write();
+    }
+
     @Override
     public Track fetch(@NotNull String apiKey) {
         if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {
@@ -140,8 +163,7 @@ public class Track extends AbstractAPIObject<Track> {
         this.foreignTrackId = StringParser.parse(obj, "foreignTrackId");
         this.foreignRecordingId = StringParser.parse(obj, "foreignRecordingId");
 
-        id = NumberParser.parseInt(-1, StringParser.parse(obj, "trackFileId"));
-        this.trackFile = id >= 0 ? api.fetch(TrackFile.class, id, true) : null;
+        this.trackFile = obj.has("trackFile") ? new TrackFile(api, NumberParser.parseInt(-1, StringParser.parse(obj.getJSONObject("trackFile"), "id")), obj.getJSONObject("trackFile")) : null;
 
         id = NumberParser.parseInt(-1, StringParser.parse(obj, "albumId"));
         this.album = id >= 0 ? api.fetch(Album.class, id, true) : null;

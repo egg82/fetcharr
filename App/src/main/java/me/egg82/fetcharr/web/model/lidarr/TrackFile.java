@@ -49,6 +49,29 @@ public class TrackFile extends AbstractAPIObject<TrackFile> {
         this.id = id;
     }
 
+    public TrackFile(@NotNull ArrAPI api, int id, @NotNull JSONObject obj) {
+        this(api, id);
+
+        CacheMeta meta = new CacheMeta(metaFile(id));
+
+        JsonNode node = new JsonNode(obj.toString());
+        try {
+            parse(node);
+        } catch (Exception ex) {
+            logger.warn("Could not read data from {}", obj, ex);
+            return;
+        }
+
+        this.fetched = Instant.now();
+        try {
+            cacheFile(id).write(node);
+        } catch (IOException ex) {
+            logger.warn("Could not write data to {}", cacheFile(id).path(), ex);
+        }
+        meta.setFetched(this.fetched);
+        meta.write();
+    }
+
     @Override
     public TrackFile fetch(@NotNull String apiKey) {
         if (this.id < 0 || !this.fetching.compareAndSet(false, true)) {

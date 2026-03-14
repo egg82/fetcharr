@@ -135,7 +135,7 @@ public class AllTracks extends AbstractAPIObject<AllTracks> {
 
             int id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
             if (id >= 0) {
-                this.items.add(api.fetch(Track.class, id, true));
+                this.items.add(new Track(api, id, obj));
             }
         }
     }
