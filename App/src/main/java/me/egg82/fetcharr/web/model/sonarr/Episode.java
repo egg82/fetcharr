@@ -53,7 +53,7 @@ public class Episode extends AbstractAPIObject<Episode> {
     private boolean unverifiedSceneNumbering;
 
     public Episode(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/episode/" + id);
+        super(api, "/api/" + api.version() + "/episode/" + id);
         this.id = id;
     }
 

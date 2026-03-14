@@ -36,6 +36,11 @@ public class WhisparrAPI extends AbstractArrAPI {
     }
 
     @Override
+    public @NotNull String version() {
+        return "v3";
+    }
+
+    @Override
     public boolean valid() {
         JsonNode response = get("/api");
         if (response == null) {
@@ -43,7 +48,7 @@ public class WhisparrAPI extends AbstractArrAPI {
             return false;
         }
         String current = response.getObject().getString("current");
-        if (current == null || !current.equalsIgnoreCase("v3")) {
+        if (current == null || !current.equalsIgnoreCase(version())) {
             logger.warn("Whisparr returned unexpected response for URL {}: {}", baseUrl + "/api", response.getObject().toString());
             return false;
         }
@@ -128,14 +133,14 @@ public class WhisparrAPI extends AbstractArrAPI {
                 "movieIds", itemIds,
                 "name", "MoviesSearch"
         ));
-        JsonNode response = post("/api/v3/command", new JsonNode(data.toString()));
+        JsonNode response = post("/api/" + version() + "/command", new JsonNode(data.toString()));
         if (response == null) {
-            logger.warn("Whisparr returned invalid response for URL {}: null", baseUrl + "/api/v3/command");
+            logger.warn("Whisparr returned invalid response for URL {}: null", baseUrl + "/api/" + version() + "/command");
             return;
         }
         int id = NumberParser.parseInt(-1, StringParser.parse(response.getObject(), "id"));
         if (id < 0) {
-            logger.warn("Whisparr returned unexpected response for URL {}: {}", baseUrl + "/api/v3/command", response.getObject().toString());
+            logger.warn("Whisparr returned unexpected response for URL {}: {}", baseUrl + "/api/" + version() + "/command", response.getObject().toString());
         }
     }
 }

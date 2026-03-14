@@ -24,7 +24,7 @@ public class Language extends AbstractAPIObject<Language> {
     private String nameLower;
 
     public Language(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/language/" + id);
+        super(api, "/api/" + api.version() + "/language/" + id);
         this.id = id;
     }
 

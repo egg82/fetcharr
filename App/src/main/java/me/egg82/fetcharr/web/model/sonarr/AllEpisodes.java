@@ -27,7 +27,7 @@ public class AllEpisodes extends AbstractAPIObject<AllEpisodes> {
     private final Set<@NotNull Episode> items = new HashSet<>();
 
     public AllEpisodes(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/episode?seriesId=" + id);
+        super(api, "/api/" + api.version() + "/episode?seriesId=" + id);
         this.id = id;
     }
 

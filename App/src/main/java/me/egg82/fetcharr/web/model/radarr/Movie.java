@@ -79,7 +79,7 @@ public class Movie extends AbstractAPIObject<Movie> implements Weighted {
     private Instant lastSelected = Instant.EPOCH;
 
     public Movie(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/movie/" + id);
+        super(api, "/api/" + api.version() + "/movie/" + id);
         this.id = id;
     }
 

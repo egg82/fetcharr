@@ -25,7 +25,7 @@ public class AllSeries extends AbstractAPIObject<AllSeries> {
     private final Set<@NotNull Series> items = new HashSet<>();
 
     public AllSeries(@NotNull ArrAPI api) {
-        super(api, "/api/v3/series");
+        super(api, "/api/" + api.version() + "/series");
     }
 
     @Override

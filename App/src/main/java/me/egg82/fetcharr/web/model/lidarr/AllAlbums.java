@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.web.model.radarr;
+package me.egg82.fetcharr.web.model.lidarr;
 
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONArray;
@@ -19,17 +19,17 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-public class AllMovies extends AbstractAPIObject<AllMovies> {
-    public static AllMovies UNKNOWN = new AllMovies(ArrAPI.UNKNOWN);
+public class AllAlbums extends AbstractAPIObject<AllAlbums> {
+    public static AllAlbums UNKNOWN = new AllAlbums(ArrAPI.UNKNOWN);
 
-    private final Set<@NotNull Movie> items = new HashSet<>();
+    private final Set<@NotNull Album> items = new HashSet<>();
 
-    public AllMovies(@NotNull ArrAPI api) {
-        super(api, "/api/" + api.version() + "/movie");
+    public AllAlbums(@NotNull ArrAPI api) {
+        super(api, "/api/" + api.version() + "/album");
     }
 
     @Override
-    public AllMovies fetch(@NotNull String apiKey) {
+    public AllAlbums fetch(@NotNull String apiKey) {
         if (!this.fetching.compareAndSet(false, true)) {
             return this;
         }
@@ -102,8 +102,8 @@ public class AllMovies extends AbstractAPIObject<AllMovies> {
 
     @Override
     public void invalidate() {
-        for (Movie m : items) {
-            m.invalidate();
+        for (Album a : items) {
+            a.invalidate();
         }
 
         try {
@@ -131,19 +131,19 @@ public class AllMovies extends AbstractAPIObject<AllMovies> {
 
             int id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
             if (id >= 0) {
-                this.items.add(new Movie(api, id, obj));
+                this.items.add(api.fetch(Album.class, id, true));
             }
         }
     }
 
-    public @NotNull Set<@NotNull Movie> items() {
+    public @NotNull Set<@NotNull Album> items() {
         return items;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AllMovies allMovies)) return false;
-        return Objects.equals(items, allMovies.items);
+        if (!(o instanceof AllAlbums allAlbums)) return false;
+        return Objects.equals(items, allAlbums.items);
     }
 
     @Override
@@ -153,7 +153,7 @@ public class AllMovies extends AbstractAPIObject<AllMovies> {
 
     @Override
     public String toString() {
-        return "AllMovies{" +
+        return "AllAlbums{" +
                 "items=" + items +
                 ", api=" + api +
                 ", apiPath='" + apiPath + '\'' +

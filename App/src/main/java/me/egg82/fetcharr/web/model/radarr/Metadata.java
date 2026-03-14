@@ -39,7 +39,7 @@ public class Metadata extends AbstractAPIObject<Metadata> {
     private boolean enable;
 
     public Metadata(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/metadata/" + id);
+        super(api, "/api/" + api.version() + "/metadata/" + id);
         this.id = id;
     }
 

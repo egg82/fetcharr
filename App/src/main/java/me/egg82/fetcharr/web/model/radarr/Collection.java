@@ -44,7 +44,7 @@ public class Collection extends AbstractAPIObject<Collection> {
     private final Set<@NotNull Tag> tags = new HashSet<>();
 
     public Collection(@NotNull ArrAPI api, int id) {
-        super(api, "/api/v3/collection/" + id);
+        super(api, "/api/" + api.version() + "/collection/" + id);
         this.id = id;
     }
 
