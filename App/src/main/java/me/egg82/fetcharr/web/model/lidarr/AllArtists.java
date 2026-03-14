@@ -16,34 +16,30 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class AllAlbums extends AbstractAPIObject<AllAlbums> {
-    public static AllAlbums UNKNOWN = new AllAlbums(ArrAPI.UNKNOWN, -1);
+public class AllArtists extends AbstractAPIObject<AllArtists> {
+    public static AllArtists UNKNOWN = new AllArtists(ArrAPI.UNKNOWN);
 
-    private final int id;
+    private final Set<@NotNull Artist> items = new HashSet<>();
 
-    private final Set<@NotNull Album> items = new HashSet<>();
-
-    public AllAlbums(@NotNull ArrAPI api, int id) {
-        super(api, "/api/" + api.version() + "/album");
-        this.id = id;
+    public AllArtists(@NotNull ArrAPI api) {
+        super(api, "/api/" + api.version() + "/artist");
     }
 
     @Override
-    public AllAlbums fetch(@NotNull String apiKey) {
+    public AllArtists fetch(@NotNull String apiKey) {
         if (!this.fetching.compareAndSet(false, true)) {
             return this;
         }
 
-        CacheMeta meta = new CacheMeta(metaFile(id));
+        CacheMeta meta = new CacheMeta(metaFile());
         boolean useCache = ConfigVars.getBool(ConfigVars.USE_CACHE);
         TimeValue cacheTime = ConfigVars.getTimeValue(ConfigVars.SHORT_CACHE_TIME);
 
         if (useCache && meta.fetched().plus(cacheTime.duration()).isAfter(Instant.now())) {
-            JSONFile data = cacheFile(id);
+            JSONFile data = cacheFile();
             try {
                 parse(data.read());
                 if (!this.items.isEmpty()) {
@@ -56,7 +52,7 @@ public class AllAlbums extends AbstractAPIObject<AllAlbums> {
             }
         }
 
-        JsonNode node = get(apiKey, Map.of("artistId", id));
+        JsonNode node = get(apiKey);
         if (node == null) {
             logger.debug("Could not read data from {}", url());
             // Not setting fetched = invalid
@@ -106,7 +102,7 @@ public class AllAlbums extends AbstractAPIObject<AllAlbums> {
 
     @Override
     public void invalidate() {
-        for (Album a : items) {
+        for (Artist a : items) {
             a.invalidate();
         }
 
@@ -135,35 +131,30 @@ public class AllAlbums extends AbstractAPIObject<AllAlbums> {
 
             int id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
             if (id >= 0) {
-                this.items.add(api.fetch(Album.class, id, true));
+                this.items.add(api.fetch(Artist.class, id, true));
             }
         }
     }
 
-    public int id() {
-        return id;
-    }
-
-    public @NotNull Set<@NotNull Album> items() {
+    public @NotNull Set<@NotNull Artist> items() {
         return items;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AllAlbums allAlbums)) return false;
-        return id == allAlbums.id;
+        if (!(o instanceof AllArtists allArtists)) return false;
+        return Objects.equals(items, allArtists.items);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(id);
+        return Objects.hashCode(items);
     }
 
     @Override
     public String toString() {
-        return "AllAlbums{" +
-                "id=" + id +
-                ", items=" + items +
+        return "AllArtists{" +
+                "items=" + items +
                 ", api=" + api +
                 ", apiPath='" + apiPath + '\'' +
                 ", fetched=" + fetched +

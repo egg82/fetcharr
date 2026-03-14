@@ -23,7 +23,7 @@ import java.util.Objects;
 import java.util.Set;
 
 public class Artist extends AbstractAPIObject<Artist> implements Weighted {
-    public static Artist UNKNOWN = new Artist(ArrAPI.UNKNOWN, -1);
+    public static final Artist UNKNOWN = new Artist(ArrAPI.UNKNOWN, -1);
 
     private final int id;
 
@@ -562,43 +562,6 @@ public class Artist extends AbstractAPIObject<Artist> implements Weighted {
                     ", albumsToMonitor=" + albumsToMonitor +
                     ", monitored=" + monitored +
                     ", searchForMissingAlbums=" + searchForMissingAlbums +
-                    '}';
-        }
-    }
-
-    public static class Ratings {
-        private final int votes;
-        private final float value;
-
-        public Ratings(@NotNull JSONObject obj) {
-            this.votes = NumberParser.parseInt(-1, StringParser.parse(obj, "votes"));
-            this.value = NumberParser.parseFloat(-1.0F, StringParser.parse(obj, "value"));
-        }
-
-        public int votes() {
-            return votes;
-        }
-
-        public float value() {
-            return value;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (!(o instanceof Ratings ratings)) return false;
-            return votes == ratings.votes && Float.compare(value, ratings.value) == 0;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(votes, value);
-        }
-
-        @Override
-        public String toString() {
-            return "Ratings{" +
-                    "votes=" + votes +
-                    ", value=" + value +
                     '}';
         }
     }

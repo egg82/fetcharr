@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.time.Instant;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class AbstractAPIObject<T extends AbstractAPIObject<T>> implements APIObject<T> {
@@ -58,10 +59,15 @@ public abstract class AbstractAPIObject<T extends AbstractAPIObject<T>> implemen
         return api.baseUrl() + apiPath;
     }
 
-    protected final @Nullable JsonNode get(@NotNull String apiKey) {
+    protected @Nullable JsonNode get(@NotNull String apiKey) {
+        return get(apiKey, null);
+    }
+
+    protected final @Nullable JsonNode get(@NotNull String apiKey, @Nullable Map<String, @NotNull Object> params) {
         return parseResponse(Unirest.get(api.baseUrl() + apiPath)
                 .header("X-Api-Key", apiKey)
                 .accept("application/json")
+                .queryString(params)
                 .asJson());
     }
 

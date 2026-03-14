@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.web.model.common;
+package me.egg82.fetcharr.web.model.lidarr;
 
 import kong.unirest.core.json.JSONObject;
 import me.egg82.fetcharr.parse.StringParser;

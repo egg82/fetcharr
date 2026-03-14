@@ -7,7 +7,10 @@ import me.egg82.fetcharr.env.LidarrConfigVars;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.util.WeightedRandom;
 import me.egg82.fetcharr.web.lidarr.LidarrAPI;
+import me.egg82.fetcharr.web.model.lidarr.AllArtists;
+import me.egg82.fetcharr.web.model.lidarr.AllTracks;
 import me.egg82.fetcharr.web.model.lidarr.Artist;
+import me.egg82.fetcharr.web.model.lidarr.Track;
 import me.egg82.fetcharr.work.AbstractUpdater;
 import org.jetbrains.annotations.NotNull;
 
@@ -60,9 +63,9 @@ public class LidarrUpdater extends AbstractUpdater {
             }
             if (useCutoff) {
                 boolean qualityCutoffMet = true;
-                AllSongs as = api.fetch(AllSongs.class, a.id(), false);
-                for (Song s : as.items()) {
-                    if (!s.songFile().qualityCutoffNotMet()) {
+                AllTracks at = api.fetch(AllTracks.class, a.id(), false);
+                for (Track t : at.items()) {
+                    if (!t.trackFile().qualityCutoffNotMet()) {
                         qualityCutoffMet = false;
                         break;
                     }

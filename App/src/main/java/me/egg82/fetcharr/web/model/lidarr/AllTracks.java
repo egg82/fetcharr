@@ -20,20 +20,20 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-public class AllAlbums extends AbstractAPIObject<AllAlbums> {
-    public static AllAlbums UNKNOWN = new AllAlbums(ArrAPI.UNKNOWN, -1);
+public class AllTracks extends AbstractAPIObject<AllTracks> {
+    public static AllTracks UNKNOWN = new AllTracks(ArrAPI.UNKNOWN, -1);
 
     private final int id;
 
-    private final Set<@NotNull Album> items = new HashSet<>();
+    private final Set<@NotNull Track> items = new HashSet<>();
 
-    public AllAlbums(@NotNull ArrAPI api, int id) {
-        super(api, "/api/" + api.version() + "/album");
+    public AllTracks(@NotNull ArrAPI api, int id) {
+        super(api, "/api/" + api.version() + "/track");
         this.id = id;
     }
 
     @Override
-    public AllAlbums fetch(@NotNull String apiKey) {
+    public AllTracks fetch(@NotNull String apiKey) {
         if (!this.fetching.compareAndSet(false, true)) {
             return this;
         }
@@ -56,7 +56,7 @@ public class AllAlbums extends AbstractAPIObject<AllAlbums> {
             }
         }
 
-        JsonNode node = get(apiKey, Map.of("artistId", id));
+        JsonNode node = get(apiKey, Map.of("albumId", id));
         if (node == null) {
             logger.debug("Could not read data from {}", url());
             // Not setting fetched = invalid
@@ -106,8 +106,8 @@ public class AllAlbums extends AbstractAPIObject<AllAlbums> {
 
     @Override
     public void invalidate() {
-        for (Album a : items) {
-            a.invalidate();
+        for (Track t : items) {
+            t.invalidate();
         }
 
         try {
@@ -135,7 +135,7 @@ public class AllAlbums extends AbstractAPIObject<AllAlbums> {
 
             int id = NumberParser.parseInt(-1, StringParser.parse(obj, "id"));
             if (id >= 0) {
-                this.items.add(api.fetch(Album.class, id, true));
+                this.items.add(api.fetch(Track.class, id, true));
             }
         }
     }
@@ -144,14 +144,14 @@ public class AllAlbums extends AbstractAPIObject<AllAlbums> {
         return id;
     }
 
-    public @NotNull Set<@NotNull Album> items() {
+    public @NotNull Set<@NotNull Track> items() {
         return items;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AllAlbums allAlbums)) return false;
-        return id == allAlbums.id;
+        if (!(o instanceof AllTracks allTracks)) return false;
+        return id == allTracks.id;
     }
 
     @Override
@@ -161,7 +161,7 @@ public class AllAlbums extends AbstractAPIObject<AllAlbums> {
 
     @Override
     public String toString() {
-        return "AllAlbums{" +
+        return "AllTracks{" +
                 "id=" + id +
                 ", items=" + items +
                 ", api=" + api +

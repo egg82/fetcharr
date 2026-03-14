@@ -16,7 +16,7 @@ import java.time.Instant;
 import java.util.Objects;
 
 public class Language extends AbstractAPIObject<Language> {
-    public static Language UNKNOWN = new Language(ArrAPI.UNKNOWN, -1);
+    public static final Language UNKNOWN = new Language(ArrAPI.UNKNOWN, -1);
 
     private final int id;
 
