@@ -42,6 +42,7 @@ public class LidarrUpdater extends AbstractUpdater {
         random.updateList(all.items());
 
         boolean monitoredOnly = LidarrConfigVars.getBool(LidarrConfigVars.MONITORED_ONLY, api.id());
+        boolean missingOnly = LidarrConfigVars.getBool(LidarrConfigVars.MISSING_ONLY, api.id());
         boolean useCutoff = LidarrConfigVars.getBool(LidarrConfigVars.USE_CUTOFF, api.id());
         String[] skipTags = LidarrConfigVars.getArr(LidarrConfigVars.SKIP_TAGS, api.id());
 
@@ -60,6 +61,20 @@ public class LidarrUpdater extends AbstractUpdater {
             if (monitoredOnly && !a.monitored()) {
                 logger.info("Skipping artist {} (\"{}\") due to unmonitored status", a.id(), a.artistName());
                 continue;
+            }
+            if (missingOnly) {
+                boolean missing = true;
+                AllTracks at = api.fetch(AllTracks.class, a.id(), false);
+                for (Track t : at.items()) {
+                    if (!t.hasFile()) {
+                        missing = false;
+                        break;
+                    }
+                }
+                if (!missing) {
+                    logger.info("Skipping artist {} (\"{}\") because it has all available tracks", a.id(), a.artistName());
+                    continue;
+                }
             }
             if (useCutoff) {
                 boolean qualityCutoffMet = true;

@@ -40,6 +40,7 @@ public class RadarrUpdater extends AbstractUpdater {
         random.updateList(all.items());
 
         boolean monitoredOnly = RadarrConfigVars.getBool(RadarrConfigVars.MONITORED_ONLY, api.id());
+        boolean missingOnly = RadarrConfigVars.getBool(RadarrConfigVars.MISSING_ONLY, api.id());
         boolean useCutoff = RadarrConfigVars.getBool(RadarrConfigVars.USE_CUTOFF, api.id());
         String[] skipTags = RadarrConfigVars.getArr(RadarrConfigVars.SKIP_TAGS, api.id());
 
@@ -57,6 +58,10 @@ public class RadarrUpdater extends AbstractUpdater {
             api.update(m);
             if (monitoredOnly && !m.monitored()) {
                 logger.info("Skipping movie {} (\"{}\") due to unmonitored status", m.id(), m.title());
+                continue;
+            }
+            if (missingOnly && m.hasFile()) {
+                logger.info("Skipping movie {} (\"{}\") because it is not missing a movie file", m.id(), m.title());
                 continue;
             }
             if (useCutoff && !m.movieFile().qualityCutoffNotMet()) {

@@ -42,6 +42,7 @@ public class SonarrUpdater extends AbstractUpdater {
         random.updateList(all.items());
 
         boolean monitoredOnly = SonarrConfigVars.getBool(SonarrConfigVars.MONITORED_ONLY, api.id());
+        boolean missingOnly = SonarrConfigVars.getBool(SonarrConfigVars.MISSING_ONLY, api.id());
         boolean useCutoff = SonarrConfigVars.getBool(SonarrConfigVars.USE_CUTOFF, api.id());
         String[] skipTags = SonarrConfigVars.getArr(SonarrConfigVars.SKIP_TAGS, api.id());
 
@@ -60,6 +61,20 @@ public class SonarrUpdater extends AbstractUpdater {
             if (monitoredOnly && !s.monitored()) {
                 logger.info("Skipping series {} (\"{}\") due to unmonitored status", s.id(), s.title());
                 continue;
+            }
+            if (missingOnly) {
+                boolean missing = true;
+                AllEpisodes a = api.fetch(AllEpisodes.class, s.id(), false);
+                for (Episode e : a.items()) {
+                    if (!e.hasFile()) {
+                        missing = false;
+                        break;
+                    }
+                }
+                if (!missing) {
+                    logger.info("Skipping series {} (\"{}\") because it has all available episodes", s.id(), s.title());
+                    continue;
+                }
             }
             if (useCutoff) {
                 boolean qualityCutoffMet = true;

@@ -114,6 +114,9 @@ Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
 - MONITORED_ONLY: True to select only monitored items, false to select all
   - bool: \<value\>
   - default: true
+- MISSING_ONLY: True to select only missing items, false to select upgrades as well
+  - bool: \<value\>
+  - default: false
 - SKIP_TAGS: Comma-separated list of tags to skip searching
   - string: \<tags\>
   - default: \<none\>
@@ -143,6 +146,9 @@ Replace `X` with a number. This allows for up to 100 instances to be configured.
 - RADARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
     - bool: \<value\>
     - default: true
+- RADARR_X_MISSING_ONLY: True to select only missing items, false to select upgrades as well
+  - bool: \<value\>
+  - default: false
 - RADARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
     - string: \<tags\>
     - default: \<none\>
@@ -169,6 +175,9 @@ Replace `X` with a number. This allows for up to 100 instances to be configured.
 - SONARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
     - bool: \<value\>
     - default: true
+- SONARR_X_MISSING_ONLY: True to select only missing items, false to select upgrades as well
+  - bool: \<value\>
+  - default: false
 - SONARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
     - string: \<tags\>
     - default: \<none\>
@@ -195,6 +204,9 @@ Replace `X` with a number. This allows for up to 100 instances to be configured.
 - LIDARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
   - bool: \<value\>
   - default: true
+- LIDARR_X_MISSING_ONLY: True to select only missing items, false to select upgrades as well
+  - bool: \<value\>
+  - default: false
 - LIDARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
   - string: \<tags\>
   - default: \<none\>
@@ -221,6 +233,9 @@ Replace `X` with a number. This allows for up to 100 instances to be configured.
 - WHISPARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
   - bool: \<value\>
   - default: true
+- WHISPARR_X_MISSING_ONLY: True to select only missing items, false to select upgrades as well
+  - bool: \<value\>
+  - default: false
 - WHISPARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
   - string: \<tags\>
   - default: \<none\>
