@@ -205,8 +205,8 @@ public class Artist extends AbstractAPIObject<Artist> implements Weighted {
             }
         }
 
-        this.nextAlbum = obj.has("nextAlbum") ? new Album(api, NumberParser.parseInt(-1, StringParser.parse(obj.getJSONObject("nextAlbum"), "id")), obj.getJSONObject("nextAlbum")) : null;
-        this.lastAlbum = obj.has("lastAlbum") ? new Album(api, NumberParser.parseInt(-1, StringParser.parse(obj.getJSONObject("nextAlbum"), "id")), obj.getJSONObject("lastAlbum")) : null;
+        this.nextAlbum = obj.has("nextAlbum") && obj.get("nextAlbum") != null ? new Album(api, NumberParser.parseInt(-1, StringParser.parse(obj.getJSONObject("nextAlbum"), "id")), obj.getJSONObject("nextAlbum")) : null;
+        this.lastAlbum = obj.has("lastAlbum") && obj.get("lastAlbum") != null ? new Album(api, NumberParser.parseInt(-1, StringParser.parse(obj.getJSONObject("lastAlbum"), "id")), obj.getJSONObject("lastAlbum")) : null;
 
         this.images.clear();
         JSONArray images = obj.has("images") ? obj.getJSONArray("images") : null;
