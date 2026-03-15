@@ -2,19 +2,22 @@ package me.egg82.arr.radarr.v3;
 
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONArray;
+import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractFetchableAPIObject;
 import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.config.CacheConfigVars;
 import me.egg82.arr.radarr.v3.schema.TagResource;
+import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class Tag extends AbstractFetchableAPIObject {
+    public static final Tag UNKNOWN = new Tag();
+
     private final List<@NotNull TagResource> resources = new ArrayList<>();
 
     public Tag(@NotNull ArrAPI api, @NotNull JsonNode node) {
@@ -30,14 +33,18 @@ public class Tag extends AbstractFetchableAPIObject {
         }
     }
 
+    private Tag() {
+        super(NullArrAPI.INSTANCE, new JSONObject());
+    }
+
     @Override
     public @NotNull String apiPath() {
         return "/api/v3/tag";
     }
 
     @Override
-    public @NotNull Duration cacheTime() {
-        return CacheConfigVars.getTimeValue(CacheConfigVars.LONG_CACHE_TIME).duration();
+    public @NotNull TimeValue cacheTime() {
+        return CacheConfigVars.getTimeValue(CacheConfigVars.LONG_CACHE_TIME);
     }
 
     public @NotNull List<@NotNull TagResource> resources() {

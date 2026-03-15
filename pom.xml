@@ -26,7 +26,7 @@
         <slf4j.version>2.0.17</slf4j.version>
         <tinylog.version>2.7.0</tinylog.version>
         <pcollections.version>5.0.0</pcollections.version>
-        <caffeine.version>3.2.3</caffeine.version>
+        <expiringmap.version>0.5.11</expiringmap.version>
         <fastutil.version>8.5.18</fastutil.version>
     </properties>
 

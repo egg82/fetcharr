@@ -1,14 +1,13 @@
 package me.egg82.arr.common;
 
 import kong.unirest.core.JsonNode;
+import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
-
-import java.time.Duration;
 
 public interface FetchableAPIObject {
     @NotNull String apiPath();
 
-    @NotNull Duration cacheTime();
+    @NotNull TimeValue cacheTime();
 
     @NotNull JsonNode node();
 }

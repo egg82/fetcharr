@@ -31,7 +31,7 @@ public abstract class AbstractArrAPI implements ArrAPI {
         return this.baseUrl;
     }
 
-    protected @Nullable JsonNode get(@NotNull String apiPath) {
+    protected final @Nullable JsonNode get(@NotNull String apiPath) {
         return get(apiPath, null);
     }
 
@@ -43,11 +43,11 @@ public abstract class AbstractArrAPI implements ArrAPI {
                 .asJson());
     }
 
-    protected @Nullable JsonNode post(@NotNull String apiPath) {
+    protected final @Nullable JsonNode post(@NotNull String apiPath) {
         return post(apiPath, null);
     }
 
-    protected @Nullable JsonNode post(@NotNull String apiPath, @Nullable JsonNode body) {
+    protected final @Nullable JsonNode post(@NotNull String apiPath, @Nullable JsonNode body) {
         return parseResponse(Unirest.post(baseUrl + apiPath)
                 .header("X-Api-Key", apiKey)
                 .header("Content-Type", "application/json")

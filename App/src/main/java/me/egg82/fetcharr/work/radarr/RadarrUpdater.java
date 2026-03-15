@@ -2,23 +2,28 @@ package me.egg82.fetcharr.work.radarr;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.egg82.arr.radarr.RadarrV3API;
+import me.egg82.arr.radarr.v3.Movie;
+import me.egg82.arr.radarr.v3.Tag;
+import me.egg82.arr.radarr.v3.schema.MovieResource;
+import me.egg82.arr.radarr.v3.schema.TagResource;
 import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.RadarrConfigVars;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.util.WeightedRandom;
-import me.egg82.fetcharr.web.model.radarr.AllMovies;
-import me.egg82.fetcharr.web.model.radarr.Movie;
-import me.egg82.fetcharr.web.radarr.RadarrAPI;
 import me.egg82.fetcharr.work.AbstractUpdater;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 public class RadarrUpdater extends AbstractUpdater {
-    private final WeightedRandom<Movie> random = new WeightedRandom<>();
+    private final WeightedRandom<WeightedMovie> random = new WeightedRandom<>();
 
-    public RadarrUpdater(@NotNull RadarrAPI api) {
+    public RadarrUpdater(@NotNull RadarrV3API api) {
         super(api);
     }
 
@@ -36,8 +41,17 @@ public class RadarrUpdater extends AbstractUpdater {
 
         logger.info("Updating up to {} items for for RADARR_{}: {}", searchAmount, api.id(), api.baseUrl());
 
-        AllMovies all = api.fetch(AllMovies.class, false);
-        random.updateList(all.items());
+        Movie all = api.fetch(Movie.class);
+        if (all == null) {
+            logger.error("RADARR_{} returned bad result for {}", api.id(), Movie.UNKNOWN.apiPath());
+            return;
+        }
+
+        List<WeightedMovie> wrapped = new ArrayList<>();
+        for (MovieResource m : all.resources()) {
+            wrapped.add(new WeightedMovie(m));
+        }
+        random.updateList(wrapped);
 
         boolean monitoredOnly = RadarrConfigVars.getBool(RadarrConfigVars.MONITORED_ONLY, api.id());
         boolean missingOnly = RadarrConfigVars.getBool(RadarrConfigVars.MISSING_ONLY, api.id());
@@ -51,35 +65,34 @@ public class RadarrUpdater extends AbstractUpdater {
         while (attempts > 0 && ids.size() < searchAmount) {
             attempts--;
 
-            Movie m = random.selectOne();
+            WeightedMovie m = random.selectOne();
             if (m == null) {
                 continue;
             }
-            api.update(m);
-            if (monitoredOnly && !m.monitored()) {
-                logger.info("Skipping movie {} (\"{}\") due to unmonitored status", m.id(), m.title());
+            if (monitoredOnly && !m.resource().monitored()) {
+                logger.info("Skipping movie {} (\"{}\") due to unmonitored status", m.resource().id(), m.resource().title());
                 continue;
             }
-            if (missingOnly && m.hasFile()) {
-                logger.info("Skipping movie {} (\"{}\") because it is not missing a movie file", m.id(), m.title());
+            if (missingOnly && m.resource().hasFile()) {
+                logger.info("Skipping movie {} (\"{}\") because it is not missing a movie file", m.resource().id(), m.resource().title());
                 continue;
             }
-            if (useCutoff && !m.movieFile().qualityCutoffNotMet()) {
-                logger.info("Skipping movie {} (\"{}\") because it meets the quality cutoff", m.id(), m.title());
+            if (useCutoff && !m.resource().movieFile().qualityCutoffNotMet()) {
+                logger.info("Skipping movie {} (\"{}\") because it meets the quality cutoff", m.resource().id(), m.resource().title());
                 continue;
             }
-            if (skipTags.length > 0 && hasAnyTag(skipTags, m.tags())) {
-                logger.info("Skipping movie {} (\"{}\") because skip-tag is set", m.id(), m.title());
+            if (skipTags.length > 0 && hasAnyTag(skipTags, m.resource().tags())) {
+                logger.info("Skipping movie {} (\"{}\") because skip-tag is set", m.resource().id(), m.resource().title());
                 continue;
             }
 
             if (dryRun) {
-                logger.info("Would update movie {} (\"{}\") if not in dry-run mode", m.id(), m.title());
+                logger.info("Would update movie {} (\"{}\") if not in dry-run mode", m.resource().id(), m.resource().title());
             } else {
-                logger.info("Updating movie {} (\"{}\")", m.id(), m.title());
+                logger.info("Updating movie {} (\"{}\")", m.resource().id(), m.resource().title());
             }
-            ids.add(m.id());
-            m.invalidate(); // Force refresh on next
+            ids.add(m.resource().id());
+            api.invalidate(Movie.class, m.resource().id()); // Force refresh on next
         }
 
         if (!dryRun && !ids.isEmpty()) {
@@ -88,5 +101,24 @@ public class RadarrUpdater extends AbstractUpdater {
 
         this.meta.last(lastUpdate);
         this.meta.write();
+    }
+
+    private boolean hasAnyTag(@NotNull String @NotNull [] needles, @NotNull Collection<@NotNull Tag> haystack) {
+        if (needles.length == 0 || haystack.isEmpty()) {
+            return false;
+        }
+
+        for (String n : needles) {
+            for (Tag t : haystack) {
+                TagResource r = t.resource();
+                if (r != null) {
+                    String label = r.label();
+                    if (label != null && label.equalsIgnoreCase(n)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 }
