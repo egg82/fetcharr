@@ -9,30 +9,14 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>fetcharr</artifactId>
-    <version>${app.version}</version>
+    <artifactId>arr-lib</artifactId>
+    <version>${lib.version}</version>
 
     <build>
         <resources>
             <resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
-                <includes>
-                    <include>**/*.properties</include>
-                    <include>**/*.yml</include>
-                </includes>
-                <excludes>
-                    <exclude>**/lang/*.properties</exclude>
-                </excludes>
-            </resource>
-
-            <resource>
-                <directory>src/main/resources</directory>
-                <filtering>false</filtering>
-                <includes>
-                    <include>**/*.dict</include>
-                    <include>**/lang/*.properties</include>
-                </includes>
             </resource>
         </resources>
 
@@ -52,7 +36,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.15.0</version>
                 <configuration>
-                    <source>21</source>
+                    <release>21</release>
                     <target>21</target>
                 </configuration>
             </plugin>
@@ -78,9 +62,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.6.1</version>
-                <configuration>
-
-                </configuration>
                 <executions>
                     <execution>
                         <phase>package</phase>
@@ -89,37 +70,10 @@
                         </goals>
                         <configuration>
                             <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
-                            <transformers>
-                                <transformer implementation = "org.apache.maven.plugins.shade.resource.PluginXmlResourceTransformer" />
-                                <transformer implementation = "org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
-                                <transformer implementation = "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>me.egg82.fetcharr.Main</mainClass>
-                                </transformer>
-                            </transformers>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <!-- included or useless -->
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                        <exclude>LICENSE-2.0.txt</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
+                            <minimizeJar>false</minimizeJar>
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>3.6.3</version>
-                <configuration>
-                    <mainClass>me.egg82.fetcharr.Main</mainClass>
-                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -130,19 +84,16 @@
 
     <dependencies>
         <dependency>
-            <groupId>me.egg82</groupId>
-            <artifactId>fetcharr-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>me.egg82</groupId>
-            <artifactId>arr-lib</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
             <version>${jetbrains.version}</version>
             <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
         </dependency>
 
         <dependency>
@@ -164,35 +115,15 @@
         </dependency>
 
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.tinylog</groupId>
-            <artifactId>slf4j-tinylog</artifactId>
-            <version>${tinylog.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.tinylog</groupId>
-            <artifactId>tinylog-impl</artifactId>
-            <version>${tinylog.version}</version>
+            <groupId>it.unimi.dsi</groupId>
+            <artifactId>fastutil-core</artifactId>
+            <version>${fastutil.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.pcollections</groupId>
-            <artifactId>pcollections</artifactId>
-            <version>${pcollections.version}</version>
-        </dependency>
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
             <version>${caffeine.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>it.unimi.dsi</groupId>
-            <artifactId>fastutil-core</artifactId>
-            <version>${fastutil.version}</version>
         </dependency>
     </dependencies>
 </project>

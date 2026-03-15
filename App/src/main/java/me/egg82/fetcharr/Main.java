@@ -14,6 +14,7 @@ import me.egg82.fetcharr.work.sonarr.SonarrUpdater;
 import me.egg82.fetcharr.work.whisparr.WhisparrUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.tinylog.configuration.Configuration;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
@@ -30,10 +31,6 @@ import java.util.List;
 import java.util.concurrent.*;
 
 public class Main {
-    static {
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", ConfigVars.getLogMode(ConfigVars.LOG_MODE).name().toLowerCase());
-    }
-
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     private static final ScheduledExecutorService workPool = Executors.newScheduledThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
@@ -43,6 +40,10 @@ public class Main {
     private static final List<Runnable> whisparr = new ArrayList<>();
 
     public static void main(String[] args) {
+        Configuration.set("writer", "console");
+        Configuration.set("writer.level", ConfigVars.getLogMode(ConfigVars.LOG_MODE).name().toLowerCase());
+        Configuration.set("writer.format", "{date} [{level}]: {message}");
+
         LOGGER.info("Starting..");
         LOGGER.info("Logging mode set to {}", ConfigVars.getLogMode(ConfigVars.LOG_MODE).name());
         LOGGER.info("Thread pool size set to {}", Math.max(4, Runtime.getRuntime().availableProcessors() / 2));

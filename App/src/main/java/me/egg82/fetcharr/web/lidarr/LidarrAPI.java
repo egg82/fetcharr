@@ -13,7 +13,6 @@ import me.egg82.fetcharr.web.ArrAPI;
 import me.egg82.fetcharr.web.ArrType;
 import me.egg82.fetcharr.web.model.common.APIObject;
 import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

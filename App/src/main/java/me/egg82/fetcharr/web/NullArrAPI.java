@@ -4,7 +4,6 @@ import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import me.egg82.fetcharr.web.model.common.APIObject;
 import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
 
 public class NullArrAPI implements ArrAPI {
     public static final NullArrAPI INSTANCE = new NullArrAPI();

@@ -52,7 +52,9 @@ public class JSONFile {
         }
     }
 
-    public boolean exists() { return file.exists() && file.isFile(); }
+    public boolean exists() {
+        return file.exists() && file.isFile();
+    }
 
     private @Nullable JsonNode readNode() throws IOException {
         if (!file.exists() || (file.exists() && file.isDirectory())) {
