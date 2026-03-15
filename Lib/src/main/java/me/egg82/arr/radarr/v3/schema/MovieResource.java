@@ -1,5 +1,7 @@
 package me.egg82.arr.radarr.v3.schema;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractAPIObject;
@@ -39,7 +41,7 @@ public class MovieResource extends AbstractAPIObject {
     private final String youTubeTrailerId;
     private final String studio;
     private final File path;
-    private final QualityProfile qualityProfile;
+    private final int qualityProfileId;
     private final boolean hasFile;
     private final boolean monitored;
     private final MovieStatusType minimumAvailability;
@@ -55,7 +57,7 @@ public class MovieResource extends AbstractAPIObject {
     private final String certification;
     private final Set<@NotNull String> genres = new HashSet<>();
     private final Set<@NotNull String> keywords = new HashSet<>();
-    private final List<@NotNull Tag> tags = new ArrayList<>();
+    private final IntList tags = new IntArrayList();
     private final Instant added;
     private final AddMovieOptions addOptions;
     private final Ratings ratings;
@@ -105,7 +107,7 @@ public class MovieResource extends AbstractAPIObject {
         this.youTubeTrailerId = StringParser.get(obj, "youTubeTrailerId");
         this.studio = StringParser.get(obj, "studio");
         this.path = FileParser.get(obj, "path");
-        this.qualityProfile = api.fetch(QualityProfile.class, NumberParser.getInt(-1, obj, "qualityProfileId"));
+        this.qualityProfileId = NumberParser.getInt(-1, obj, "qualityProfileId");
         this.hasFile = BooleanParser.get(false, obj, "hasFile");
         this.monitored = BooleanParser.get(false, obj, "monitored");
         this.minimumAvailability = MovieStatusType.get(MovieStatusType.DELETED, obj, "minimumAvailability");
@@ -137,7 +139,7 @@ public class MovieResource extends AbstractAPIObject {
         JSONArray tags = obj.has("tags") && obj.get("tags") != null ? obj.getJSONArray("tags") : null;
         if (tags != null) {
             for (int i = 0; i < tags.length(); i++) {
-                this.tags.add(api.fetch(Tag.class, tags.getInt(i)));
+                this.tags.add(tags.getInt(i));
             }
         }
 
@@ -244,7 +246,7 @@ public class MovieResource extends AbstractAPIObject {
     }
 
     public @NotNull QualityProfile qualityProfile() {
-        return qualityProfile;
+        return api.fetch(QualityProfile.class, qualityProfileId);
     }
 
     public boolean hasFile() {
@@ -308,7 +310,11 @@ public class MovieResource extends AbstractAPIObject {
     }
 
     public @NotNull List<@NotNull Tag> tags() {
-        return tags;
+        List<@NotNull Tag> r = new ArrayList<>();
+        for (int id : this.tags) {
+            r.add(api.fetch(Tag.class, id));
+        }
+        return r;
     }
 
     public @NotNull Instant added() {
@@ -380,7 +386,7 @@ public class MovieResource extends AbstractAPIObject {
                 ", youTubeTrailerId='" + youTubeTrailerId + '\'' +
                 ", studio='" + studio + '\'' +
                 ", path=" + path +
-                ", qualityProfile=" + qualityProfile +
+                ", qualityProfileId=" + qualityProfileId +
                 ", hasFile=" + hasFile +
                 ", monitored=" + monitored +
                 ", minimumAvailability=" + minimumAvailability +

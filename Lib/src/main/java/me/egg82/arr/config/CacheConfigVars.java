@@ -1,12 +1,15 @@
 package me.egg82.arr.config;
 
+import me.egg82.arr.parse.FileParser;
 import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 public enum CacheConfigVars {
+    CACHE_DIR(File.class, new File("/cache")),
     SHORT_CACHE_TIME(TimeValue.class, new TimeValue(65, TimeUnit.MINUTES)),
     LONG_CACHE_TIME(TimeValue.class, new TimeValue(6L, TimeUnit.HOURS));
 
@@ -38,6 +41,10 @@ public enum CacheConfigVars {
     public static @NotNull String @NotNull [] getArr(@NotNull CacheConfigVars var) {
         String r = System.getenv(var.name());
         return r != null ? r.split(",") : var.def();
+    }
+
+    public static @NotNull File getFile(@NotNull CacheConfigVars var) {
+        return FileParser.parse(var.def(), System.getenv(var.name()), true);
     }
 
     public static @NotNull TimeValue getTimeValue(@NotNull CacheConfigVars var) {
