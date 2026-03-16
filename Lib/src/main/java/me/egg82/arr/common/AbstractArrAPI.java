@@ -4,6 +4,9 @@ import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.Unirest;
+import me.egg82.arr.config.CacheConfigVars;
+import me.egg82.arr.file.FetchableAPIObjectMeta;
+import me.egg82.arr.file.JSONFile;
 import me.egg82.arr.unit.TimeValue;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
@@ -12,6 +15,8 @@ import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.time.Duration;
@@ -53,6 +58,12 @@ public abstract class AbstractArrAPI implements ArrAPI {
     @Override
     public <T extends FetchableAPIObject> @Nullable T fetch(@NotNull Class<T> type, @Nullable Map<String, @NotNull Object> params) {
         T r = (T) cache.computeIfAbsent(type, k -> {
+            T cache = getCache(type);
+            if (cache != null) {
+                logger.debug("Loaded {} from cache ({}_{})", type.getSimpleName(), this.type(), this.id);
+                return cache;
+            }
+
             T unknown = buildUnknown(type);
             if (unknown == null) {
                 return null;
@@ -61,7 +72,11 @@ public abstract class AbstractArrAPI implements ArrAPI {
             if (node == null) {
                 return null;
             }
-            return build(type, node, Instant.now());
+
+            T composite = build(type, node, Instant.now());
+            logger.debug("Fetched {} from API ({}_{})", type.getSimpleName(), this.type(), this.id);
+            writeCache(composite);
+            return composite;
         });
         if (r != null) {
             Duration expires = r.expiresIn();
@@ -73,6 +88,12 @@ public abstract class AbstractArrAPI implements ArrAPI {
     @Override
     public <T extends FetchableAPIObject> @Nullable T fetch(@NotNull Class<T> type, int id, @Nullable Map<String, @NotNull Object> params) {
         T r = (T) idCache.computeIfAbsent(ObjectIntPair.of(type, id), k -> {
+            T cache = getCache(type, id);
+            if (cache != null) {
+                logger.debug("Loaded {} ({}) from cache ({}_{})", type.getSimpleName(), id, this.type(), this.id);
+                return cache;
+            }
+
             T unknown = buildUnknown(type);
             if (unknown == null) {
                 return null;
@@ -81,7 +102,11 @@ public abstract class AbstractArrAPI implements ArrAPI {
             if (node == null) {
                 return null;
             }
-            return build(type, node, Instant.now());
+
+            T composite = build(type, node, Instant.now());
+            logger.debug("Fetched {} ({}) from API ({}_{})", type.getSimpleName(), id, this.type(), this.id);
+            writeCache(composite, id);
+            return composite;
         });
         if (r != null) {
             Duration expires = r.expiresIn();
@@ -129,6 +154,88 @@ public abstract class AbstractArrAPI implements ArrAPI {
             }
             return null;
         });
+    }
+
+    private <T extends FetchableAPIObject> @Nullable T getCache(@NotNull Class<T> type) {
+        T unknown = buildUnknown(type);
+        if (unknown == null) {
+            return null;
+        }
+
+        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(type), "meta.json")));
+        if (Instant.now().isAfter(metaFile.lastFetched().plus(unknown.cacheTime().duration()))) {
+            return null;
+        }
+
+        JSONFile cacheFile = new JSONFile(new File(getBasePath(type), "base.json"));
+        if (!cacheFile.exists()) {
+            return null;
+        }
+
+        try {
+            return build(type, cacheFile.read(), metaFile.lastFetched());
+        } catch (IOException ex) {
+            logger.warn("Could not read cache file {}", cacheFile.absolutePath(), ex);
+        }
+        return null;
+    }
+
+    private <T extends FetchableAPIObject> void writeCache(@NotNull T composite) {
+        JSONFile cacheFile = new JSONFile(new File(getBasePath(composite.getClass()), "base.json"));
+        try {
+            cacheFile.write(composite.node());
+        }  catch (IOException ex) {
+            logger.warn("Could not write cache file {}", cacheFile.absolutePath(), ex);
+            return;
+        }
+
+        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(composite.getClass()), "meta.json")));
+        metaFile.setFetched(composite.lastFetched());
+        metaFile.write();
+    }
+
+    private <T extends FetchableAPIObject> @Nullable T getCache(@NotNull Class<T> type, int id) {
+        T unknown = buildUnknown(type);
+        if (unknown == null) {
+            return null;
+        }
+
+        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(type), id + ".meta.json")));
+        if (Instant.now().isAfter(metaFile.lastFetched().plus(unknown.cacheTime().duration()))) {
+            return null;
+        }
+
+        JSONFile cacheFile = new JSONFile(new File(getBasePath(type), id + ".json"));
+        if (!cacheFile.exists()) {
+            return null;
+        }
+
+        try {
+            return build(type, cacheFile.read(), metaFile.lastFetched());
+        } catch (IOException ex) {
+            logger.warn("Could not read cache file {}", cacheFile.absolutePath(), ex);
+        }
+        return null;
+    }
+
+    private <T extends FetchableAPIObject> void writeCache(@NotNull T composite, int id) {
+        JSONFile cacheFile = new JSONFile(new File(getBasePath(composite.getClass()), id + ".json"));
+        try {
+            cacheFile.write(composite.node());
+        }  catch (IOException ex) {
+            logger.warn("Could not write cache file {}", cacheFile.absolutePath(), ex);
+            return;
+        }
+
+        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(composite.getClass()), id + ".meta.json")));
+        metaFile.setFetched(composite.lastFetched());
+        metaFile.write();
+    }
+
+    private <T extends FetchableAPIObject> @NotNull File getBasePath(@NotNull Class<T> type) {
+        File base = CacheConfigVars.getFile(CacheConfigVars.CACHE_DIR);
+        File arr = new File(base, this.type().name().toLowerCase() + "-" + this.id);
+        return new File(arr, type.getSimpleName());
     }
 
     protected final @Nullable JsonNode get(@NotNull String apiPath) {

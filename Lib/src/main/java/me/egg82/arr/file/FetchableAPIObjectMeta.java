@@ -27,15 +27,15 @@ public class FetchableAPIObjectMeta {
         try {
             JSONObject obj = file.read().getObject();
             if (obj == null || obj.isEmpty()) {
-                this.lastFetched = Instant.now();
+                this.lastFetched = Instant.EPOCH;
                 return;
             }
 
-            this.lastFetched = InstantParser.parse(Instant.now(), obj.getString("lastFetched"));
+            this.lastFetched = InstantParser.parse(Instant.EPOCH, obj.getString("lastFetched"));
         } catch (Exception ex) {
-            logger.warn("Could not read meta from {}: ", file.path(), ex);
+            logger.warn("Could not read meta from {}: ", file.absolutePath(), ex);
 
-            this.lastFetched = Instant.now();
+            this.lastFetched = Instant.EPOCH;
         }
     }
 
@@ -47,7 +47,7 @@ public class FetchableAPIObjectMeta {
         try {
             file.write(new JsonNode(obj.toString()));
         } catch (IOException ex) {
-            logger.warn("Could not write meta to {}: ", file.path(), ex);
+            logger.warn("Could not write meta to {}: ", file.absolutePath(), ex);
         }
     }
 

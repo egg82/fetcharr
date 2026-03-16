@@ -23,7 +23,7 @@ public class JSONFile {
         this.file = file;
     }
 
-    public @NotNull String path() {
+    public @NotNull String absolutePath() {
         return file.getAbsolutePath();
     }
 

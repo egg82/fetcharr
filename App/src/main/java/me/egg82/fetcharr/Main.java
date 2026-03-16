@@ -197,7 +197,7 @@ public class Main {
         }
 
         radarr.add(new RadarrUpdater(api));
-        LOGGER.info("Added Radarr instance at {}", url);
+        LOGGER.info("Added RADARR_{} instance at {}", num, url);
     }
 
     /*

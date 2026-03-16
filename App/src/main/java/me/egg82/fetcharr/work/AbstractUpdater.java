@@ -15,13 +15,13 @@ public abstract class AbstractUpdater implements Runnable {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected final ArrAPI api;
-    protected final UpdaterMeta meta;
+    protected final UpdaterMeta metaFile;
     protected Instant lastUpdate;
 
     public AbstractUpdater(@NotNull ArrAPI api) {
         this.api = api;
-        this.meta = new UpdaterMeta(new JSONFile(new File(getBasePath(), "meta.json")));
-        this.lastUpdate = meta.lastUpdate();
+        this.metaFile = new UpdaterMeta(new JSONFile(new File(getBasePath(), "meta.json")));
+        this.lastUpdate = metaFile.lastUpdate();
     }
 
     @Override

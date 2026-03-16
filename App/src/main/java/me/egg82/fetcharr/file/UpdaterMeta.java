@@ -33,7 +33,7 @@ public class UpdaterMeta {
 
             this.lastUpdate = InstantParser.parse(Instant.EPOCH, obj.getString("lastUpdate"));
         } catch (Exception ex) {
-            logger.warn("Could not read meta from {}: ", file.path(), ex);
+            logger.warn("Could not read meta from {}: ", file.absolutePath(), ex);
 
             this.lastUpdate = Instant.EPOCH;
         }
@@ -47,7 +47,7 @@ public class UpdaterMeta {
         try {
             file.write(new JsonNode(obj.toString()));
         } catch (IOException ex) {
-            logger.warn("Could not write meta to {}: ", file.path(), ex);
+            logger.warn("Could not write meta to {}: ", file.absolutePath(), ex);
         }
     }
 

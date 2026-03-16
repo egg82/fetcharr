@@ -26,6 +26,10 @@ public class RadarrUpdater extends AbstractUpdater {
 
     public RadarrUpdater(@NotNull RadarrV3API api) {
         super(api);
+
+        if (!Instant.EPOCH.equals(this.metaFile.lastUpdate())) {
+            logger.debug("Resuming RADARR_{} from last update at {}", api.id(), this.metaFile.lastUpdate());
+        }
     }
 
     @Override
@@ -101,8 +105,8 @@ public class RadarrUpdater extends AbstractUpdater {
             api.search(ids);
         }
 
-        this.meta.lastUpdate(lastUpdate);
-        this.meta.write();
+        this.metaFile.lastUpdate(lastUpdate);
+        this.metaFile.write();
     }
 
     private boolean hasAnyTag(@NotNull String @NotNull [] needles, @NotNull Collection<@NotNull Tag> haystack) {
