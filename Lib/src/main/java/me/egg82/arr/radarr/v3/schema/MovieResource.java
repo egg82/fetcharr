@@ -73,7 +73,7 @@ public class MovieResource extends AbstractAPIObject {
         this.id = NumberParser.getInt(-1, obj, "id");
         this.title = StringParser.get(obj, "title");
         this.originalTitle = StringParser.get(obj, "originalTitle");
-        this.originalLanguage = new Language(api, obj.getJSONObject("language"));
+        this.originalLanguage = ObjectParser.get(Language.class, api, obj, "language");
 
         JSONArray alternateTitles = obj.has("alternateTitles") && obj.get("alternateTitles") != null ? obj.getJSONArray("alternateTitles") : null;
         if (alternateTitles != null) {
@@ -144,13 +144,13 @@ public class MovieResource extends AbstractAPIObject {
         }
 
         this.added = InstantParser.get(Instant.EPOCH, obj, "added");
-        this.addOptions = new AddMovieOptions(api, obj.getJSONObject("addOptions"));
-        this.ratings = new Ratings(api, obj.getJSONObject("ratings"));
-        this.movieFile = new MovieFileResource(api, obj.getJSONObject("movieFile"));
-        this.collection = new MovieCollectionResource(api, obj.getJSONObject("collection"));
+        this.addOptions = ObjectParser.get(AddMovieOptions.class, api, obj, "addOptions");
+        this.ratings = ObjectParser.get(Ratings.class, api, obj, "ratings");
+        this.movieFile = ObjectParser.get(MovieFileResource.class, api, obj, "movieFile");
+        this.collection = ObjectParser.get(MovieCollectionResource.class, api, obj, "collection");
         this.popularity = NumberParser.getFloat(-1.0F, obj, "popularity");
         this.lastSearchTime = InstantParser.get(Instant.EPOCH, obj, "lastSearchTime");
-        this.statistics = new MovieStatisticsResource(api, obj.getJSONObject("statistics"));
+        this.statistics = ObjectParser.get(MovieStatisticsResource.class, api, obj, "statistics");
     }
 
     public int id() {
@@ -165,7 +165,7 @@ public class MovieResource extends AbstractAPIObject {
         return originalTitle;
     }
 
-    public @NotNull Language originalLanguage() {
+    public @Nullable Language originalLanguage() {
         return originalLanguage;
     }
 
@@ -245,7 +245,7 @@ public class MovieResource extends AbstractAPIObject {
         return path;
     }
 
-    public @NotNull QualityProfile qualityProfile() {
+    public @Nullable QualityProfile qualityProfile() {
         return api.fetch(QualityProfile.class, qualityProfileId);
     }
 
@@ -312,7 +312,10 @@ public class MovieResource extends AbstractAPIObject {
     public @NotNull List<@NotNull Tag> tags() {
         List<@NotNull Tag> r = new ArrayList<>();
         for (int id : this.tags) {
-            r.add(api.fetch(Tag.class, id));
+            Tag t = api.fetch(Tag.class, id);
+            if (t != null) {
+                r.add(t);
+            }
         }
         return r;
     }
@@ -321,19 +324,19 @@ public class MovieResource extends AbstractAPIObject {
         return added;
     }
 
-    public @NotNull AddMovieOptions addOptions() {
+    public @Nullable AddMovieOptions addOptions() {
         return addOptions;
     }
 
-    public @NotNull Ratings ratings() {
+    public @Nullable Ratings ratings() {
         return ratings;
     }
 
-    public @NotNull MovieFileResource movieFile() {
+    public @Nullable MovieFileResource movieFile() {
         return movieFile;
     }
 
-    public @NotNull MovieCollectionResource collection() {
+    public @Nullable MovieCollectionResource collection() {
         return collection;
     }
 
@@ -345,7 +348,7 @@ public class MovieResource extends AbstractAPIObject {
         return lastSearchTime;
     }
 
-    public @NotNull MovieStatisticsResource statistics() {
+    public @Nullable MovieStatisticsResource statistics() {
         return statistics;
     }
 

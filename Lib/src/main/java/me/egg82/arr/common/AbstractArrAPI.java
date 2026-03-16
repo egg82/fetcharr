@@ -25,8 +25,8 @@ public abstract class AbstractArrAPI implements ArrAPI {
     private final ConcurrentMap<Class<? extends FetchableAPIObject>, @Nullable Constructor<?>> constructors = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends FetchableAPIObject>, @Nullable Object> unknowns = new ConcurrentHashMap<>();
 
-    private final ExpiringMap<Class<? extends FetchableAPIObject>, @Nullable Object> cache = ExpiringMap.builder().expirationPolicy(ExpirationPolicy.CREATED).build();
-    private final ExpiringMap<ObjectIntPair<Class<? extends FetchableAPIObject>>, @Nullable Object> idCache = ExpiringMap.builder().expirationPolicy(ExpirationPolicy.CREATED).build();
+    private final ExpiringMap<Class<? extends FetchableAPIObject>, @Nullable Object> cache = ExpiringMap.builder().expirationPolicy(ExpirationPolicy.CREATED).variableExpiration().build();
+    private final ExpiringMap<ObjectIntPair<Class<? extends FetchableAPIObject>>, @Nullable Object> idCache = ExpiringMap.builder().expirationPolicy(ExpirationPolicy.CREATED).variableExpiration().build();
 
     protected final String baseUrl;
     protected final String apiKey;

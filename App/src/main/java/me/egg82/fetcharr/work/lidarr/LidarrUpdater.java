@@ -2,15 +2,11 @@ package me.egg82.fetcharr.work.lidarr;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.egg82.arr.lidarr.LidarrV1API;
 import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.LidarrConfigVars;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.util.WeightedRandom;
-import me.egg82.fetcharr.web.lidarr.LidarrAPI;
-import me.egg82.fetcharr.web.model.lidarr.AllArtists;
-import me.egg82.fetcharr.web.model.lidarr.AllTracks;
-import me.egg82.fetcharr.web.model.lidarr.Artist;
-import me.egg82.fetcharr.web.model.lidarr.Track;
 import me.egg82.fetcharr.work.AbstractUpdater;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +14,16 @@ import java.time.Duration;
 import java.time.Instant;
 
 public class LidarrUpdater extends AbstractUpdater {
-    private final WeightedRandom<Artist> random = new WeightedRandom<>();
+    public LidarrUpdater(@NotNull LidarrV1API api) {
+        super(api);
+    }
+
+    @Override
+    protected void doWork() {
+
+    }
+
+    /*private final WeightedRandom<Artist> random = new WeightedRandom<>();
 
     public LidarrUpdater(@NotNull LidarrAPI api) {
         super(api);
@@ -110,5 +115,5 @@ public class LidarrUpdater extends AbstractUpdater {
 
         this.meta.last(lastUpdate);
         this.meta.write();
-    }
+    }*/
 }

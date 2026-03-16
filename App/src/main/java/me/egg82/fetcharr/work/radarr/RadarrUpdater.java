@@ -5,6 +5,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import me.egg82.arr.radarr.RadarrV3API;
 import me.egg82.arr.radarr.v3.Movie;
 import me.egg82.arr.radarr.v3.Tag;
+import me.egg82.arr.radarr.v3.schema.MovieFileResource;
 import me.egg82.arr.radarr.v3.schema.MovieResource;
 import me.egg82.arr.radarr.v3.schema.TagResource;
 import me.egg82.fetcharr.env.ConfigVars;
@@ -77,7 +78,8 @@ public class RadarrUpdater extends AbstractUpdater {
                 logger.info("Skipping movie {} (\"{}\") because it is not missing a movie file", m.resource().id(), m.resource().title());
                 continue;
             }
-            if (useCutoff && !m.resource().movieFile().qualityCutoffNotMet()) {
+            MovieFileResource movieFile = m.resource().movieFile();
+            if (useCutoff && movieFile != null && !movieFile.qualityCutoffNotMet()) {
                 logger.info("Skipping movie {} (\"{}\") because it meets the quality cutoff", m.resource().id(), m.resource().title());
                 continue;
             }

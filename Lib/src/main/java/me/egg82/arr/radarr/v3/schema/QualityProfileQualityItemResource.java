@@ -6,6 +6,7 @@ import me.egg82.arr.common.AbstractAPIObject;
 import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.parse.BooleanParser;
 import me.egg82.arr.parse.NumberParser;
+import me.egg82.arr.parse.ObjectParser;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,7 +27,7 @@ public class QualityProfileQualityItemResource extends AbstractAPIObject {
 
         this.id = NumberParser.getInt(-1, obj, "id");
         this.name = StringParser.get(obj, "name");
-        this.quality = new Quality(api, obj.getJSONObject("quality"));
+        this.quality = ObjectParser.get(Quality.class, api, obj, "quality");
 
         JSONArray items = obj.has("items") && obj.get("items") != null ? obj.getJSONArray("items") : null;
         if (items != null) {
@@ -46,7 +47,7 @@ public class QualityProfileQualityItemResource extends AbstractAPIObject {
         return name;
     }
 
-    public @NotNull Quality quality() {
+    public @Nullable Quality quality() {
         return quality;
     }
 

@@ -54,7 +54,7 @@ public class MovieFileResource extends AbstractAPIObject {
             }
         }
 
-        this.quality = new QualityModel(api, obj.getJSONObject("quality"));
+        this.quality = ObjectParser.get(QualityModel.class, api, obj, "quality");
 
         JSONArray customFormats = obj.has("customFormats") && obj.get("customFormats") != null ? obj.getJSONArray("customFormats") : null;
         if (customFormats != null) {
@@ -65,7 +65,7 @@ public class MovieFileResource extends AbstractAPIObject {
 
         this.customFormatScore = NumberParser.getInt(-1, obj, "customFormatScore");
         this.indexerFlags = NumberParser.getInt(-1, obj, "indexerFlags");
-        this.mediaInfo = new MediaInfoResource(api, obj.getJSONObject("mediaInfo"));
+        this.mediaInfo = ObjectParser.get(MediaInfoResource.class, api, obj, "mediaInfo");
         this.originalFilePath = FileParser.get(obj, "originalFilePath");
         this.qualityCutoffNotMet = BooleanParser.get(false, obj, "qualityCutoffNotMet");
     }
@@ -74,7 +74,7 @@ public class MovieFileResource extends AbstractAPIObject {
         return id;
     }
 
-    public @NotNull Movie movie() {
+    public @Nullable Movie movie() {
         return api.fetch(Movie.class, movieId);
     }
 
@@ -110,7 +110,7 @@ public class MovieFileResource extends AbstractAPIObject {
         return languages;
     }
 
-    public @NotNull QualityModel quality() {
+    public @Nullable QualityModel quality() {
         return quality;
     }
 
@@ -126,7 +126,7 @@ public class MovieFileResource extends AbstractAPIObject {
         return indexerFlags;
     }
 
-    public @NotNull MediaInfoResource mediaInfo() {
+    public @Nullable MediaInfoResource mediaInfo() {
         return mediaInfo;
     }
 

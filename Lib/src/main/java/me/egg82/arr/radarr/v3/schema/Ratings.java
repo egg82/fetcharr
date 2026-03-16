@@ -3,7 +3,9 @@ package me.egg82.arr.radarr.v3.schema;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractAPIObject;
 import me.egg82.arr.common.ArrAPI;
+import me.egg82.arr.parse.ObjectParser;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -17,30 +19,30 @@ public class Ratings extends AbstractAPIObject {
     public Ratings(@NotNull ArrAPI api, @NotNull JSONObject obj) {
         super(api, obj);
 
-        this.imdb = new RatingChild(api, obj.getJSONObject("imdb"));
-        this.tmdb = new RatingChild(api, obj.getJSONObject("tmdb"));
-        this.metacritic = new RatingChild(api, obj.getJSONObject("metacritic"));
-        this.rottenTomatoes = new RatingChild(api, obj.getJSONObject("rottenTomatoes"));
-        this.trakt = new RatingChild(api, obj.getJSONObject("trakt"));
+        this.imdb = ObjectParser.get(RatingChild.class, api, obj, "imdb");
+        this.tmdb = ObjectParser.get(RatingChild.class, api, obj, "tmdb");
+        this.metacritic = ObjectParser.get(RatingChild.class, api, obj, "metacritic");
+        this.rottenTomatoes = ObjectParser.get(RatingChild.class, api, obj, "rottenTomatoes");
+        this.trakt = ObjectParser.get(RatingChild.class, api, obj, "trakt");
     }
 
-    public @NotNull RatingChild imdb() {
+    public @Nullable RatingChild imdb() {
         return imdb;
     }
 
-    public @NotNull RatingChild tmdb() {
+    public @Nullable RatingChild tmdb() {
         return tmdb;
     }
 
-    public @NotNull RatingChild metacritic() {
+    public @Nullable RatingChild metacritic() {
         return metacritic;
     }
 
-    public @NotNull RatingChild rottenTomatoes() {
+    public @Nullable RatingChild rottenTomatoes() {
         return rottenTomatoes;
     }
 
-    public @NotNull RatingChild trakt() {
+    public @Nullable RatingChild trakt() {
         return trakt;
     }
 

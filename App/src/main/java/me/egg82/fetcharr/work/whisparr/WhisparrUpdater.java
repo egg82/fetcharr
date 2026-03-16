@@ -2,13 +2,11 @@ package me.egg82.fetcharr.work.whisparr;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.egg82.arr.whisparr.WhisparrV3API;
 import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.WhisparrConfigVars;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.util.WeightedRandom;
-import me.egg82.fetcharr.web.model.radarr.AllMovies;
-import me.egg82.fetcharr.web.model.radarr.Movie;
-import me.egg82.fetcharr.web.whisparr.WhisparrAPI;
 import me.egg82.fetcharr.work.AbstractUpdater;
 import org.jetbrains.annotations.NotNull;
 
@@ -16,7 +14,16 @@ import java.time.Duration;
 import java.time.Instant;
 
 public class WhisparrUpdater extends AbstractUpdater {
-    private final WeightedRandom<Movie> random = new WeightedRandom<>();
+    public WhisparrUpdater(@NotNull WhisparrV3API api) {
+        super(api);
+    }
+
+    @Override
+    protected void doWork() {
+
+    }
+
+    /*private final WeightedRandom<Movie> random = new WeightedRandom<>();
 
     public WhisparrUpdater(@NotNull WhisparrAPI api) {
         super(api);
@@ -88,5 +95,5 @@ public class WhisparrUpdater extends AbstractUpdater {
 
         this.meta.last(lastUpdate);
         this.meta.write();
-    }
+    }*/
 }

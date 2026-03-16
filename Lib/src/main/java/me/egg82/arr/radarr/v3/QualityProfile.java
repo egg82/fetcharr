@@ -2,9 +2,9 @@ package me.egg82.arr.radarr.v3;
 
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONArray;
-import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractFetchableAPIObject;
 import me.egg82.arr.common.ArrAPI;
+import me.egg82.arr.common.NullArrAPI;
 import me.egg82.arr.config.CacheConfigVars;
 import me.egg82.arr.radarr.v3.schema.QualityProfileResource;
 import me.egg82.arr.unit.TimeValue;
@@ -34,7 +34,7 @@ public class QualityProfile extends AbstractFetchableAPIObject {
     }
 
     private QualityProfile() {
-        super(NullArrAPI.INSTANCE, new JSONObject());
+        super(NullArrAPI.INSTANCE, new JsonNode("{}"));
     }
 
     @Override

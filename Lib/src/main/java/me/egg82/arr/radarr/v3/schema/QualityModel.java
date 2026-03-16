@@ -3,7 +3,9 @@ package me.egg82.arr.radarr.v3.schema;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractAPIObject;
 import me.egg82.arr.common.ArrAPI;
+import me.egg82.arr.parse.ObjectParser;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -14,15 +16,15 @@ public class QualityModel extends AbstractAPIObject {
     public QualityModel(@NotNull ArrAPI api, @NotNull JSONObject obj) {
         super(api, obj);
 
-        this.quality = new Quality(api, obj.getJSONObject("quality"));
-        this.revision = new Revision(api, obj.getJSONObject("revision"));
+        this.quality = ObjectParser.get(Quality.class, api, obj, "quality");
+        this.revision = ObjectParser.get(Revision.class, api, obj, "revision");
     }
 
-    public @NotNull Quality quality() {
+    public @Nullable Quality quality() {
         return quality;
     }
 
-    public @NotNull Revision revision() {
+    public @Nullable Revision revision() {
         return revision;
     }
 

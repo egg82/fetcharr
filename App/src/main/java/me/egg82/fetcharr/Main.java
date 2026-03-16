@@ -2,16 +2,10 @@ package me.egg82.fetcharr;
 
 import kong.unirest.core.Proxy;
 import kong.unirest.core.Unirest;
+import me.egg82.arr.log.FileLogger;
+import me.egg82.arr.radarr.RadarrV3API;
 import me.egg82.fetcharr.env.*;
-import me.egg82.fetcharr.web.LoggingInterceptor;
-import me.egg82.fetcharr.web.lidarr.LidarrAPI;
-import me.egg82.fetcharr.web.radarr.RadarrAPI;
-import me.egg82.fetcharr.web.sonarr.SonarrAPI;
-import me.egg82.fetcharr.web.whisparr.WhisparrAPI;
-import me.egg82.fetcharr.work.lidarr.LidarrUpdater;
 import me.egg82.fetcharr.work.radarr.RadarrUpdater;
-import me.egg82.fetcharr.work.sonarr.SonarrUpdater;
-import me.egg82.fetcharr.work.whisparr.WhisparrUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinylog.configuration.Configuration;
@@ -31,7 +25,13 @@ import java.util.List;
 import java.util.concurrent.*;
 
 public class Main {
-    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
+    static {
+        Configuration.set("writer", "console");
+        Configuration.set("writer.level", ConfigVars.getLogMode(ConfigVars.LOG_MODE).name().toLowerCase());
+        Configuration.set("writer.format", "{date} [{level}]: {message}");
+    }
+
+    private static final Logger LOGGER = new FileLogger(LoggerFactory.getLogger(Main.class));
 
     private static final ScheduledExecutorService workPool = Executors.newScheduledThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
     private static final List<Runnable> radarr = new ArrayList<>();
@@ -40,10 +40,6 @@ public class Main {
     private static final List<Runnable> whisparr = new ArrayList<>();
 
     public static void main(String[] args) {
-        Configuration.set("writer", "console");
-        Configuration.set("writer.level", ConfigVars.getLogMode(ConfigVars.LOG_MODE).name().toLowerCase());
-        Configuration.set("writer.format", "{date} [{level}]: {message}");
-
         LOGGER.info("Starting..");
         LOGGER.info("Logging mode set to {}", ConfigVars.getLogMode(ConfigVars.LOG_MODE).name());
         LOGGER.info("Thread pool size set to {}", Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
@@ -52,9 +48,11 @@ public class Main {
 
         for (int i = 0; i < 100; i++) {
             setupRadarr(i);
+            /*
             setupSonarr(i);
             setupLidarr(i);
             setupWhisparr(i);
+             */
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -93,9 +91,6 @@ public class Main {
     }
 
     private static void setupUnirest() {
-        LogMode logMode = ConfigVars.getLogMode(ConfigVars.LOG_MODE);
-        Unirest.config().interceptor(new LoggingInterceptor(logMode));
-
         String proxyHost = ConfigVars.get(ConfigVars.PROXY_HOST);
         int proxyPort = ConfigVars.getInt(ConfigVars.PROXY_PORT);
         if (proxyHost != null && proxyPort > 0) {
@@ -175,7 +170,7 @@ public class Main {
         url = url.strip().replaceAll("/+$", "");
         key = key.strip();
 
-        RadarrAPI api = new RadarrAPI(url, key, num);
+        RadarrV3API api = new RadarrV3API(url, key, num);
         if (!api.valid()) {
             LOGGER.warn("Could not authenticate to Radarr instance configured at {} ({})", RadarrConfigVars.URL.envName(num), url);
             return;
@@ -185,6 +180,7 @@ public class Main {
         LOGGER.info("Added Radarr instance at {}", url);
     }
 
+    /*
     private static void setupSonarr(int num) {
         String url = SonarrConfigVars.get(SonarrConfigVars.URL, num);
         String key = SonarrConfigVars.get(SonarrConfigVars.API_KEY, num);
@@ -271,4 +267,5 @@ public class Main {
         whisparr.add(new WhisparrUpdater(api));
         LOGGER.info("Added Whisparr instance at {}", url);
     }
+     */
 }

@@ -2,15 +2,11 @@ package me.egg82.fetcharr.work.sonarr;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.egg82.arr.sonarr.SonarrV3API;
 import me.egg82.fetcharr.env.ConfigVars;
 import me.egg82.fetcharr.env.SonarrConfigVars;
 import me.egg82.fetcharr.unit.TimeValue;
 import me.egg82.fetcharr.util.WeightedRandom;
-import me.egg82.fetcharr.web.model.sonarr.AllEpisodes;
-import me.egg82.fetcharr.web.model.sonarr.AllSeries;
-import me.egg82.fetcharr.web.model.sonarr.Episode;
-import me.egg82.fetcharr.web.model.sonarr.Series;
-import me.egg82.fetcharr.web.sonarr.SonarrAPI;
 import me.egg82.fetcharr.work.AbstractUpdater;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,7 +14,16 @@ import java.time.Duration;
 import java.time.Instant;
 
 public class SonarrUpdater extends AbstractUpdater {
-    private final WeightedRandom<Series> random = new WeightedRandom<>();
+    public SonarrUpdater(@NotNull SonarrV3API api) {
+        super(api);
+    }
+
+    @Override
+    protected void doWork() {
+
+    }
+
+    /*private final WeightedRandom<Series> random = new WeightedRandom<>();
 
     public SonarrUpdater(@NotNull SonarrAPI api) {
         super(api);
@@ -110,5 +115,5 @@ public class SonarrUpdater extends AbstractUpdater {
 
         this.meta.last(lastUpdate);
         this.meta.write();
-    }
+    }*/
 }

@@ -1,6 +1,7 @@
 package me.egg82.arr.parse;
 
 import kong.unirest.core.json.JSONObject;
+import me.egg82.arr.log.FileLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -12,7 +13,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 
 public class InstantParser {
-    private static final Logger LOGGER = LoggerFactory.getLogger(InstantParser.class);
+    private static final Logger LOGGER = new FileLogger(LoggerFactory.getLogger(InstantParser.class));
 
     public static @NotNull Instant get(@NotNull Instant def, @Nullable JSONObject obj, @Nullable String key) {
         return get(def, obj, key, false);

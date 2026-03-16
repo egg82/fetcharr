@@ -6,6 +6,7 @@ import me.egg82.arr.common.AbstractAPIObject;
 import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.parse.BooleanParser;
 import me.egg82.arr.parse.NumberParser;
+import me.egg82.arr.parse.ObjectParser;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -52,7 +53,7 @@ public class QualityProfileResource extends AbstractAPIObject {
             }
         }
 
-        this.language = new Language(api, obj.getJSONObject("language"));
+        this.language = ObjectParser.get(Language.class, api, obj, "language");
     }
 
     public int id() {
@@ -91,7 +92,7 @@ public class QualityProfileResource extends AbstractAPIObject {
         return formatItems;
     }
 
-    public @NotNull Language language() {
+    public @Nullable Language language() {
         return language;
     }
 
