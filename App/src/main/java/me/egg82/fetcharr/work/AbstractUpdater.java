@@ -2,8 +2,8 @@ package me.egg82.fetcharr.work;
 
 import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.config.CacheConfigVars;
-import me.egg82.fetcharr.file.JSONFile;
-import me.egg82.fetcharr.file.UpdateMeta;
+import me.egg82.arr.file.JSONFile;
+import me.egg82.fetcharr.file.UpdaterMeta;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,13 +15,13 @@ public abstract class AbstractUpdater implements Runnable {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     protected final ArrAPI api;
-    protected final UpdateMeta meta;
+    protected final UpdaterMeta meta;
     protected Instant lastUpdate;
 
     public AbstractUpdater(@NotNull ArrAPI api) {
         this.api = api;
-        this.meta = new UpdateMeta(new JSONFile(new File(getBasePath(), "base.meta.json")));
-        this.lastUpdate = meta.last();
+        this.meta = new UpdaterMeta(new JSONFile(new File(getBasePath(), "meta.json")));
+        this.lastUpdate = meta.lastUpdate();
     }
 
     @Override

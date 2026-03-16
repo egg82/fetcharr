@@ -17,6 +17,12 @@ public class TimeValue {
         this.duration = Duration.ofMillis(unit.toMillis(time));
     }
 
+    public TimeValue(@NotNull Duration duration) {
+        this.time = duration.toMillis();
+        this.unit = TimeUnit.MILLISECONDS;
+        this.duration = duration;
+    }
+
     public long time() {
         return time;
     }

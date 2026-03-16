@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.file;
+package me.egg82.arr.file;
 
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONObject;
@@ -12,13 +12,13 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 
-public class UpdateMeta {
-    private final Logger logger = LoggerFactory.getLogger(UpdateMeta.class);
+public class FetchableAPIObjectMeta {
+    private final Logger logger = LoggerFactory.getLogger(FetchableAPIObjectMeta.class);
 
     private final JSONFile file;
-    private Instant last;
+    private Instant lastFetched;
 
-    public UpdateMeta(@NotNull JSONFile file) {
+    public FetchableAPIObjectMeta(@NotNull JSONFile file) {
         this.file = file;
         read();
     }
@@ -27,21 +27,21 @@ public class UpdateMeta {
         try {
             JSONObject obj = file.read().getObject();
             if (obj == null || obj.isEmpty()) {
-                this.last = Instant.EPOCH;
+                this.lastFetched = Instant.now();
                 return;
             }
 
-            this.last = InstantParser.parse(Instant.EPOCH, obj.getString("last"));
+            this.lastFetched = InstantParser.parse(Instant.now(), obj.getString("lastFetched"));
         } catch (Exception ex) {
             logger.warn("Could not read meta from {}: ", file.path(), ex);
 
-            this.last = Instant.EPOCH;
+            this.lastFetched = Instant.now();
         }
     }
 
     public void write() {
         JSONObject obj = new JSONObject(Map.of(
-                "last", last.toString()
+                "lastFetched", lastFetched.toString()
         ));
 
         try {
@@ -51,18 +51,18 @@ public class UpdateMeta {
         }
     }
 
-    public @NotNull Instant last() {
-        return last;
+    public @NotNull Instant lastFetched() {
+        return lastFetched;
     }
 
-    public void last(@NotNull Instant last) {
-        this.last = last;
+    public void setFetched(@NotNull Instant lastFetched) {
+        this.lastFetched = lastFetched;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof UpdateMeta that)) return false;
-        return Objects.equals(file, that.file);
+        if (!(o instanceof FetchableAPIObjectMeta fetchableApiObjectMeta)) return false;
+        return Objects.equals(file, fetchableApiObjectMeta.file);
     }
 
     @Override
@@ -72,9 +72,9 @@ public class UpdateMeta {
 
     @Override
     public String toString() {
-        return "UpdateMeta{" +
+        return "FetchableAPIObjectMeta{" +
                 "file=" + file +
-                ", last=" + last +
+                ", lastFetched=" + lastFetched +
                 '}';
     }
 }

@@ -101,7 +101,7 @@ public class RadarrUpdater extends AbstractUpdater {
             api.search(ids);
         }
 
-        this.meta.last(lastUpdate);
+        this.meta.lastUpdate(lastUpdate);
         this.meta.write();
     }
 

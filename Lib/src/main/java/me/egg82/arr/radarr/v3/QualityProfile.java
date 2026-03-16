@@ -11,6 +11,7 @@ import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -20,8 +21,8 @@ public class QualityProfile extends AbstractFetchableAPIObject {
 
     private final List<@NotNull QualityProfileResource> resources = new ArrayList<>();
 
-    public QualityProfile(@NotNull ArrAPI api, @NotNull JsonNode node) {
-        super(api, node);
+    public QualityProfile(@NotNull ArrAPI api, @NotNull JsonNode node, @NotNull Instant lastFetched) {
+        super(api, node, lastFetched);
 
         if (node.isArray()) {
             JSONArray resources = node.getArray();
@@ -34,7 +35,7 @@ public class QualityProfile extends AbstractFetchableAPIObject {
     }
 
     private QualityProfile() {
-        super(NullArrAPI.INSTANCE, new JsonNode("{}"));
+        super(NullArrAPI.INSTANCE, new JsonNode("{}"), Instant.EPOCH);
     }
 
     @Override

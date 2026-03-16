@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.file;
+package me.egg82.arr.file;
 
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONObject;
@@ -97,7 +97,7 @@ public class JSONFile {
             }
         }
 
-        LOGGER.debug("Wrote {} bytes to {}", file.length(), file.getAbsolutePath());
+        LOGGER.trace("Wrote {} bytes to {}", file.length(), file.getAbsolutePath());
     }
 
     @Override

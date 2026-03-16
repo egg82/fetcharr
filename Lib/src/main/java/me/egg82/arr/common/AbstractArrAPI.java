@@ -14,9 +14,12 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractArrAPI implements ArrAPI {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
@@ -58,11 +61,11 @@ public abstract class AbstractArrAPI implements ArrAPI {
             if (node == null) {
                 return null;
             }
-            return build(type, node);
+            return build(type, node, Instant.now());
         });
         if (r != null) {
-            TimeValue time = r.cacheTime();
-            cache.setExpiration(type, time.time(), time.unit());
+            Duration expires = r.expiresIn();
+            cache.setExpiration(type, expires.toMillis(), TimeUnit.MILLISECONDS);
         }
         return r;
     }
@@ -78,11 +81,11 @@ public abstract class AbstractArrAPI implements ArrAPI {
             if (node == null) {
                 return null;
             }
-            return build(type, node);
+            return build(type, node, Instant.now());
         });
         if (r != null) {
-            TimeValue time = r.cacheTime();
-            cache.setExpiration(type, time.time(), time.unit());
+            Duration expires = r.expiresIn();
+            idCache.setExpiration(ObjectIntPair.of(type, id), expires.toMillis(), TimeUnit.MILLISECONDS);
         }
         return r;
     }
@@ -97,10 +100,10 @@ public abstract class AbstractArrAPI implements ArrAPI {
         idCache.remove(ObjectIntPair.of(type, id));
     }
 
-    private <T extends FetchableAPIObject> @Nullable T build(@NotNull Class<T> type, @NotNull JsonNode node) {
+    private <T extends FetchableAPIObject> @Nullable T build(@NotNull Class<T> type, @NotNull JsonNode node, @NotNull Instant lastFetched) {
         Constructor<?> c = constructors.computeIfAbsent(type, k -> {
             try {
-                return type.getConstructor(ArrAPI.class, JsonNode.class);
+                return type.getConstructor(ArrAPI.class, JsonNode.class, Instant.class);
             } catch (NoSuchMethodException ex) {
                 logger.error("Could not find API constructor for class {}", type.getName(), ex);
             }
@@ -108,7 +111,7 @@ public abstract class AbstractArrAPI implements ArrAPI {
         });
 
         try {
-            return (T) c.newInstance(this, node);
+            return (T) c.newInstance(this, node, lastFetched);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
             logger.error("Could not create new instance of class {}", type.getName(), ex);
         }

@@ -11,6 +11,7 @@ import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -20,8 +21,8 @@ public class Movie extends AbstractFetchableAPIObject {
 
     private final List<@NotNull MovieResource> resources = new ArrayList<>();
 
-    public Movie(@NotNull ArrAPI api, @NotNull JsonNode node) {
-        super(api, node);
+    public Movie(@NotNull ArrAPI api, @NotNull JsonNode node, @NotNull Instant lastFetched) {
+        super(api, node, lastFetched);
 
         if (node.isArray()) {
             JSONArray resources = node.getArray();
@@ -34,7 +35,7 @@ public class Movie extends AbstractFetchableAPIObject {
     }
 
     private Movie() {
-        super(NullArrAPI.INSTANCE, new JsonNode("{}"));
+        super(NullArrAPI.INSTANCE, new JsonNode("{}"), Instant.EPOCH);
     }
 
     @Override
