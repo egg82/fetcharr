@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.ex;
+package me.egg82.arr.parse;
 
 import org.jetbrains.annotations.NotNull;
 

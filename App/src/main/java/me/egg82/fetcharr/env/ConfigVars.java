@@ -1,7 +1,10 @@
 package me.egg82.fetcharr.env;
 
-import me.egg82.fetcharr.parse.*;
-import me.egg82.fetcharr.unit.TimeValue;
+import me.egg82.arr.parse.BooleanParser;
+import me.egg82.arr.parse.FileParser;
+import me.egg82.arr.parse.NumberParser;
+import me.egg82.arr.parse.TimeValueParser;
+import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -9,18 +12,13 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 public enum ConfigVars {
-    LOG_MODE(LogMode.class, "Logging mode", LogMode.INFO),
     PROXY_HOST(String.class, "HTTP proxy host", null),
     PROXY_PORT(Integer.class, "HTTP proxy port", 0),
     CONNECT_TIMEOUT(Integer.class, "HTTP connection timeout in milliseconds", 0),
     REQUEST_TIMEOUT(Integer.class, "HTTP request timeout in milliseconds", 0),
     CONNECT_TTL(Integer.class, "HTTP connection TTL in milliseconds", -1),
     VERIFY_CERTS(Boolean.class, "Verify SSL certificates", true),
-    USE_CACHE(Boolean.class, "Use internal caching mechanisms", true),
-    SHORT_CACHE_TIME(TimeValue.class, "Expiration time for short-lived cached values", new TimeValue(65, TimeUnit.MINUTES)),
-    LONG_CACHE_TIME(TimeValue.class, "Expiration time for long-lived cached values", new TimeValue(6L, TimeUnit.HOURS)),
-    DATA_DIR(File.class, "Data storage directory", new File("/data")),
-    CACHE_DIR(File.class, "Cache storage directory", new File("/cache")),
+    CONFIG_DIR(File.class, "Data storage directory", new File("/app/config")),
     SSL_PATH(File.class, "File path containing custom SSL certs", new File("/etc/ssl/certs/ca-bundle.crt")),
     SEARCH_AMOUNT(Integer.class, "Number of items to search at each run", 5),
     SEARCH_INTERVAL(TimeValue.class, "How often to search", new TimeValue(1L, TimeUnit.HOURS)),

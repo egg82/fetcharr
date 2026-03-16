@@ -1,7 +1,10 @@
 package me.egg82.fetcharr.env;
 
-import me.egg82.fetcharr.parse.*;
-import me.egg82.fetcharr.unit.TimeValue;
+import me.egg82.arr.parse.BooleanParser;
+import me.egg82.arr.parse.FileParser;
+import me.egg82.arr.parse.NumberParser;
+import me.egg82.arr.parse.TimeValueParser;
+import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -4,7 +4,6 @@ import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.Unirest;
-import me.egg82.arr.log.FileLogger;
 import me.egg82.arr.unit.TimeValue;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
@@ -20,7 +19,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public abstract class AbstractArrAPI implements ArrAPI {
-    protected final Logger logger = new FileLogger(LoggerFactory.getLogger(getClass()));
+    protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ConcurrentMap<Class<? extends FetchableAPIObject>, @Nullable Constructor<?>> constructors = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends FetchableAPIObject>, @Nullable Object> unknowns = new ConcurrentHashMap<>();

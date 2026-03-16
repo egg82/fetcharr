@@ -4,7 +4,6 @@ import kong.unirest.core.json.JSONException;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.APIObject;
 import me.egg82.arr.common.ArrAPI;
-import me.egg82.arr.log.FileLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -16,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class ObjectParser {
-    private static final Logger LOGGER = new FileLogger(LoggerFactory.getLogger(ObjectParser.class));
+    private static final Logger LOGGER = LoggerFactory.getLogger(ObjectParser.class);
 
     private static final ConcurrentMap<Class<? extends APIObject>, @Nullable Constructor<?>> constructors = new ConcurrentHashMap<>();
 

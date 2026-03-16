@@ -1,5 +1,6 @@
 package me.egg82.arr.config;
 
+import me.egg82.arr.parse.BooleanParser;
 import me.egg82.arr.parse.FileParser;
 import me.egg82.arr.parse.TimeValueParser;
 import me.egg82.arr.unit.TimeValue;
@@ -10,7 +11,8 @@ import java.io.File;
 import java.util.concurrent.TimeUnit;
 
 public enum CacheConfigVars {
-    CACHE_DIR(File.class, new File("/cache")),
+    USE_CACHE(Boolean.class, true),
+    CACHE_DIR(File.class, new File("/app/cache")),
     SHORT_CACHE_TIME(TimeValue.class, new TimeValue(65, TimeUnit.MINUTES)),
     LONG_CACHE_TIME(TimeValue.class, new TimeValue(6L, TimeUnit.HOURS));
 
@@ -42,6 +44,10 @@ public enum CacheConfigVars {
     public static @NotNull String @NotNull [] getArr(@NotNull CacheConfigVars var) {
         String r = System.getenv(var.name());
         return r != null ? r.split(",") : var.def();
+    }
+
+    public static boolean getBool(@NotNull CacheConfigVars var) {
+        return BooleanParser.parse(var.def(), System.getenv(var.name()));
     }
 
     public static @NotNull File getFile(@NotNull CacheConfigVars var) {

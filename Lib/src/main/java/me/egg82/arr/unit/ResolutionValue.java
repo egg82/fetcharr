@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.unit;
+package me.egg82.arr.unit;
 
 import java.util.Objects;
 

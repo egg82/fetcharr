@@ -1,7 +1,6 @@
 package me.egg82.arr.parse;
 
 import kong.unirest.core.json.JSONObject;
-import me.egg82.arr.log.FileLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -11,7 +10,7 @@ import java.io.File;
 import java.nio.file.InvalidPathException;
 
 public class FileParser {
-    private static final Logger LOGGER = new FileLogger(LoggerFactory.getLogger(FileParser.class));
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileParser.class);
 
     public static @NotNull File get(@NotNull File def, @Nullable JSONObject obj, @Nullable String key) {
         return get(def, obj, key, false);

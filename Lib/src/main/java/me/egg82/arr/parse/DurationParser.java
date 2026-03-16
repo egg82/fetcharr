@@ -1,7 +1,6 @@
 package me.egg82.arr.parse;
 
 import kong.unirest.core.json.JSONObject;
-import me.egg82.arr.log.FileLogger;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
@@ -13,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class DurationParser {
-    private static final Logger LOGGER = new FileLogger(LoggerFactory.getLogger(DurationParser.class));
+    private static final Logger LOGGER = LoggerFactory.getLogger(DurationParser.class);
 
     private static final Pattern PATTERN = Pattern.compile("^(\\d+):(\\d+)(?::(\\d+))?(?::(\\d+))?$");
 

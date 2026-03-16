@@ -1,17 +1,8 @@
 package me.egg82.fetcharr.work.sonarr;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import me.egg82.arr.sonarr.SonarrV3API;
-import me.egg82.fetcharr.env.ConfigVars;
-import me.egg82.fetcharr.env.SonarrConfigVars;
-import me.egg82.fetcharr.unit.TimeValue;
-import me.egg82.fetcharr.util.WeightedRandom;
 import me.egg82.fetcharr.work.AbstractUpdater;
 import org.jetbrains.annotations.NotNull;
-
-import java.time.Duration;
-import java.time.Instant;
 
 public class SonarrUpdater extends AbstractUpdater {
     public SonarrUpdater(@NotNull SonarrV3API api) {

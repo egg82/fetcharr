@@ -1,13 +1,12 @@
 package me.egg82.arr.parse;
 
 import kong.unirest.core.json.JSONObject;
-import me.egg82.arr.log.FileLogger;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BooleanParser {
-    private static final Logger LOGGER = new FileLogger(LoggerFactory.getLogger(BooleanParser.class));
+    private static final Logger LOGGER = LoggerFactory.getLogger(BooleanParser.class);
 
     public static boolean get(boolean def, @Nullable JSONObject obj, @Nullable String key) {
         return get(def, obj, key, false);

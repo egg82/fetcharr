@@ -1,7 +1,6 @@
 package me.egg82.arr.parse;
 
 import kong.unirest.core.json.JSONObject;
-import me.egg82.arr.log.FileLogger;
 import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,7 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TimeValueParser {
-    private static final Logger LOGGER = new FileLogger(LoggerFactory.getLogger(TimeValueParser.class));
+    private static final Logger LOGGER = LoggerFactory.getLogger(TimeValueParser.class);
 
     private static final Pattern PATTERN = Pattern.compile("^(\\d+)\\s*(\\w+)$");
 

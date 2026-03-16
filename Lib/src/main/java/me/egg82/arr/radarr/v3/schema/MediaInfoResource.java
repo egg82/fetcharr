@@ -5,7 +5,9 @@ import me.egg82.arr.common.AbstractAPIObject;
 import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.parse.DurationParser;
 import me.egg82.arr.parse.NumberParser;
+import me.egg82.arr.parse.ResolutionParser;
 import me.egg82.arr.parse.StringParser;
+import me.egg82.arr.unit.ResolutionValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,7 +30,7 @@ public class MediaInfoResource extends AbstractAPIObject {
     private final float videoFps;
     private final String videoDynamicRange;
     private final String videoDynamicRangeType;
-    private final String resolution;
+    private final ResolutionValue resolution;
     private final Duration runTime;
     private final String scanType;
     private final Set<@NotNull String> subtitles = new HashSet<>();
@@ -53,7 +55,7 @@ public class MediaInfoResource extends AbstractAPIObject {
         this.videoFps = NumberParser.getFloat(-1.0F, obj, "videoFps");
         this.videoDynamicRange = StringParser.get(obj, "videoDynamicRange");
         this.videoDynamicRangeType = StringParser.get(obj, "videoDynamicRangeType");
-        this.resolution = StringParser.get(obj, "resolution");
+        this.resolution = ResolutionParser.get(obj, "resolution");
         this.runTime = DurationParser.get(obj, "runTime");
         this.scanType = StringParser.get(obj, "scanType");
 
@@ -111,7 +113,7 @@ public class MediaInfoResource extends AbstractAPIObject {
         return videoDynamicRangeType;
     }
 
-    public @Nullable String resolution() {
+    public @Nullable ResolutionValue resolution() {
         return resolution;
     }
 

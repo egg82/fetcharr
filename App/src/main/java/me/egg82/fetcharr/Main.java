@@ -2,8 +2,8 @@ package me.egg82.fetcharr;
 
 import kong.unirest.core.Proxy;
 import kong.unirest.core.Unirest;
-import me.egg82.arr.log.FileLogger;
 import me.egg82.arr.radarr.RadarrV3API;
+import me.egg82.fetcharr.config.LogConfigVars;
 import me.egg82.fetcharr.env.*;
 import me.egg82.fetcharr.work.radarr.RadarrUpdater;
 import org.slf4j.Logger;
@@ -26,12 +26,32 @@ import java.util.concurrent.*;
 
 public class Main {
     static {
+        // ChatGPT wrote most of this logging config. Tested, tweaked, and overall looks fine
+        File logDir = LogConfigVars.getFile(LogConfigVars.LOG_DIR);
+        if (!logDir.exists() && !logDir.mkdirs()) {
+            throw new IllegalStateException("Could not create log directory: " + logDir.getAbsolutePath());
+        }
+
         Configuration.set("writer", "console");
-        Configuration.set("writer.level", ConfigVars.getLogMode(ConfigVars.LOG_MODE).name().toLowerCase());
-        Configuration.set("writer.format", "{date} [{level}]: {message}");
+        Configuration.set("writer.level", LogConfigVars.getLogMode(LogConfigVars.LOG_MODE).name().toLowerCase());
+        Configuration.set("writer.format", "{date: HH:mm:ss.SSS} [{level}] {message}");
+        Configuration.set("writer.stream", "err@WARN");
+
+        Configuration.set("writer2", "rolling file");
+        Configuration.set("writer2.level", "trace");
+        Configuration.set("writer2.format", "{date: yyyy-MM-dd HH:mm:ss.SSS} {class}.{method}() [{level}] {message}");
+        Configuration.set("writer2.file", new File(logDir, "fetcharr-{date:yyyy-MM-dd}-{count}.log").getAbsolutePath());
+        Configuration.set("writer2.latest", new File(logDir, "fetcharr-latest.log").getAbsolutePath());
+        Configuration.set("writer2.charset", "UTF-8");
+        Configuration.set("writer2.buffered", "true");
+        Configuration.set("writer2.policies", "daily, size: 25mb");
+        Configuration.set("writer2.convert", "gzip");
+        Configuration.set("writer2.backups", "30");
+
+        Configuration.set("writingthread", "true");
     }
 
-    private static final Logger LOGGER = new FileLogger(LoggerFactory.getLogger(Main.class));
+    private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
     private static final ScheduledExecutorService workPool = Executors.newScheduledThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
     private static final List<Runnable> radarr = new ArrayList<>();
@@ -41,7 +61,7 @@ public class Main {
 
     public static void main(String[] args) {
         LOGGER.info("Starting..");
-        LOGGER.info("Logging mode set to {}", ConfigVars.getLogMode(ConfigVars.LOG_MODE).name());
+        LOGGER.info("Logging mode set to {}", LogConfigVars.getLogMode(LogConfigVars.LOG_MODE).name());
         LOGGER.info("Thread pool size set to {}", Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
 
         setupUnirest();

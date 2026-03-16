@@ -2,7 +2,7 @@ package me.egg82.fetcharr.file;
 
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONObject;
-import me.egg82.fetcharr.parse.InstantParser;
+import me.egg82.arr.parse.InstantParser;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
