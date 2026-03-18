@@ -61,9 +61,13 @@ public abstract class AbstractArrAPI implements ArrAPI {
     public <T extends FetchableAPIObject> @Nullable T fetch(@NotNull Class<T> type, @Nullable Map<String, @NotNull Object> params) {
         Pair<Class<? extends FetchableAPIObject>, String> key = Pair.of(type, encode(params));
         T r = (T) cache.computeIfAbsent(key, k -> {
-            T cache = getCache(type);
+            T cache = getCache(type, params);
             if (cache != null) {
-                logger.debug("Loaded {} from cache ({}_{})", type.getSimpleName(), this.type(), this.id);
+                if (params == null || params.isEmpty()) {
+                    logger.debug("Loaded {} from cache ({}_{})", type.getSimpleName(), this.type(), this.id);
+                } else {
+                    logger.debug("Loaded {} ({}) from cache ({}_{})", type.getSimpleName(), encode(params), this.type(), this.id);
+                }
                 return cache;
             }
 
@@ -77,8 +81,12 @@ public abstract class AbstractArrAPI implements ArrAPI {
             }
 
             T composite = build(type, node, Instant.now());
-            logger.debug("Fetched {} from API ({}_{})", type.getSimpleName(), this.type(), this.id);
-            writeCache(composite);
+            if (params == null || params.isEmpty()) {
+                logger.debug("Fetched {} from API ({}_{})", type.getSimpleName(), this.type(), this.id);
+            } else {
+                logger.debug("Fetched {} ({}) from API ({}_{})", type.getSimpleName(), encode(params), this.type(), this.id);
+            }
+            writeCache(composite, params);
             return composite;
         });
         if (r != null) {
@@ -92,9 +100,13 @@ public abstract class AbstractArrAPI implements ArrAPI {
     public <T extends FetchableAPIObject> @Nullable T fetch(@NotNull Class<T> type, int id, @Nullable Map<String, @NotNull Object> params) {
         Pair<ObjectIntPair<Class<? extends FetchableAPIObject>>, String> key = Pair.of(ObjectIntPair.of(type, id), encode(params));
         T r = (T) idCache.computeIfAbsent(key, k -> {
-            T cache = getCache(type, id);
+            T cache = getCache(type, id, params);
             if (cache != null) {
-                logger.debug("Loaded {} ({}) from cache ({}_{})", type.getSimpleName(), id, this.type(), this.id);
+                if (params == null || params.isEmpty()) {
+                    logger.debug("Loaded {} {} from cache ({}_{})", type.getSimpleName(), id, this.type(), this.id);
+                } else {
+                    logger.debug("Loaded {} {} ({}) from cache ({}_{})", type.getSimpleName(), id, encode(params), this.type(), this.id);
+                }
                 return cache;
             }
 
@@ -108,8 +120,12 @@ public abstract class AbstractArrAPI implements ArrAPI {
             }
 
             T composite = build(type, node, Instant.now());
-            logger.debug("Fetched {} ({}) from API ({}_{})", type.getSimpleName(), id, this.type(), this.id);
-            writeCache(composite, id);
+            if (params == null || params.isEmpty()) {
+                logger.debug("Fetched {} {} from API ({}_{})", type.getSimpleName(), id, this.type(), this.id);
+            } else {
+                logger.debug("Fetched {} {} ({}) from API ({}_{})", type.getSimpleName(), id, encode(params), this.type(), this.id);
+            }
+            writeCache(composite, id, params);
             return composite;
         });
         if (r != null) {
@@ -160,18 +176,18 @@ public abstract class AbstractArrAPI implements ArrAPI {
         });
     }
 
-    private <T extends FetchableAPIObject> @Nullable T getCache(@NotNull Class<T> type) {
+    private <T extends FetchableAPIObject> @Nullable T getCache(@NotNull Class<T> type, @Nullable Map<String, @NotNull Object> params) {
         T unknown = buildUnknown(type);
         if (unknown == null) {
             return null;
         }
 
-        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(type), "meta.json")));
+        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(type), params == null || params.isEmpty() ? "meta.json" : encode(params) + ".meta.json")));
         if (Instant.now().isAfter(metaFile.lastFetched().plus(unknown.cacheTime().duration()))) {
             return null;
         }
 
-        JSONFile cacheFile = new JSONFile(new File(getBasePath(type), "base.json"));
+        JSONFile cacheFile = new JSONFile(new File(getBasePath(type), params == null || params.isEmpty() ? "base.json" : encode(params) + ".json"));
         if (!cacheFile.exists()) {
             return null;
         }
@@ -184,8 +200,8 @@ public abstract class AbstractArrAPI implements ArrAPI {
         return null;
     }
 
-    private <T extends FetchableAPIObject> void writeCache(@NotNull T composite) {
-        JSONFile cacheFile = new JSONFile(new File(getBasePath(composite.getClass()), "base.json"));
+    private <T extends FetchableAPIObject> void writeCache(@NotNull T composite, @Nullable Map<String, @NotNull Object> params) {
+        JSONFile cacheFile = new JSONFile(new File(getBasePath(composite.getClass()), params == null || params.isEmpty() ? "base.json" : encode(params) + ".json"));
         try {
             cacheFile.write(composite.node());
         }  catch (IOException ex) {
@@ -193,23 +209,23 @@ public abstract class AbstractArrAPI implements ArrAPI {
             return;
         }
 
-        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(composite.getClass()), "meta.json")));
+        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(composite.getClass()), params == null || params.isEmpty() ? "meta.json" : encode(params) + ".meta.json")));
         metaFile.setFetched(composite.lastFetched());
         metaFile.write();
     }
 
-    private <T extends FetchableAPIObject> @Nullable T getCache(@NotNull Class<T> type, int id) {
+    private <T extends FetchableAPIObject> @Nullable T getCache(@NotNull Class<T> type, int id, @Nullable Map<String, @NotNull Object> params) {
         T unknown = buildUnknown(type);
         if (unknown == null) {
             return null;
         }
 
-        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(type), id + ".meta.json")));
+        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(type), params == null || params.isEmpty() ? id + ".meta.json" : id + "." + encode(params) + ".meta.json")));
         if (Instant.now().isAfter(metaFile.lastFetched().plus(unknown.cacheTime().duration()))) {
             return null;
         }
 
-        JSONFile cacheFile = new JSONFile(new File(getBasePath(type), id + ".json"));
+        JSONFile cacheFile = new JSONFile(new File(getBasePath(type), params == null || params.isEmpty() ? id + ".json" : id + "." + encode(params) + ".json"));
         if (!cacheFile.exists()) {
             return null;
         }
@@ -222,8 +238,8 @@ public abstract class AbstractArrAPI implements ArrAPI {
         return null;
     }
 
-    private <T extends FetchableAPIObject> void writeCache(@NotNull T composite, int id) {
-        JSONFile cacheFile = new JSONFile(new File(getBasePath(composite.getClass()), id + ".json"));
+    private <T extends FetchableAPIObject> void writeCache(@NotNull T composite, int id, @Nullable Map<String, @NotNull Object> params) {
+        JSONFile cacheFile = new JSONFile(new File(getBasePath(composite.getClass()), params == null || params.isEmpty() ? id + ".json" : id + "." + encode(params) + ".json"));
         try {
             cacheFile.write(composite.node());
         }  catch (IOException ex) {
@@ -231,7 +247,7 @@ public abstract class AbstractArrAPI implements ArrAPI {
             return;
         }
 
-        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(composite.getClass()), id + ".meta.json")));
+        FetchableAPIObjectMeta metaFile = new FetchableAPIObjectMeta(new JSONFile(new File(getBasePath(composite.getClass()), params == null || params.isEmpty() ? id + ".meta.json" : id + "." + encode(params) + ".meta.json")));
         metaFile.setFetched(composite.lastFetched());
         metaFile.write();
     }
@@ -308,7 +324,7 @@ public abstract class AbstractArrAPI implements ArrAPI {
     }
 
     private @NotNull String encode(@Nullable Map<String, @NotNull Object> params) {
-        if (params == null) {
+        if (params == null || params.isEmpty()) {
             return "";
         }
 
