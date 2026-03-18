@@ -24,8 +24,15 @@ public interface ArrAPI {
     }
     <T extends FetchableAPIObject> @Nullable T fetch(@NotNull Class<T> type, int id, @Nullable Map<String, @NotNull Object> params);
 
-    void invalidate(@NotNull Class<? extends FetchableAPIObject> type);
-    void invalidate(@NotNull Class<? extends FetchableAPIObject> type, int id);
+    default void invalidate(@NotNull Class<? extends FetchableAPIObject> type) {
+        invalidate(type, null);
+    }
+    void invalidate(@NotNull Class<? extends FetchableAPIObject> type, @Nullable Map<String, @NotNull Object> params);
+
+    default void invalidate(@NotNull Class<? extends FetchableAPIObject> type, int id) {
+        invalidate(type, id, null);
+    }
+    void invalidate(@NotNull Class<? extends FetchableAPIObject> type, int id, @Nullable Map<String, @NotNull Object> params);
 
     default void search(int itemId) {
         search(new int[] { itemId });

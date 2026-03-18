@@ -6,7 +6,7 @@ import me.egg82.arr.common.AbstractFetchableAPIObject;
 import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.common.NullArrAPI;
 import me.egg82.arr.config.CacheConfigVars;
-import me.egg82.arr.sonarr.v3.schema.SeriesResource;
+import me.egg82.arr.sonarr.v3.schema.TagResource;
 import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -16,50 +16,50 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class Series extends AbstractFetchableAPIObject {
-    public static final Series UNKNOWN = new Series();
+public class Tag extends AbstractFetchableAPIObject {
+    public static final Tag UNKNOWN = new Tag();
 
-    private final List<@NotNull SeriesResource> resources = new ArrayList<>();
+    private final List<@NotNull TagResource> resources = new ArrayList<>();
 
-    public Series(@NotNull ArrAPI api, @NotNull JsonNode node, @NotNull Instant lastFetched) {
+    public Tag(@NotNull ArrAPI api, @NotNull JsonNode node, @NotNull Instant lastFetched) {
         super(api, node, lastFetched);
 
         if (node.isArray()) {
             JSONArray resources = node.getArray();
             for (int i = 0; i < resources.length(); i++) {
-                this.resources.add(new SeriesResource(api, resources.getJSONObject(i)));
+                this.resources.add(new TagResource(api, resources.getJSONObject(i)));
             }
         } else {
-            this.resources.add(new SeriesResource(api, node.getObject()));
+            this.resources.add(new TagResource(api, node.getObject()));
         }
     }
 
-    private Series() {
+    private Tag() {
         super(NullArrAPI.INSTANCE, new JsonNode("{}"), Instant.EPOCH);
     }
 
     @Override
     public @NotNull String apiPath() {
-        return "/api/v3/series";
+        return "/api/v3/tag";
     }
 
     @Override
     public @NotNull TimeValue cacheTime() {
-        return CacheConfigVars.getTimeValue(CacheConfigVars.SHORT_CACHE_TIME);
+        return CacheConfigVars.getTimeValue(CacheConfigVars.LONG_CACHE_TIME);
     }
 
-    public @NotNull List<@NotNull SeriesResource> resources() {
+    public @NotNull List<@NotNull TagResource> resources() {
         return resources;
     }
 
-    public @Nullable SeriesResource resource() {
+    public @Nullable TagResource resource() {
         return resources.size() == 1 ? resources.getFirst() : null;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Series series)) return false;
-        return Objects.equals(resources, series.resources);
+        if (!(o instanceof Tag tag)) return false;
+        return Objects.equals(resources, tag.resources);
     }
 
     @Override
@@ -69,7 +69,7 @@ public class Series extends AbstractFetchableAPIObject {
 
     @Override
     public String toString() {
-        return "Series{" +
+        return "Tag{" +
                 "resources=" + resources +
                 ", api=" + api +
                 ", node=" + node +

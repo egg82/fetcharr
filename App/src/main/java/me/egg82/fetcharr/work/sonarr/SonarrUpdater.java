@@ -1,23 +1,38 @@
 package me.egg82.fetcharr.work.sonarr;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import me.egg82.arr.sonarr.SonarrV3API;
+import me.egg82.arr.sonarr.v3.Episode;
+import me.egg82.arr.sonarr.v3.Series;
+import me.egg82.arr.sonarr.v3.Tag;
+import me.egg82.arr.sonarr.v3.schema.EpisodeFileResource;
+import me.egg82.arr.sonarr.v3.schema.EpisodeResource;
+import me.egg82.arr.sonarr.v3.schema.SeriesResource;
+import me.egg82.arr.sonarr.v3.schema.TagResource;
+import me.egg82.arr.unit.TimeValue;
+import me.egg82.fetcharr.env.ConfigVars;
+import me.egg82.fetcharr.env.SonarrConfigVars;
+import me.egg82.fetcharr.util.WeightedRandom;
 import me.egg82.fetcharr.work.AbstractUpdater;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+
 public class SonarrUpdater extends AbstractUpdater {
+    private final WeightedRandom<WeightedSeries> random = new WeightedRandom<>();
+
     public SonarrUpdater(@NotNull SonarrV3API api) {
         super(api);
-    }
 
-    @Override
-    protected void doWork() {
-
-    }
-
-    /*private final WeightedRandom<Series> random = new WeightedRandom<>();
-
-    public SonarrUpdater(@NotNull SonarrAPI api) {
-        super(api);
+        if (!Instant.EPOCH.equals(this.metaFile.lastUpdate())) {
+            logger.debug("Resuming SONARR_{} from last update at {}", api.id(), this.metaFile.lastUpdate());
+        }
     }
 
     @Override
@@ -34,8 +49,23 @@ public class SonarrUpdater extends AbstractUpdater {
 
         logger.info("Updating up to {} items for for SONARR_{}: {}", searchAmount, api.id(), api.baseUrl());
 
-        AllSeries all = api.fetch(AllSeries.class, false);
-        random.updateList(all.items());
+        Series allSeries = api.fetch(Series.class);
+        if (allSeries == null) {
+            logger.error("SONARR_{} returned bad result for {}", api.id(), Series.UNKNOWN.apiPath());
+            return;
+        }
+
+        List<WeightedSeries> wrapped = new ArrayList<>();
+        for (SeriesResource s : allSeries.resources()) {
+            Episode allEpisodes = api.fetch(Episode.class, Map.of("seriesId", s.id()));
+            if (allEpisodes == null) {
+                logger.error("SONARR_{} returned bad result for {}", api.id(), Episode.UNKNOWN.apiPath());
+                continue;
+            }
+
+            wrapped.add(new WeightedSeries(s, allEpisodes.resources()));
+        }
+        random.updateList(wrapped);
 
         boolean monitoredOnly = SonarrConfigVars.getBool(SonarrConfigVars.MONITORED_ONLY, api.id());
         boolean missingOnly = SonarrConfigVars.getBool(SonarrConfigVars.MISSING_ONLY, api.id());
@@ -49,62 +79,80 @@ public class SonarrUpdater extends AbstractUpdater {
         while (attempts > 0 && ids.size() < searchAmount) {
             attempts--;
 
-            Series s = random.selectOne();
+            WeightedSeries s = random.selectOne();
             if (s == null) {
                 continue;
             }
-            api.update(s);
-            if (monitoredOnly && !s.monitored()) {
-                logger.info("Skipping series {} (\"{}\") due to unmonitored status", s.id(), s.title());
+            if (monitoredOnly && !s.series().monitored()) {
+                logger.info("Skipping series {} (\"{}\") due to unmonitored status", s.series().id(), s.series().title());
+                continue;
+            }
+            if (skipTags.length > 0 && hasAnyTag(skipTags, s.series().tags())) {
+                logger.info("Skipping series {} (\"{}\") because skip-tag is set", s.series().id(), s.series().title());
                 continue;
             }
             if (missingOnly) {
-                boolean missing = true;
-                AllEpisodes a = api.fetch(AllEpisodes.class, s.id(), false);
-                for (Episode e : a.items()) {
+                boolean hasFiles = true;
+                for (EpisodeResource e : s.episodes()) {
                     if (!e.hasFile()) {
-                        missing = false;
+                        hasFiles = false;
                         break;
                     }
                 }
-                if (!missing) {
-                    logger.info("Skipping series {} (\"{}\") because it has all available episodes", s.id(), s.title());
+                if (hasFiles) {
+                    logger.info("Skipping series {} (\"{}\") because it is not missing any series files", s.series().id(), s.series().title());
                     continue;
                 }
             }
             if (useCutoff) {
-                boolean qualityCutoffMet = true;
-                AllEpisodes a = api.fetch(AllEpisodes.class, s.id(), false);
-                for (Episode e : a.items()) {
-                    if (!e.episodeFile().qualityCutoffNotMet()) {
-                        qualityCutoffMet = false;
+                boolean cutoffMet = true;
+                for (EpisodeResource e : s.episodes()) {
+                    EpisodeFileResource episodeFile = e.episodeFile();
+                    if (episodeFile != null && !episodeFile.qualityCutoffNotMet()) {
+                        cutoffMet = false;
                         break;
                     }
                 }
-                if (qualityCutoffMet) {
-                    logger.info("Skipping series {} (\"{}\") because it meets the quality cutoff", s.id(), s.title());
+                if (cutoffMet) {
+                    logger.info("Skipping series {} (\"{}\") because it meets the quality cutoff", s.series().id(), s.series().title());
                     continue;
                 }
             }
-            if (skipTags.length > 0 && hasAnyTag(skipTags, s.tags())) {
-                logger.info("Skipping series {} (\"{}\") because skip-tag is set", s.id(), s.title());
-                continue;
-            }
 
             if (dryRun) {
-                logger.info("Would update series {} (\"{}\") if not in dry-run mode", s.id(), s.title());
+                logger.info("Would update series {} (\"{}\") if not in dry-run mode", s.series().id(), s.series().title());
             } else {
-                logger.info("Updating series {} (\"{}\")", s.id(), s.title());
+                logger.info("Updating series {} (\"{}\")", s.series().id(), s.series().title());
             }
-            ids.add(s.id());
-            s.invalidate(); // Force refresh on next
+            ids.add(s.series().id());
+            api.invalidate(Series.class, s.series().id()); // Force refresh on next
+            api.invalidate(Episode.class, Map.of("seriesId", s.series().id())); // Force refresh on next
         }
 
         if (!dryRun && !ids.isEmpty()) {
             api.search(ids);
         }
 
-        this.meta.last(lastUpdate);
-        this.meta.write();
-    }*/
+        this.metaFile.lastUpdate(lastUpdate);
+        this.metaFile.write();
+    }
+
+    private boolean hasAnyTag(@NotNull String @NotNull [] needles, @NotNull Collection<@NotNull Tag> haystack) {
+        if (needles.length == 0 || haystack.isEmpty()) {
+            return false;
+        }
+
+        for (String n : needles) {
+            for (Tag t : haystack) {
+                TagResource r = t.resource();
+                if (r != null) {
+                    String label = r.label();
+                    if (label != null && label.equalsIgnoreCase(n)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 }

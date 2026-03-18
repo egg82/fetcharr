@@ -3,9 +3,11 @@ package me.egg82.fetcharr;
 import kong.unirest.core.Proxy;
 import kong.unirest.core.Unirest;
 import me.egg82.arr.radarr.RadarrV3API;
+import me.egg82.arr.sonarr.SonarrV3API;
 import me.egg82.fetcharr.config.LogConfigVars;
 import me.egg82.fetcharr.env.*;
 import me.egg82.fetcharr.work.radarr.RadarrUpdater;
+import me.egg82.fetcharr.work.sonarr.SonarrUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinylog.configuration.Configuration;
@@ -68,8 +70,8 @@ public class Main {
 
         for (int i = 0; i < 100; i++) {
             setupRadarr(i);
-            /*
             setupSonarr(i);
+            /*
             setupLidarr(i);
             setupWhisparr(i);
              */
@@ -85,6 +87,7 @@ public class Main {
             } catch (InterruptedException ignored) {
                 Thread.currentThread().interrupt();
             }
+            Unirest.shutDown();
         }));
 
         while (true) {
@@ -200,7 +203,6 @@ public class Main {
         LOGGER.info("Added RADARR_{} instance at {}", num, url);
     }
 
-    /*
     private static void setupSonarr(int num) {
         String url = SonarrConfigVars.get(SonarrConfigVars.URL, num);
         String key = SonarrConfigVars.get(SonarrConfigVars.API_KEY, num);
@@ -220,16 +222,17 @@ public class Main {
         url = url.strip().replaceAll("/+$", "");
         key = key.strip();
 
-        SonarrAPI api = new SonarrAPI(url, key, num);
+        SonarrV3API api = new SonarrV3API(url, key, num);
         if (!api.valid()) {
             LOGGER.warn("Could not authenticate to Sonarr instance configured at {} ({})", SonarrConfigVars.URL.envName(num), url);
             return;
         }
 
-        sonarr.add(new SonarrUpdater(api));
-        LOGGER.info("Added Sonarr instance at {}", url);
+        radarr.add(new SonarrUpdater(api));
+        LOGGER.info("Added SONARR_{} instance at {}", num, url);
     }
 
+    /*
     private static void setupLidarr(int num) {
         String url = LidarrConfigVars.get(LidarrConfigVars.URL, num);
         String key = LidarrConfigVars.get(LidarrConfigVars.API_KEY, num);

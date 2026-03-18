@@ -1,5 +1,6 @@
 package me.egg82.arr.common;
 
+import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.JsonNode;
@@ -7,7 +8,6 @@ import kong.unirest.core.Unirest;
 import me.egg82.arr.config.CacheConfigVars;
 import me.egg82.arr.file.FetchableAPIObjectMeta;
 import me.egg82.arr.file.JSONFile;
-import me.egg82.arr.unit.TimeValue;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +19,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
@@ -32,8 +34,8 @@ public abstract class AbstractArrAPI implements ArrAPI {
     private final ConcurrentMap<Class<? extends FetchableAPIObject>, @Nullable Constructor<?>> constructors = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends FetchableAPIObject>, @Nullable Object> unknowns = new ConcurrentHashMap<>();
 
-    private final ExpiringMap<Class<? extends FetchableAPIObject>, @Nullable Object> cache = ExpiringMap.builder().expirationPolicy(ExpirationPolicy.CREATED).variableExpiration().build();
-    private final ExpiringMap<ObjectIntPair<Class<? extends FetchableAPIObject>>, @Nullable Object> idCache = ExpiringMap.builder().expirationPolicy(ExpirationPolicy.CREATED).variableExpiration().build();
+    private final ExpiringMap<Pair<Class<? extends FetchableAPIObject>, String>, @Nullable Object> cache = ExpiringMap.builder().expirationPolicy(ExpirationPolicy.CREATED).variableExpiration().build();
+    private final ExpiringMap<Pair<ObjectIntPair<Class<? extends FetchableAPIObject>>, String>, @Nullable Object> idCache = ExpiringMap.builder().expirationPolicy(ExpirationPolicy.CREATED).variableExpiration().build();
 
     protected final String baseUrl;
     protected final String apiKey;
@@ -57,7 +59,8 @@ public abstract class AbstractArrAPI implements ArrAPI {
 
     @Override
     public <T extends FetchableAPIObject> @Nullable T fetch(@NotNull Class<T> type, @Nullable Map<String, @NotNull Object> params) {
-        T r = (T) cache.computeIfAbsent(type, k -> {
+        Pair<Class<? extends FetchableAPIObject>, String> key = Pair.of(type, encode(params));
+        T r = (T) cache.computeIfAbsent(key, k -> {
             T cache = getCache(type);
             if (cache != null) {
                 logger.debug("Loaded {} from cache ({}_{})", type.getSimpleName(), this.type(), this.id);
@@ -80,14 +83,15 @@ public abstract class AbstractArrAPI implements ArrAPI {
         });
         if (r != null) {
             Duration expires = r.expiresIn();
-            cache.setExpiration(type, expires.toMillis(), TimeUnit.MILLISECONDS);
+            cache.setExpiration(key, expires.toMillis(), TimeUnit.MILLISECONDS);
         }
         return r;
     }
 
     @Override
     public <T extends FetchableAPIObject> @Nullable T fetch(@NotNull Class<T> type, int id, @Nullable Map<String, @NotNull Object> params) {
-        T r = (T) idCache.computeIfAbsent(ObjectIntPair.of(type, id), k -> {
+        Pair<ObjectIntPair<Class<? extends FetchableAPIObject>>, String> key = Pair.of(ObjectIntPair.of(type, id), encode(params));
+        T r = (T) idCache.computeIfAbsent(key, k -> {
             T cache = getCache(type, id);
             if (cache != null) {
                 logger.debug("Loaded {} ({}) from cache ({}_{})", type.getSimpleName(), id, this.type(), this.id);
@@ -110,19 +114,19 @@ public abstract class AbstractArrAPI implements ArrAPI {
         });
         if (r != null) {
             Duration expires = r.expiresIn();
-            idCache.setExpiration(ObjectIntPair.of(type, id), expires.toMillis(), TimeUnit.MILLISECONDS);
+            idCache.setExpiration(key, expires.toMillis(), TimeUnit.MILLISECONDS);
         }
         return r;
     }
 
     @Override
-    public void invalidate(@NotNull Class<? extends FetchableAPIObject> type) {
-        cache.remove(type);
+    public void invalidate(@NotNull Class<? extends FetchableAPIObject> type, @Nullable Map<String, @NotNull Object> params) {
+        cache.remove(Pair.of(type, encode(params)));
     }
 
     @Override
-    public void invalidate(@NotNull Class<? extends FetchableAPIObject> type, int id) {
-        idCache.remove(ObjectIntPair.of(type, id));
+    public void invalidate(@NotNull Class<? extends FetchableAPIObject> type, int id, @Nullable Map<String, @NotNull Object> params) {
+        idCache.remove(Pair.of(ObjectIntPair.of(type, id), encode(params)));
     }
 
     private <T extends FetchableAPIObject> @Nullable T build(@NotNull Class<T> type, @NotNull JsonNode node, @NotNull Instant lastFetched) {
@@ -301,5 +305,19 @@ public abstract class AbstractArrAPI implements ArrAPI {
         }
 
         return response.getBody();
+    }
+
+    private @NotNull String encode(@Nullable Map<String, @NotNull Object> params) {
+        if (params == null) {
+            return "";
+        }
+
+        // Source - https://stackoverflow.com/a/29213105
+        // Posted by eclipse, modified by community. See post 'Timeline' for change history
+        // Retrieved 2026-03-17, License - CC BY-SA 3.0
+        return params.entrySet().stream()
+                .map(p -> URLEncoder.encode(p.getKey(), StandardCharsets.UTF_8) + "=" + URLEncoder.encode(p.getValue().toString(), StandardCharsets.UTF_8))
+                .reduce((p1, p2) -> p1 + "&" + p2)
+                .orElse("");
     }
 }
