@@ -4,10 +4,12 @@ import kong.unirest.core.Proxy;
 import kong.unirest.core.Unirest;
 import me.egg82.arr.radarr.RadarrV3API;
 import me.egg82.arr.sonarr.SonarrV3API;
+import me.egg82.arr.whisparr.WhisparrV3API;
 import me.egg82.fetcharr.config.LogConfigVars;
 import me.egg82.fetcharr.env.*;
 import me.egg82.fetcharr.work.radarr.RadarrUpdater;
 import me.egg82.fetcharr.work.sonarr.SonarrUpdater;
+import me.egg82.fetcharr.work.whisparr.WhisparrUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinylog.configuration.Configuration;
@@ -71,10 +73,8 @@ public class Main {
         for (int i = 0; i < 100; i++) {
             setupRadarr(i);
             setupSonarr(i);
-            /*
-            setupLidarr(i);
+            // setupLidarr(i);
             setupWhisparr(i);
-             */
         }
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -228,12 +228,40 @@ public class Main {
             return;
         }
 
-        radarr.add(new SonarrUpdater(api));
+        sonarr.add(new SonarrUpdater(api));
         LOGGER.info("Added SONARR_{} instance at {}", num, url);
     }
 
-    /*
-    private static void setupLidarr(int num) {
+    private static void setupWhisparr(int num) {
+        String url = WhisparrConfigVars.get(WhisparrConfigVars.URL, num);
+        String key = WhisparrConfigVars.get(WhisparrConfigVars.API_KEY, num);
+
+        if (url == null && key == null) {
+            return;
+        }
+        if (url == null) {
+            LOGGER.warn("Whisparr URL at {} missing", WhisparrConfigVars.URL.envName(num));
+            return;
+        }
+        if (key == null) {
+            LOGGER.warn("Whisparr API key at {} missing", WhisparrConfigVars.API_KEY.envName(num));
+            return;
+        }
+
+        url = url.strip().replaceAll("/+$", "");
+        key = key.strip();
+
+        WhisparrV3API api = new WhisparrV3API(url, key, num);
+        if (!api.valid()) {
+            LOGGER.warn("Could not authenticate to Whisparr instance configured at {} ({})", WhisparrConfigVars.URL.envName(num), url);
+            return;
+        }
+
+        whisparr.add(new WhisparrUpdater(api));
+        LOGGER.info("Added WHISPARR_{} instance at {}", num, url);
+    }
+
+    /*private static void setupLidarr(int num) {
         String url = LidarrConfigVars.get(LidarrConfigVars.URL, num);
         String key = LidarrConfigVars.get(LidarrConfigVars.API_KEY, num);
 
@@ -260,35 +288,5 @@ public class Main {
 
         sonarr.add(new LidarrUpdater(api));
         LOGGER.info("Added Lidarr instance at {}", url);
-    }
-
-    private static void setupWhisparr(int num) {
-        String url = WhisparrConfigVars.get(WhisparrConfigVars.URL, num);
-        String key = WhisparrConfigVars.get(WhisparrConfigVars.API_KEY, num);
-
-        if (url == null && key == null) {
-            return;
-        }
-        if (url == null) {
-            LOGGER.warn("Whisparr URL at {} missing", WhisparrConfigVars.URL.envName(num));
-            return;
-        }
-        if (key == null) {
-            LOGGER.warn("Whisparr API key at {} missing", WhisparrConfigVars.API_KEY.envName(num));
-            return;
-        }
-
-        url = url.strip().replaceAll("/+$", "");
-        key = key.strip();
-
-        WhisparrAPI api = new WhisparrAPI(url, key, num);
-        if (!api.valid()) {
-            LOGGER.warn("Could not authenticate to Whisparr instance configured at {} ({})", WhisparrConfigVars.URL.envName(num), url);
-            return;
-        }
-
-        whisparr.add(new WhisparrUpdater(api));
-        LOGGER.info("Added Whisparr instance at {}", url);
-    }
-     */
+    }*/
 }

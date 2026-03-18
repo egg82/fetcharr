@@ -1,23 +1,35 @@
 package me.egg82.fetcharr.work.whisparr;
 
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import me.egg82.arr.unit.TimeValue;
 import me.egg82.arr.whisparr.WhisparrV3API;
+import me.egg82.arr.whisparr.v3.Movie;
+import me.egg82.arr.whisparr.v3.Tag;
+import me.egg82.arr.whisparr.v3.schema.MovieFileResource;
+import me.egg82.arr.whisparr.v3.schema.MovieResource;
+import me.egg82.arr.whisparr.v3.schema.TagResource;
+import me.egg82.fetcharr.env.ConfigVars;
+import me.egg82.fetcharr.env.WhisparrConfigVars;
+import me.egg82.fetcharr.util.WeightedRandom;
 import me.egg82.fetcharr.work.AbstractUpdater;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+
 public class WhisparrUpdater extends AbstractUpdater {
+    private final WeightedRandom<WeightedMovie> random = new WeightedRandom<>();
+
     public WhisparrUpdater(@NotNull WhisparrV3API api) {
         super(api);
-    }
 
-    @Override
-    protected void doWork() {
-
-    }
-
-    /*private final WeightedRandom<Movie> random = new WeightedRandom<>();
-
-    public WhisparrUpdater(@NotNull WhisparrAPI api) {
-        super(api);
+        if (!Instant.EPOCH.equals(this.metaFile.lastUpdate())) {
+            logger.debug("Resuming WHISPARR_{} from last update at {}", api.id(), this.metaFile.lastUpdate());
+        }
     }
 
     @Override
@@ -34,8 +46,17 @@ public class WhisparrUpdater extends AbstractUpdater {
 
         logger.info("Updating up to {} items for for WHISPARR_{}: {}", searchAmount, api.id(), api.baseUrl());
 
-        AllMovies all = api.fetch(AllMovies.class, false);
-        random.updateList(all.items());
+        Movie all = api.fetch(Movie.class);
+        if (all == null) {
+            logger.error("WHISPARR_{} returned bad result for {}", api.id(), Movie.UNKNOWN.apiPath());
+            return;
+        }
+
+        List<WeightedMovie> wrapped = new ArrayList<>();
+        for (MovieResource m : all.resources()) {
+            wrapped.add(new WeightedMovie(m));
+        }
+        random.updateList(wrapped);
 
         boolean monitoredOnly = WhisparrConfigVars.getBool(WhisparrConfigVars.MONITORED_ONLY, api.id());
         boolean missingOnly = WhisparrConfigVars.getBool(WhisparrConfigVars.MISSING_ONLY, api.id());
@@ -49,42 +70,61 @@ public class WhisparrUpdater extends AbstractUpdater {
         while (attempts > 0 && ids.size() < searchAmount) {
             attempts--;
 
-            Movie m = random.selectOne();
+            WeightedMovie m = random.selectOne();
             if (m == null) {
                 continue;
             }
-            api.update(m);
-            if (monitoredOnly && !m.monitored()) {
-                logger.info("Skipping scene/movie {} (\"{}\") due to unmonitored status", m.id(), m.title());
+            if (monitoredOnly && !m.resource().monitored()) {
+                logger.info("Skipping scene/movie {} (\"{}\") due to unmonitored status", m.resource().id(), m.resource().title());
                 continue;
             }
-            if (missingOnly && m.hasFile()) {
-                logger.info("Skipping scene/movie {} (\"{}\") because it is not missing a scene/movie file", m.id(), m.title());
+            if (missingOnly && m.resource().hasFile()) {
+                logger.info("Skipping scene/movie {} (\"{}\") because it is not missing a movie file", m.resource().id(), m.resource().title());
                 continue;
             }
-            if (useCutoff && !m.movieFile().qualityCutoffNotMet()) {
-                logger.info("Skipping scene/movie {} (\"{}\") because it meets the quality cutoff", m.id(), m.title());
+            MovieFileResource movieFile = m.resource().movieFile();
+            if (useCutoff && movieFile != null && !movieFile.qualityCutoffNotMet()) {
+                logger.info("Skipping scene/movie {} (\"{}\") because it meets the quality cutoff", m.resource().id(), m.resource().title());
                 continue;
             }
-            if (skipTags.length > 0 && hasAnyTag(skipTags, m.tags())) {
-                logger.info("Skipping scene/movie {} (\"{}\") because skip-tag is set", m.id(), m.title());
+            if (skipTags.length > 0 && hasAnyTag(skipTags, m.resource().tags())) {
+                logger.info("Skipping scene/movie {} (\"{}\") because skip-tag is set", m.resource().id(), m.resource().title());
                 continue;
             }
 
             if (dryRun) {
-                logger.info("Would update scene/movie {} (\"{}\") if not in dry-run mode", m.id(), m.title());
+                logger.info("Would update scene/movie {} (\"{}\") if not in dry-run mode", m.resource().id(), m.resource().title());
             } else {
-                logger.info("Updating scene/movie {} (\"{}\")", m.id(), m.title());
+                logger.info("Updating scene/movie {} (\"{}\")", m.resource().id(), m.resource().title());
             }
-            ids.add(m.id());
-            m.invalidate(); // Force refresh on next
+            ids.add(m.resource().id());
+            api.invalidate(Movie.class, m.resource().id()); // Force refresh on next
         }
 
         if (!dryRun && !ids.isEmpty()) {
             api.search(ids);
         }
 
-        this.meta.last(lastUpdate);
-        this.meta.write();
-    }*/
+        this.metaFile.lastUpdate(lastUpdate);
+        this.metaFile.write();
+    }
+
+    private boolean hasAnyTag(@NotNull String @NotNull [] needles, @NotNull Collection<@NotNull Tag> haystack) {
+        if (needles.length == 0 || haystack.isEmpty()) {
+            return false;
+        }
+
+        for (String n : needles) {
+            for (Tag t : haystack) {
+                TagResource r = t.resource();
+                if (r != null) {
+                    String label = r.label();
+                    if (label != null && label.equalsIgnoreCase(n)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 }
