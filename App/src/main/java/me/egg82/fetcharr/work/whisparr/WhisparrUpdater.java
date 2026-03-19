@@ -2,6 +2,8 @@ package me.egg82.fetcharr.work.whisparr;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.egg82.arr.config.CacheConfigVars;
+import me.egg82.arr.config.Tristate;
 import me.egg82.arr.unit.TimeValue;
 import me.egg82.arr.whisparr.WhisparrV3API;
 import me.egg82.arr.whisparr.v3.Movie;
@@ -45,6 +47,10 @@ public class WhisparrUpdater extends AbstractUpdater {
         int searchAmount = WhisparrConfigVars.getInt(WhisparrConfigVars.SEARCH_AMOUNT, api.id());
 
         logger.info("Updating up to {} items for for WHISPARR_{}: {}", searchAmount, api.id(), api.baseUrl());
+        if (searchAmount <= 0) {
+            logger.info("Skipping updating items (search amount {}) for WHISPARR_{}: {}", searchAmount, api.id(), api.baseUrl());
+            return;
+        }
 
         Movie all = api.fetch(Movie.class);
         if (all == null) {
@@ -106,7 +112,10 @@ public class WhisparrUpdater extends AbstractUpdater {
         }
 
         this.metaFile.lastUpdate(lastUpdate);
-        this.metaFile.write();
+        Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
+        if ((fileCache == Tristate.AUTO && isCacheWritable()) || fileCache == Tristate.TRUE) {
+            this.metaFile.write();
+        }
     }
 
     private boolean hasAnyTag(@NotNull String @NotNull [] needles, @NotNull Collection<@NotNull Tag> haystack) {

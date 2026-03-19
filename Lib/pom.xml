@@ -94,6 +94,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -114,6 +115,11 @@
             <version>${unirest.version}</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.pcollections</groupId>
+            <artifactId>pcollections</artifactId>
+            <version>${pcollections.version}</version>
+        </dependency>
         <dependency>
             <groupId>it.unimi.dsi</groupId>
             <artifactId>fastutil-core</artifactId>

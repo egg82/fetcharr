@@ -13,10 +13,10 @@ import java.util.concurrent.TimeUnit;
 
 public enum ConfigVars {
     PROXY_HOST(String.class, "HTTP proxy host", null),
-    PROXY_PORT(Integer.class, "HTTP proxy port", 0),
-    CONNECT_TIMEOUT(Integer.class, "HTTP connection timeout in milliseconds", 0),
-    REQUEST_TIMEOUT(Integer.class, "HTTP request timeout in milliseconds", 0),
-    CONNECT_TTL(Integer.class, "HTTP connection TTL in milliseconds", -1),
+    PROXY_PORT(Integer.class, "HTTP proxy port", 80),
+    CONNECT_TIMEOUT(Integer.class, "HTTP connection timeout in milliseconds", 2500),
+    REQUEST_TIMEOUT(Integer.class, "HTTP request timeout in milliseconds", 120000),
+    CONNECT_TTL(Integer.class, "HTTP connection TTL in milliseconds", 300000),
     VERIFY_CERTS(Boolean.class, "Verify SSL certificates", true),
     CONFIG_DIR(File.class, "Data storage directory", new File("/app/config")),
     SSL_PATH(File.class, "File path containing custom SSL certs", new File("/etc/ssl/certs/ca-bundle.crt")),

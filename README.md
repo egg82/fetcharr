@@ -38,6 +38,11 @@ Now, it's worth mentioning that Sonarr, Radarr, etc have had a built-in system t
 them to work reliably. Maybe it's just bad luck or some strange misconfiguration, but I've always had a need for apps like
 Scoutarr (Upgradinatorr), Huntarr, etc. Considering the popularity of these apps it feels like I am not the only one.
 
+Update to this: I learned that at *arr stack uses RSS feeds to scan for and fetch updates, so if your indexer doesn't support those
+feeds or the feeds or too old (or a myriad of other issues that can come from this kind of system) then you won't get replacement content
+even if it exists. This is why these kinds of "hunting", "fetching", "upgrading", etc systems work so well. They simply force the *arr
+apps to periodically update their content through their configured indexer, regardless of RSS feed availability.
+
 If the concept sounds interesting to you, give Fetcharr a try. See if it finds anything. If my experience while developing this is anything
 to go by, you'll get some results almost immediately. Likely within a few hours, and maybe even within a few seconds. See if it helps
 and if you want to add it to your stack.
@@ -66,182 +71,109 @@ Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
 
 ### Common
 
-- LOG_MODE: Logging mode
-  - string: trace, debug, info, warn, error
-  - default: info
-- PROXY_HOST: HTTP proxy host
-  - string: \<URL\>
-  - default: null
-- PROXY_PORT: HTTP proxy port
-  - int: \<port\>
-  - default: 0
-- CONNECT_TIMEOUT: HTTP connection timeout in milliseconds
-  - int: \<ms\>
-  - default: 10,000
-- REQUEST_TIMEOUT: HTTP request timeout in milliseconds
-  - int: \<ms\>
-  - default: 10,000
-- CONNECT_TTL: HTTP connection TTL in milliseconds
-  - int: \<ms\>
-  - default: 10,000
-- VERIFY_CERTS: Verify SSL certificates
-  - bool: \<value\>
-  - default: true
-- USE_CACHE: Use internal caching mechanisms
-  - bool: \<value\>
-  - default: true
-- SHORT_CACHE_TIME: Expiration time for short-lived cached values
-  - string: \<time\>
-  - default: 65minutes
-- LONG_CACHE_TIME: Expiration time for long-lived cached values
-  - string: \<time\>
-  - default: 6hours
-- DATA_DIR: Data storage directory
-  - string: \<file\>
-  - default: /data
-- CACHE_DIR: Cache storage directory
-  - string: \<file\>
-  - default: /cache
-- SSL_PATH: File path containing custom SSL certs
-  - string: \<file\>
-  - default: /etc/ssl/certs/ca-bundle.crt
-- SEARCH_AMOUNT: Number of items to search at each run
-  - int: \<amount\>
-  - default: 5
-- SEARCH_INTERVAL: How often to search
-  - string: \<time\>
-  - 1hour
-- MONITORED_ONLY: True to select only monitored items, false to select all
-  - bool: \<value\>
-  - default: true
-- MISSING_ONLY: True to select only missing items, false to select upgrades as well
-  - bool: \<value\>
-  - default: false
-- SKIP_TAGS: Comma-separated list of tags to skip searching
-  - string: \<tags\>
-  - default: \<none\>
-- DRY_RUN: True to run in dry-run mode, which doesn't perform searches
-  - boolean: \<value\>
-  - default: false
-- USE_CUTOFF: Skip items that have their profile cutoff met
-  - boolean: \<value\>
-  - default: false
+| variable | type    | values | default  | description |
+| -------- |---------| ------ |----------| ----------- |
+| LOG_MODE | string | trace, debug, info, warn, error | info | Logging mode |
+| DRY_RUN | boolean | true, false | false | Run in dry-run mode, which will list (but **not** perform) searches |
+| CONFIG_DIR | directory | /any/directory/path | /app/config | Configuration storage directory |
+| CACHE_DIR | directory | /any/directory/path | /app/cache | Cache storage directory |
+| LOG_DIR | directory | /any/directory/path | /app/logs | Log storage directory |
+| VERIFY_CERTS | boolean | true, false | true | Verify SSL certificates |
+| SSL_PATH | file | /any/file/path.ext | /etc/ssl/certs/ca-bundle.crt | File path for SSL cert bundle |
+| PROXY_HOST | string | \<URL\> | \<none\> | HTTP proxy host |
+| PROXY_PORT| integer | 1-65534 | 80 | HTTP proxy port |
+| CONNECT_TIMEOUT | integer | 0-2147483647 | 2500 | HTTP connection timeout in milliseconds |
+| REQUEST_TIMEOUT | integer | 0-2147483647 | 120000 | HTTP request timeout in milliseconds |
+| CONNECT_TTL | integer | 0-2147483647 | 300000 | HTTP connection TTL in milliseconds |
+| USE_FILE_CACHE | tristate | auto, true, false | auto | Use file-based cache |
+| USE_MEMORY_CACHE | tristate | auto, true, false | auto | Use in-memory cache |
+| SHORT_CACHE_TIME | time | 5minutes, 3hours, etc | 65minutes | Expiration time for short-lived cached values |
+| LONG_CACHE_TIME | time | 5minutes, 3hours, etc | 6hours | Expiration time for long-lived cached values |
+| SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
+| SEARCH_INTERVAL | time | 5minutes, 3hours, etc | 1hour | How often to perform searches |
+| MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
+| MISSING_ONLY | boolean | true, false | false | Select for missing items |
+| USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
+| SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 
-### Radarr
+Notes on caching:
 
-Replace `X` with a number. This allows for up to 100 instances to be configured.
+With `USE_FILE_CACHE` set to "auto", Fetcharr will determine if the configured cache directory is writable.
+If so, it will enable use of file caching. If not, it will disable file caching.
 
-- RADARR_X_URL: Base URL
-  - string: \<url\>
-  - default: null
-- RADARR_X_API_KEY: API key
-  - string: \<key\>
-  - default: null
-- RADARR_X_SEARCH_AMOUNT: Number of items to search at each run
-    - int: \<amount\>
-    - default: 5
-- RADARR_X_SEARCH_INTERVAL: How often to search
-    - string: \<time\>
-    - 1hour
-- RADARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
-    - bool: \<value\>
-    - default: true
-- RADARR_X_MISSING_ONLY: True to select only missing items, false to select upgrades as well
-  - bool: \<value\>
-  - default: false
-- RADARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
-    - string: \<tags\>
-    - default: \<none\>
-- RADARR_X_USE_CUTOFF: Skip items that have their profile cutoff met
-  - boolean: \<value\>
-  - default: false
+With `USE_MEMORY_CACHE` set to "auto", Fetcharr will determine if the file cache is usable.
+If so, it will disable use of in-memory caching. If not, it will enable in-memory caching.
 
-### Sonarr
+This means that, if file caching is available, it won't store cached objects in memory. If file caching is
+not available, cached objects will be stored in memory. In-memory caching can consume a fair amount of memory,
+so file caching is preferred when possible.
 
-Replace `X` with a number. This allows for up to 100 instances to be configured.
+It's also possible to disable both so no caching is performed at all. Obviously, if you're using purely in-memory
+caching and you restart the container your cache will be lost.
 
-- SONARR_X_URL: Base URL
-    - string: \<url\>
-    - default: null
-- SONARR_X_API_KEY: API key
-    - string: \<key\>
-    - default: null
-- SONARR_X_SEARCH_AMOUNT: Number of items to search at each run
-    - int: \<amount\>
-    - default: 5
-- SONARR_X_SEARCH_INTERVAL: How often to search
-    - string: \<time\>
-    - 1hour
-- SONARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
-    - bool: \<value\>
-    - default: true
-- SONARR_X_MISSING_ONLY: True to select only missing items, false to select upgrades as well
-  - bool: \<value\>
-  - default: false
-- SONARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
-    - string: \<tags\>
-    - default: \<none\>
-- SONARR_X_USE_CUTOFF: Skip items that have their profile cutoff met
-  - boolean: \<value\>
-  - default: false
+Since caching is just that - caching - then clearing or disabling the cache won't really affect the program
+except to cause more API calls and a slightly slower run. Depending on your setup either tradeoff can be
+perfectly acceptable. This is why there's configuration options, eh?
 
-### Lidarr
+### Radarr overrides
 
-Replace `X` with a number. This allows for up to 100 instances to be configured.
+Replace `X` with a number from 0 to 99. This allows for up to 100 instances to be configured.
 
-- LIDARR_X_URL: Base URL
-  - string: \<url\>
-  - default: null
-- LIDARR_X_API_KEY: API key
-  - string: \<key\>
-  - default: null
-- LIDARR_X_SEARCH_AMOUNT: Number of items to search at each run
-  - int: \<amount\>
-  - default: 5
-- LIDARR_X_SEARCH_INTERVAL: How often to search
-  - string: \<time\>
-  - 1hour
-- LIDARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
-  - bool: \<value\>
-  - default: true
-- LIDARR_X_MISSING_ONLY: True to select only missing items, false to select upgrades as well
-  - bool: \<value\>
-  - default: false
-- LIDARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
-  - string: \<tags\>
-  - default: \<none\>
-- LIDARR_X_USE_CUTOFF: Skip items that have their profile cutoff met
-  - boolean: \<value\>
-  - default: false
+| variable | type    | values | default  | description |
+| -------- |---------| ------ |----------| ----------- |
+| RADARR_X_URL | string | \<URL\> | \<none\> | Base URL |
+| RADARR_X_API_KEY | string | \<key\> | \<none\> | API key |
+| RADARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
+| RADARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, etc | 1hour | How often to perform searches |
+| RADARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
+| RADARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
+| RADARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
+| RADARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 
-### Whisparr
+### Sonarr overrides
 
-Replace `X` with a number. This allows for up to 100 instances to be configured.
+Replace `X` with a number from 0 to 99. This allows for up to 100 instances to be configured.
 
-- WHISPARR_X_URL: Base URL
-  - string: \<url\>
-  - default: null
-- WHISPARR_X_API_KEY: API key
-  - string: \<key\>
-  - default: null
-- WHISPARR_X_SEARCH_AMOUNT: Number of items to search at each run
-  - int: \<amount\>
-  - default: 5
-- WHISPARR_X_SEARCH_INTERVAL: How often to search
-  - string: \<time\>
-  - 1hour
-- WHISPARR_X_MONITORED_ONLY: True to select only monitored items, false to select all
-  - bool: \<value\>
-  - default: true
-- WHISPARR_X_MISSING_ONLY: True to select only missing items, false to select upgrades as well
-  - bool: \<value\>
-  - default: false
-- WHISPARR_X_SKIP_TAGS: Comma-separated list of tags to skip searching
-  - string: \<tags\>
-  - default: \<none\>
-- WHISPARR_X_USE_CUTOFF: Skip items that have their profile cutoff met
-  - boolean: \<value\>
-  - default: false
+| variable | type    | values | default  | description |
+| -------- |---------| ------ |----------| ----------- |
+| SONARR_X_URL | string | \<URL\> | \<none\> | Base URL |
+| SONARR_X_API_KEY | string | \<key\> | \<none\> | API key |
+| SONARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
+| SONARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, etc | 1hour | How often to perform searches |
+| SONARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
+| SONARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
+| SONARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
+| SONARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
+
+### Lidarr overrides
+
+Replace `X` with a number from 0 to 99. This allows for up to 100 instances to be configured.
+
+| variable | type    | values | default  | description |
+| -------- |---------| ------ |----------| ----------- |
+| LIDARR_X_URL | string | \<URL\> | \<none\> | Base URL |
+| LIDARR_X_API_KEY | string | \<key\> | \<none\> | API key |
+| LIDARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
+| LIDARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, etc | 1hour | How often to perform searches |
+| LIDARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
+| LIDARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
+| LIDARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
+| LIDARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
+
+### Whisparr overrides
+
+Replace `X` with a number from 0 to 99. This allows for up to 100 instances to be configured.
+
+| variable | type    | values | default  | description |
+| -------- |---------| ------ |----------| ----------- |
+| WHISPARR_X_URL | string | \<URL\> | \<none\> | Base URL |
+| WHISPARR_X_API_KEY | string | \<key\> | \<none\> | API key |
+| WHISPARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
+| WHISPARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, etc | 1hour | How often to perform searches |
+| WHISPARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
+| WHISPARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
+| WHISPARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
+| WHISPARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 
 ### Wall of oddities
 

@@ -1,0 +1,65 @@
+package me.egg82.arr.lidarr.v1.schema;
+
+import kong.unirest.core.json.JSONObject;
+import me.egg82.arr.common.AbstractAPIObject;
+import me.egg82.arr.common.ArrAPI;
+import me.egg82.arr.parse.StringParser;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.Objects;
+
+public class MediaCover extends AbstractAPIObject {
+    private final MediaCoverTypes coverType;
+    private final String url;
+    private final String remoteUrl;
+    private final String extension;
+
+    public MediaCover(@NotNull ArrAPI api, @NotNull JSONObject obj) {
+        super(api, obj);
+
+        this.coverType = MediaCoverTypes.get(MediaCoverTypes.UNKNOWN, obj, "coverType");
+        this.url = StringParser.get(obj, "url");
+        this.remoteUrl = StringParser.get(obj, "remoteUrl");
+        this.extension = StringParser.get(obj, "extension");
+    }
+
+    public @NotNull MediaCoverTypes coverType() {
+        return coverType;
+    }
+
+    public @Nullable String url() {
+        return url;
+    }
+
+    public @Nullable String remoteUrl() {
+        return remoteUrl;
+    }
+
+    public @Nullable String extension() {
+        return extension;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof MediaCover that)) return false;
+        return coverType == that.coverType && Objects.equals(url, that.url) && Objects.equals(remoteUrl, that.remoteUrl) && Objects.equals(extension, that.extension);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(coverType, url, remoteUrl, extension);
+    }
+
+    @Override
+    public String toString() {
+        return "MediaCover{" +
+                "coverType=" + coverType +
+                ", url='" + url + '\'' +
+                ", remoteUrl='" + remoteUrl + '\'' +
+                ", extension='" + extension + '\'' +
+                ", api=" + api +
+                ", obj=" + obj +
+                '}';
+    }
+}

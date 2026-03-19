@@ -2,6 +2,8 @@ package me.egg82.fetcharr.work.radarr;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.egg82.arr.config.CacheConfigVars;
+import me.egg82.arr.config.Tristate;
 import me.egg82.arr.radarr.RadarrV3API;
 import me.egg82.arr.radarr.v3.Movie;
 import me.egg82.arr.radarr.v3.Tag;
@@ -43,6 +45,10 @@ public class RadarrUpdater extends AbstractUpdater {
         this.lastUpdate = now;
 
         int searchAmount = RadarrConfigVars.getInt(RadarrConfigVars.SEARCH_AMOUNT, api.id());
+        if (searchAmount <= 0) {
+            logger.info("Skipping updating items (search amount {}) for RADARR_{}: {}", searchAmount, api.id(), api.baseUrl());
+            return;
+        }
 
         logger.info("Updating up to {} items for for RADARR_{}: {}", searchAmount, api.id(), api.baseUrl());
 
@@ -106,7 +112,10 @@ public class RadarrUpdater extends AbstractUpdater {
         }
 
         this.metaFile.lastUpdate(lastUpdate);
-        this.metaFile.write();
+        Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
+        if ((fileCache == Tristate.AUTO && isCacheWritable()) || fileCache == Tristate.TRUE) {
+            this.metaFile.write();
+        }
     }
 
     private boolean hasAnyTag(@NotNull String @NotNull [] needles, @NotNull Collection<@NotNull Tag> haystack) {

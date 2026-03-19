@@ -2,6 +2,8 @@ package me.egg82.fetcharr.work.sonarr;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import me.egg82.arr.config.CacheConfigVars;
+import me.egg82.arr.config.Tristate;
 import me.egg82.arr.sonarr.SonarrV3API;
 import me.egg82.arr.sonarr.v3.Episode;
 import me.egg82.arr.sonarr.v3.Series;
@@ -46,6 +48,10 @@ public class SonarrUpdater extends AbstractUpdater {
         this.lastUpdate = now;
 
         int searchAmount = SonarrConfigVars.getInt(SonarrConfigVars.SEARCH_AMOUNT, api.id());
+        if (searchAmount <= 0) {
+            logger.info("Skipping updating items (search amount {}) for SONARR_{}: {}", searchAmount, api.id(), api.baseUrl());
+            return;
+        }
 
         logger.info("Updating up to {} items for for SONARR_{}: {}", searchAmount, api.id(), api.baseUrl());
 
@@ -100,7 +106,7 @@ public class SonarrUpdater extends AbstractUpdater {
                     }
                 }
                 if (hasFiles) {
-                    logger.info("Skipping series {} (\"{}\") because it is not missing any series files", s.series().id(), s.series().title());
+                    logger.info("Skipping series {} (\"{}\") because it is not missing any episode files", s.series().id(), s.series().title());
                     continue;
                 }
             }
@@ -134,7 +140,10 @@ public class SonarrUpdater extends AbstractUpdater {
         }
 
         this.metaFile.lastUpdate(lastUpdate);
-        this.metaFile.write();
+        Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
+        if ((fileCache == Tristate.AUTO && isCacheWritable()) || fileCache == Tristate.TRUE) {
+            this.metaFile.write();
+        }
     }
 
     private boolean hasAnyTag(@NotNull String @NotNull [] needles, @NotNull Collection<@NotNull Tag> haystack) {

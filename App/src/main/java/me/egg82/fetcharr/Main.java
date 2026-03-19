@@ -2,11 +2,13 @@ package me.egg82.fetcharr;
 
 import kong.unirest.core.Proxy;
 import kong.unirest.core.Unirest;
+import me.egg82.arr.lidarr.LidarrV1API;
 import me.egg82.arr.radarr.RadarrV3API;
 import me.egg82.arr.sonarr.SonarrV3API;
 import me.egg82.arr.whisparr.WhisparrV3API;
 import me.egg82.fetcharr.config.LogConfigVars;
 import me.egg82.fetcharr.env.*;
+import me.egg82.fetcharr.work.lidarr.LidarrUpdater;
 import me.egg82.fetcharr.work.radarr.RadarrUpdater;
 import me.egg82.fetcharr.work.sonarr.SonarrUpdater;
 import me.egg82.fetcharr.work.whisparr.WhisparrUpdater;
@@ -73,7 +75,7 @@ public class Main {
         for (int i = 0; i < 100; i++) {
             setupRadarr(i);
             setupSonarr(i);
-            // setupLidarr(i);
+            setupLidarr(i);
             setupWhisparr(i);
         }
 
@@ -131,7 +133,7 @@ public class Main {
         }
 
         int connectTTL = ConfigVars.getInt(ConfigVars.CONNECT_TTL);
-        if (connectTTL > -1) {
+        if (connectTTL > 0) {
             Unirest.config().connectionTTL(connectTTL, TimeUnit.MILLISECONDS);
         }
 
@@ -232,6 +234,35 @@ public class Main {
         LOGGER.info("Added SONARR_{} instance at {}", num, url);
     }
 
+    private static void setupLidarr(int num) {
+        String url = LidarrConfigVars.get(LidarrConfigVars.URL, num);
+        String key = LidarrConfigVars.get(LidarrConfigVars.API_KEY, num);
+
+        if (url == null && key == null) {
+            return;
+        }
+        if (url == null) {
+            LOGGER.warn("Lidarr URL at {} missing", LidarrConfigVars.URL.envName(num));
+            return;
+        }
+        if (key == null) {
+            LOGGER.warn("Lidarr API key at {} missing", LidarrConfigVars.API_KEY.envName(num));
+            return;
+        }
+
+        url = url.strip().replaceAll("/+$", "");
+        key = key.strip();
+
+        LidarrV1API api = new LidarrV1API(url, key, num);
+        if (!api.valid()) {
+            LOGGER.warn("Could not authenticate to Lidarr instance configured at {} ({})", LidarrConfigVars.URL.envName(num), url);
+            return;
+        }
+
+        lidarr.add(new LidarrUpdater(api));
+        LOGGER.info("Added LIDARR_{} instance at {}", num, url);
+    }
+
     private static void setupWhisparr(int num) {
         String url = WhisparrConfigVars.get(WhisparrConfigVars.URL, num);
         String key = WhisparrConfigVars.get(WhisparrConfigVars.API_KEY, num);
@@ -260,33 +291,4 @@ public class Main {
         whisparr.add(new WhisparrUpdater(api));
         LOGGER.info("Added WHISPARR_{} instance at {}", num, url);
     }
-
-    /*private static void setupLidarr(int num) {
-        String url = LidarrConfigVars.get(LidarrConfigVars.URL, num);
-        String key = LidarrConfigVars.get(LidarrConfigVars.API_KEY, num);
-
-        if (url == null && key == null) {
-            return;
-        }
-        if (url == null) {
-            LOGGER.warn("Lidarr URL at {} missing", LidarrConfigVars.URL.envName(num));
-            return;
-        }
-        if (key == null) {
-            LOGGER.warn("Lidarr API key at {} missing", LidarrConfigVars.API_KEY.envName(num));
-            return;
-        }
-
-        url = url.strip().replaceAll("/+$", "");
-        key = key.strip();
-
-        LidarrAPI api = new LidarrAPI(url, key, num);
-        if (!api.valid()) {
-            LOGGER.warn("Could not authenticate to Lidarr instance configured at {} ({})", LidarrConfigVars.URL.envName(num), url);
-            return;
-        }
-
-        sonarr.add(new LidarrUpdater(api));
-        LOGGER.info("Added Lidarr instance at {}", url);
-    }*/
 }

@@ -5,9 +5,12 @@ import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import kong.unirest.core.HttpResponse;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.Unirest;
+import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.config.CacheConfigVars;
+import me.egg82.arr.config.Tristate;
 import me.egg82.arr.file.FetchableAPIObjectMeta;
 import me.egg82.arr.file.JSONFile;
+import me.egg82.arr.parse.BooleanParser;
 import net.jodah.expiringmap.ExpirationPolicy;
 import net.jodah.expiringmap.ExpiringMap;
 import org.jetbrains.annotations.NotNull;
@@ -59,80 +62,109 @@ public abstract class AbstractArrAPI implements ArrAPI {
 
     @Override
     public <T extends FetchableAPIObject> @Nullable T fetch(@NotNull Class<T> type, @Nullable Map<String, @NotNull Object> params) {
-        Pair<Class<? extends FetchableAPIObject>, String> key = Pair.of(type, encode(params));
-        T r = (T) cache.computeIfAbsent(key, k -> {
-            T cache = getCache(type, params);
-            if (cache != null) {
-                if (params == null || params.isEmpty()) {
-                    logger.debug("Loaded {} from cache ({}_{})", type.getSimpleName(), this.type(), this.id);
-                } else {
-                    logger.debug("Loaded {} ({}) from cache ({}_{})", type.getSimpleName(), encode(params), this.type(), this.id);
-                }
-                return cache;
+        Tristate memoryCache = CacheConfigVars.getTristate(CacheConfigVars.USE_MEMORY_CACHE);
+        Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
+        if ((memoryCache == Tristate.AUTO && fileCache == Tristate.AUTO && !isCacheWritable()) || (memoryCache == Tristate.AUTO && fileCache == Tristate.FALSE) || memoryCache == Tristate.TRUE) {
+            Pair<Class<? extends FetchableAPIObject>, String> key = Pair.of(type, encode(params));
+            T r = (T) cache.computeIfAbsent(key, k -> fetchInternal(type, params));
+            if (r != null) {
+                Duration expires = r.expiresIn();
+                cache.setExpiration(key, expires.toMillis(), TimeUnit.MILLISECONDS);
             }
-
-            T unknown = buildUnknown(type);
-            if (unknown == null) {
-                return null;
-            }
-            JsonNode node = get(unknown.apiPath(), params);
-            if (node == null) {
-                return null;
-            }
-
-            T composite = build(type, node, Instant.now());
-            if (params == null || params.isEmpty()) {
-                logger.debug("Fetched {} from API ({}_{})", type.getSimpleName(), this.type(), this.id);
-            } else {
-                logger.debug("Fetched {} ({}) from API ({}_{})", type.getSimpleName(), encode(params), this.type(), this.id);
-            }
-            writeCache(composite, params);
-            return composite;
-        });
-        if (r != null) {
-            Duration expires = r.expiresIn();
-            cache.setExpiration(key, expires.toMillis(), TimeUnit.MILLISECONDS);
+            return r;
         }
-        return r;
+        return fetchInternal(type, params);
+    }
+
+    private <T extends FetchableAPIObject> @Nullable T fetchInternal(@NotNull Class<T> type, @Nullable Map<String, @NotNull Object> params) {
+        T cache = getCache(type, params);
+        if (cache != null) {
+            if (params == null || params.isEmpty()) {
+                logger.debug("Loaded {} from cache ({}_{})", type.getSimpleName(), this.type(), this.id);
+            } else {
+                logger.debug("Loaded {} ({}) from cache ({}_{})", type.getSimpleName(), encode(params), this.type(), this.id);
+            }
+            return cache;
+        }
+
+        T unknown = buildUnknown(type);
+        if (unknown == null) {
+            return null;
+        }
+        JsonNode node = get(unknown.apiPath(), params);
+        if (node == null) {
+            return null;
+        }
+        T composite = build(type, node, Instant.now());
+        if (composite == null) {
+            return null;
+        }
+
+        if (params == null || params.isEmpty()) {
+            logger.debug("Fetched {} from API ({}_{})", type.getSimpleName(), this.type(), this.id);
+        } else {
+            logger.debug("Fetched {} ({}) from API ({}_{})", type.getSimpleName(), encode(params), this.type(), this.id);
+        }
+        Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
+        if ((fileCache == Tristate.AUTO && isCacheWritable()) || fileCache == Tristate.TRUE) {
+            writeCache(composite, params);
+        }
+        return composite;
     }
 
     @Override
     public <T extends FetchableAPIObject> @Nullable T fetch(@NotNull Class<T> type, int id, @Nullable Map<String, @NotNull Object> params) {
-        Pair<ObjectIntPair<Class<? extends FetchableAPIObject>>, String> key = Pair.of(ObjectIntPair.of(type, id), encode(params));
-        T r = (T) idCache.computeIfAbsent(key, k -> {
-            T cache = getCache(type, id, params);
-            if (cache != null) {
-                if (params == null || params.isEmpty()) {
-                    logger.debug("Loaded {} {} from cache ({}_{})", type.getSimpleName(), id, this.type(), this.id);
-                } else {
-                    logger.debug("Loaded {} {} ({}) from cache ({}_{})", type.getSimpleName(), id, encode(params), this.type(), this.id);
-                }
-                return cache;
+        Tristate memoryCache = CacheConfigVars.getTristate(CacheConfigVars.USE_MEMORY_CACHE);
+        Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
+        if ((memoryCache == Tristate.AUTO && fileCache == Tristate.AUTO && !isCacheWritable()) || (memoryCache == Tristate.AUTO && fileCache == Tristate.FALSE) || memoryCache == Tristate.TRUE) {
+            Pair<ObjectIntPair<Class<? extends FetchableAPIObject>>, String> key = Pair.of(ObjectIntPair.of(type, id), encode(params));
+            T r = (T) idCache.computeIfAbsent(key, k -> fetchInternal(type, id, params));
+            if (r != null) {
+                Duration expires = r.expiresIn();
+                idCache.setExpiration(key, expires.toMillis(), TimeUnit.MILLISECONDS);
             }
-
-            T unknown = buildUnknown(type);
-            if (unknown == null) {
-                return null;
-            }
-            JsonNode node = get(unknown.apiPath() + "/" + id, params);
-            if (node == null) {
-                return null;
-            }
-
-            T composite = build(type, node, Instant.now());
-            if (params == null || params.isEmpty()) {
-                logger.debug("Fetched {} {} from API ({}_{})", type.getSimpleName(), id, this.type(), this.id);
-            } else {
-                logger.debug("Fetched {} {} ({}) from API ({}_{})", type.getSimpleName(), id, encode(params), this.type(), this.id);
-            }
-            writeCache(composite, id, params);
-            return composite;
-        });
-        if (r != null) {
-            Duration expires = r.expiresIn();
-            idCache.setExpiration(key, expires.toMillis(), TimeUnit.MILLISECONDS);
+            return r;
         }
-        return r;
+        return fetchInternal(type, id, params);
+    }
+
+    private <T extends FetchableAPIObject> @Nullable T fetchInternal(@NotNull Class<T> type, int id, @Nullable Map<String, @NotNull Object> params) {
+        T cache = getCache(type, id, params);
+        if (cache != null) {
+            if (params == null || params.isEmpty()) {
+                logger.debug("Loaded {} {} from cache ({}_{})", type.getSimpleName(), id, this.type(), this.id);
+            } else {
+                logger.debug("Loaded {} {} ({}) from cache ({}_{})", type.getSimpleName(), id, encode(params), this.type(), this.id);
+            }
+            return cache;
+        }
+
+        T unknown = buildUnknown(type);
+        if (unknown == null) {
+            return null;
+        }
+        if (id < 0) {
+            return unknown;
+        }
+        JsonNode node = get(unknown.apiPath() + "/" + id, params);
+        if (node == null) {
+            return null;
+        }
+        T composite = build(type, node, Instant.now());
+        if (composite == null) {
+            return null;
+        }
+
+        if (params == null || params.isEmpty()) {
+            logger.debug("Fetched {} {} from API ({}_{})", type.getSimpleName(), id, this.type(), this.id);
+        } else {
+            logger.debug("Fetched {} {} ({}) from API ({}_{})", type.getSimpleName(), id, encode(params), this.type(), this.id);
+        }
+        Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
+        if ((fileCache == Tristate.AUTO && isCacheWritable()) || fileCache == Tristate.TRUE) {
+            writeCache(composite, id, params);
+        }
+        return composite;
     }
 
     @Override
@@ -335,5 +367,18 @@ public abstract class AbstractArrAPI implements ArrAPI {
                 .map(p -> URLEncoder.encode(p.getKey(), StandardCharsets.UTF_8) + "=" + URLEncoder.encode(p.getValue().toString(), StandardCharsets.UTF_8))
                 .reduce((p1, p2) -> p1 + "&" + p2)
                 .orElse("");
+    }
+
+    protected final boolean isCacheWritable() {
+        JSONFile testFile = new JSONFile(new File(CacheConfigVars.getFile(CacheConfigVars.CACHE_DIR), "touch.json"));
+        try {
+            boolean writable = BooleanParser.get(false, testFile.read().getObject(), "writable");
+            if (!writable) {
+                testFile.write(new JsonNode(new JSONObject(Map.of("writable", true)).toString()));
+            }
+        } catch (IOException ignored) {
+            return false;
+        }
+        return true;
     }
 }

@@ -33,7 +33,7 @@ public class ObjectParser {
     }
 
     public static <T extends APIObject> @Nullable T get(@NotNull Class<T> type, @NotNull ArrAPI api, @Nullable JSONObject obj, @Nullable String key, boolean silent) {
-        if (obj == null || key == null || key.isEmpty() || !obj.has(key)) {
+        if (obj == null || key == null || key.isEmpty() || !obj.has(key) || obj.get(key) == null) {
             return null;
         }
         JSONObject val;
@@ -41,7 +41,7 @@ public class ObjectParser {
             val = obj.getJSONObject(key);
         } catch (JSONException ex) {
             if (!silent) {
-                LOGGER.warn("Could not convert \"{}\" to JSONObject", key, ex);
+                LOGGER.warn("Could not convert \"{}\" ({}) to JSONObject", key, obj.get(key), ex);
             }
             return null;
         }
