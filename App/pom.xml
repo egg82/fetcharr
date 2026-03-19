@@ -189,5 +189,11 @@
             <artifactId>fastutil-core</artifactId>
             <version>${fastutil.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.sasorio</groupId>
+            <artifactId>event-api</artifactId>
+            <version>${event.version}</version>
+        </dependency>
     </dependencies>
 </project>

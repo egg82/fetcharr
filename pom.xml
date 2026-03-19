@@ -28,6 +28,7 @@
         <pcollections.version>5.0.0</pcollections.version>
         <expiringmap.version>0.5.11</expiringmap.version>
         <fastutil.version>8.5.18</fastutil.version>
+        <event.version>1.0.0</event.version>
     </properties>
 
     <profiles>

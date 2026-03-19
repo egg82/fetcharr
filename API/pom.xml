@@ -96,5 +96,12 @@
             <version>${slf4j.version}</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.sasorio</groupId>
+            <artifactId>event-api</artifactId>
+            <version>${event.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 </project>
