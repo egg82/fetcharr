@@ -1,6 +1,6 @@
 # Fetcharr
 
-<img src="fetcharr-temp-icon.png" width="60"/>
+<img src=".doc-misc/fetcharr-temp-icon.png" width="60"/>
 
 ###### Icon is LLM-generated and temporary until one from an artist can be sourced.
 
@@ -242,3 +242,17 @@ Replace `X` with a number. This allows for up to 100 instances to be configured.
 - WHISPARR_X_USE_CUTOFF: Skip items that have their profile cutoff met
   - boolean: \<value\>
   - default: false
+
+### Wall of oddities
+
+Note that this is *not* a wall of shame. Just some odd comments, funny moments, and other strange
+things that I have seen around this project.
+
+<img src=".doc-misc/Screenshot_20260318-132140.png" width="400"/>
+
+It definitely feels like I won a contest that I wasn't aware I was in. Passed all 0 gates, too!
+
+<img src=".doc-misc/screenshot-titel.png" width="650"/>
+
+I'm terrible at naming these things, so I'm grateful to have someone who came up with the name "fetcharr".
+A few days after it released. Glad *someone* is on the ball, at least!
