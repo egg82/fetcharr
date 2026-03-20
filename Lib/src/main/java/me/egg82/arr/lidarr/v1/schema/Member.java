@@ -7,6 +7,8 @@ import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +17,7 @@ import java.util.Objects;
 public class Member extends AbstractAPIObject {
     private final String name;
     private final String instrument;
-    private final List<@NotNull MediaCover> images = new ArrayList<>();
+    private final PVector<@NotNull MediaCover> images;
 
     public Member(@NotNull ArrAPI api, @NotNull JSONObject obj) {
         super(api, obj);
@@ -24,11 +26,13 @@ public class Member extends AbstractAPIObject {
         this.instrument = StringParser.get(obj, "instrument");
 
         JSONArray images = obj.has("images") && obj.get("images") != null ? obj.getJSONArray("images") : null;
+        List<@NotNull MediaCover> imagesL = new ArrayList<>();
         if (images != null) {
             for (int i = 0; i < images.length(); i++) {
-                this.images.add(new MediaCover(api, images.getJSONObject(i)));
+                imagesL.add(new MediaCover(api, images.getJSONObject(i)));
             }
         }
+        this.images = TreePVector.from(imagesL);
     }
 
     public @Nullable String name() {
@@ -39,7 +43,7 @@ public class Member extends AbstractAPIObject {
         return instrument;
     }
 
-    public @NotNull List<@NotNull MediaCover> images() {
+    public @NotNull PVector<@NotNull MediaCover> images() {
         return images;
     }
 

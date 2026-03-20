@@ -6,6 +6,8 @@ import me.egg82.arr.common.AbstractAPIObject;
 import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.parse.BooleanParser;
 import org.jetbrains.annotations.NotNull;
+import org.pcollections.HashTreePSet;
+import org.pcollections.PSet;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -13,7 +15,7 @@ import java.util.Set;
 
 public class AddArtistOptions extends AbstractAPIObject {
     private final MonitorTypes monitor;
-    private final Set<@NotNull String> albumsToMonitor = new HashSet<>();
+    private final PSet<@NotNull String> albumsToMonitor;
     private final boolean monitored;
     private final boolean searchForMissingAlbums;
 
@@ -23,11 +25,13 @@ public class AddArtistOptions extends AbstractAPIObject {
         this.monitor = MonitorTypes.get(MonitorTypes.UNKNOWN, obj, "monitor");
 
         JSONArray albumsToMonitor = obj.has("albumsToMonitor") && obj.get("albumsToMonitor") != null ? obj.getJSONArray("albumsToMonitor") : null;
+        Set<@NotNull String> albumsToMonitorL = new HashSet<>();
         if (albumsToMonitor != null) {
             for (int i = 0; i < albumsToMonitor.length(); i++) {
-                this.albumsToMonitor.add(albumsToMonitor.getString(i));
+                albumsToMonitorL.add(albumsToMonitor.getString(i));
             }
         }
+        this.albumsToMonitor = HashTreePSet.from(albumsToMonitorL);
 
         this.monitored = BooleanParser.get(false, obj, "monitored");
         this.searchForMissingAlbums = BooleanParser.get(false, obj, "searchForMissingAlbums");
@@ -37,7 +41,7 @@ public class AddArtistOptions extends AbstractAPIObject {
         return monitor;
     }
 
-    public @NotNull Set<@NotNull String> albumsToMonitor() {
+    public @NotNull PSet<@NotNull String> albumsToMonitor() {
         return albumsToMonitor;
     }
 

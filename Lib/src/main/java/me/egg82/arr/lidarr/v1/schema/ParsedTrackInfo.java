@@ -1,7 +1,6 @@
 package me.egg82.arr.lidarr.v1.schema;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.*;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractAPIObject;
@@ -37,7 +36,7 @@ public class ParsedTrackInfo extends AbstractAPIObject {
     private final Duration duration;
     private final QualityModel quality;
     private final MediaInfoModel mediaInfo;
-    private final IntList trackNumbers = new IntArrayList();
+    private final IntImmutableList trackNumbers;
     private final String releaseGroup;
     private final String releaseHash;
 
@@ -66,11 +65,13 @@ public class ParsedTrackInfo extends AbstractAPIObject {
         this.mediaInfo = ObjectParser.get(MediaInfoModel.class, api, obj, "mediaInfo");
 
         JSONArray trackNumbers = obj.has("trackNumbers") && obj.get("trackNumbers") != null ? obj.getJSONArray("trackNumbers") : null;
+        IntList trackNumbersL = new IntArrayList();
         if (trackNumbers != null) {
             for (int i = 0; i < trackNumbers.length(); i++) {
-                this.trackNumbers.add(trackNumbers.getInt(i));
+                trackNumbersL.add(trackNumbers.getInt(i));
             }
         }
+        this.trackNumbers = IntImmutableList.toList(trackNumbersL.intStream());
 
         this.releaseGroup = StringParser.get(obj, "releaseGroup");
         this.releaseHash = StringParser.get(obj, "releaseHash");
@@ -156,7 +157,7 @@ public class ParsedTrackInfo extends AbstractAPIObject {
         return mediaInfo;
     }
 
-    public @NotNull IntList trackNumbers() {
+    public @NotNull IntImmutableList trackNumbers() {
         return trackNumbers;
     }
 

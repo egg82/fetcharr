@@ -1,7 +1,7 @@
 package me.egg82.arr.lidarr.v1.schema;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractAPIObject;
@@ -13,6 +13,8 @@ import me.egg82.arr.parse.ObjectParser;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,14 +23,14 @@ import java.util.Objects;
 public class DownloadClientResource extends AbstractAPIObject {
     private final int id;
     private final String name;
-    private final List<@NotNull Field> fields = new ArrayList<>();
+    private final PVector<@NotNull Field> fields;
     private final String implementationName;
     private final String implementation;
     private final String configContract;
     private final String infoLink;
     private final ProviderMessage message;
-    private final IntList tags = new IntArrayList();
-    private final List<@NotNull Object> presets = new ArrayList<>();
+    private final IntSet tags = new IntArraySet();
+    private final PVector<@NotNull Object> presets;
     private final boolean enable;
     private final DownloadProtocol protocol;
     private final int priority;
@@ -42,11 +44,13 @@ public class DownloadClientResource extends AbstractAPIObject {
         this.name = StringParser.get(obj, "name");
 
         JSONArray fields = obj.has("fields") && obj.get("fields") != null ? obj.getJSONArray("fields") : null;
+        List<@NotNull Field> fieldsL = new ArrayList<>();
         if (fields != null) {
             for (int i = 0; i < fields.length(); i++) {
-                this.fields.add(new Field(api, fields.getJSONObject(i)));
+                fieldsL.add(new Field(api, fields.getJSONObject(i)));
             }
         }
+        this.fields = TreePVector.from(fieldsL);
 
         this.implementationName = StringParser.get(obj, "implementationName");
         this.implementation = StringParser.get(obj, "implementation");
@@ -63,11 +67,13 @@ public class DownloadClientResource extends AbstractAPIObject {
         }
 
         JSONArray presets = obj.has("presets") && obj.get("presets") != null ? obj.getJSONArray("presets") : null;
+        List<@NotNull Object> presetsL = new ArrayList<>();
         if (presets != null) {
             for (int i = 0; i < presets.length(); i++) {
-                this.presets.add(presets.get(i));
+                presetsL.add(presets.get(i));
             }
         }
+        this.presets = TreePVector.from(presetsL);
 
         this.enable = BooleanParser.get(false, obj, "enable");
         this.protocol = DownloadProtocol.get(DownloadProtocol.UNKNOWN, obj, "protocol");
@@ -84,7 +90,7 @@ public class DownloadClientResource extends AbstractAPIObject {
         return name;
     }
 
-    public @NotNull List<@NotNull Field> fields() {
+    public @NotNull PVector<@NotNull Field> fields() {
         return fields;
     }
 
@@ -108,7 +114,7 @@ public class DownloadClientResource extends AbstractAPIObject {
         return message;
     }
 
-    public @NotNull List<@NotNull Tag> tags() {
+    public @NotNull PVector<@NotNull Tag> tags() {
         List<@NotNull Tag> r = new ArrayList<>();
         for (int id : this.tags) {
             Tag t = api.fetch(Tag.class, id);
@@ -116,10 +122,10 @@ public class DownloadClientResource extends AbstractAPIObject {
                 r.add(t);
             }
         }
-        return r;
+        return TreePVector.from(r);
     }
 
-    public @NotNull List<@NotNull Object> presets() {
+    public @NotNull PVector<@NotNull Object> presets() {
         return presets;
     }
 

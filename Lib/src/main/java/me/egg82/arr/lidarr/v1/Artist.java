@@ -10,6 +10,8 @@ import me.egg82.arr.lidarr.v1.schema.ArtistResource;
 import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -19,23 +21,26 @@ import java.util.Objects;
 public class Artist extends AbstractFetchableAPIObject {
     public static final Artist UNKNOWN = new Artist();
 
-    private final List<@NotNull ArtistResource> resources = new ArrayList<>();
+    private final PVector<@NotNull ArtistResource> resources;
 
     public Artist(@NotNull ArrAPI api, @NotNull JsonNode node, @NotNull Instant lastFetched) {
         super(api, node, lastFetched);
 
         if (node.isArray()) {
             JSONArray resources = node.getArray();
+            List<@NotNull ArtistResource> resourcesL = new ArrayList<>();
             for (int i = 0; i < resources.length(); i++) {
-                this.resources.add(new ArtistResource(api, resources.getJSONObject(i)));
+                resourcesL.add(new ArtistResource(api, resources.getJSONObject(i)));
             }
+            this.resources = TreePVector.from(resourcesL);
         } else {
-            this.resources.add(new ArtistResource(api, node.getObject()));
+            this.resources = TreePVector.singleton(new ArtistResource(api, node.getObject()));
         }
     }
 
     private Artist() {
         super(NullArrAPI.INSTANCE, new JsonNode("{}"), Instant.EPOCH);
+        this.resources = TreePVector.empty();
     }
 
     @Override
@@ -48,7 +53,7 @@ public class Artist extends AbstractFetchableAPIObject {
         return CacheConfigVars.getTimeValue(CacheConfigVars.SHORT_CACHE_TIME);
     }
 
-    public @NotNull List<@NotNull ArtistResource> resources() {
+    public @NotNull PVector<@NotNull ArtistResource> resources() {
         return resources;
     }
 

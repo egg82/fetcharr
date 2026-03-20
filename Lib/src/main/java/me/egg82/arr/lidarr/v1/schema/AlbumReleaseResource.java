@@ -11,6 +11,10 @@ import me.egg82.arr.parse.NumberParser;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PSet;
+import org.pcollections.PVector;
+import org.pcollections.TreePSet;
+import org.pcollections.TreePVector;
 
 import java.time.Duration;
 import java.util.*;
@@ -23,11 +27,11 @@ public class AlbumReleaseResource extends AbstractAPIObject {
     private final String status;
     private final Duration duration;
     private final int trackCount;
-    private final List<@NotNull MediumResource> media = new ArrayList<>();
+    private final PVector<@NotNull MediumResource> media;
     private final int mediumCount;
     private final String disambiguation;
-    private final Set<@NotNull String> country = new HashSet<>();
-    private final Set<@NotNull String> label = new HashSet<>();
+    private final PSet<@NotNull String> country;
+    private final PSet<@NotNull String> label;
     private final String format;
     private final boolean monitored;
 
@@ -43,28 +47,34 @@ public class AlbumReleaseResource extends AbstractAPIObject {
         this.trackCount = NumberParser.getInt(-1, obj, "trackCount");
 
         JSONArray media = obj.has("media") && obj.get("media") != null ? obj.getJSONArray("media") : null;
+        List<@NotNull MediumResource> mediaL = new ArrayList<>();
         if (media != null) {
             for (int i = 0; i < media.length(); i++) {
-                this.media.add(new MediumResource(api, media.getJSONObject(i)));
+                mediaL.add(new MediumResource(api, media.getJSONObject(i)));
             }
         }
+        this.media = TreePVector.from(mediaL);
 
         this.mediumCount = NumberParser.getInt(-1, obj, "mediumCount");
         this.disambiguation = StringParser.get(obj, "disambiguation");
 
         JSONArray country = obj.has("country") && obj.get("country") != null ? obj.getJSONArray("country") : null;
+        Set<@NotNull String> countryL = new HashSet<>();
         if (country != null) {
             for (int i = 0; i < country.length(); i++) {
-                this.country.add(country.getString(i));
+                countryL.add(country.getString(i));
             }
         }
+        this.country = TreePSet.from(countryL);
 
         JSONArray label = obj.has("label") && obj.get("label") != null ? obj.getJSONArray("label") : null;
+        Set<@NotNull String> labelL = new HashSet<>();
         if (label != null) {
             for (int i = 0; i < label.length(); i++) {
-                this.label.add(label.getString(i));
+                labelL.add(label.getString(i));
             }
         }
+        this.label = TreePSet.from(labelL);
 
         this.format = StringParser.get(obj, "format");
         this.monitored = BooleanParser.get(false, obj, "monitored");
@@ -98,7 +108,7 @@ public class AlbumReleaseResource extends AbstractAPIObject {
         return trackCount;
     }
 
-    public @NotNull List<@NotNull MediumResource> media() {
+    public @NotNull PVector<@NotNull MediumResource> media() {
         return media;
     }
 
@@ -110,11 +120,11 @@ public class AlbumReleaseResource extends AbstractAPIObject {
         return disambiguation;
     }
 
-    public @NotNull Set<@NotNull String> country() {
+    public @NotNull PSet<@NotNull String> country() {
         return country;
     }
 
-    public @NotNull Set<@NotNull String> label() {
+    public @NotNull PSet<@NotNull String> label() {
         return label;
     }
 

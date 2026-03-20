@@ -12,6 +12,10 @@ import me.egg82.arr.lidarr.v1.Tag;
 import me.egg82.arr.parse.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PSet;
+import org.pcollections.PVector;
+import org.pcollections.TreePSet;
+import org.pcollections.TreePVector;
 
 import java.io.File;
 import java.time.Instant;
@@ -30,11 +34,11 @@ public class ArtistResource extends AbstractAPIObject {
     private final String overview;
     private final String artistType;
     private final String disambiguation;
-    private final List<@NotNull Links> links = new ArrayList<>();
+    private final PVector<@NotNull Links> links;
     private final AlbumResource nextAlbum;
     private final AlbumResource lastAlbum;
-    private final List<@NotNull MediaCover> images = new ArrayList<>();
-    private final List<@NotNull Member> members = new ArrayList<>();
+    private final PVector<@NotNull MediaCover> images;
+    private final PVector<@NotNull Member> members;
     private final String remotePoster;
     private final File path;
     private final int qualityProfileId;
@@ -43,7 +47,7 @@ public class ArtistResource extends AbstractAPIObject {
     private final NewItemMonitorTypes monitorNewItems;
     private final File rootFolderPath;
     private final File folder;
-    private final Set<@NotNull String> genres = new HashSet<>();
+    private final PSet<@NotNull String> genres;
     private final String cleanName;
     private final String sortName;
     private final IntSet tags = new IntArraySet();
@@ -69,28 +73,34 @@ public class ArtistResource extends AbstractAPIObject {
         this.disambiguation = StringParser.get(obj, "disambiguation");
 
         JSONArray links = obj.has("links") && obj.get("links") != null ? obj.getJSONArray("links") : null;
+        List<@NotNull Links> linksL = new ArrayList<>();
         if (links != null) {
             for (int i = 0; i < links.length(); i++) {
-                this.links.add(new Links(api, links.getJSONObject(i)));
+                linksL.add(new Links(api, links.getJSONObject(i)));
             }
         }
+        this.links = TreePVector.from(linksL);
 
         this.nextAlbum = ObjectParser.get(AlbumResource.class, api, obj, "nextAlbum");
         this.lastAlbum = ObjectParser.get(AlbumResource.class, api, obj, "lastAlbum");
 
         JSONArray images = obj.has("images") && obj.get("images") != null ? obj.getJSONArray("images") : null;
+        List<@NotNull MediaCover> imagesL = new ArrayList<>();
         if (images != null) {
             for (int i = 0; i < images.length(); i++) {
-                this.images.add(new MediaCover(api, images.getJSONObject(i)));
+                imagesL.add(new MediaCover(api, images.getJSONObject(i)));
             }
         }
+        this.images = TreePVector.from(imagesL);
 
         JSONArray members = obj.has("members") && obj.get("members") != null ? obj.getJSONArray("members") : null;
+        List<@NotNull Member> membersL = new ArrayList<>();
         if (members != null) {
             for (int i = 0; i < members.length(); i++) {
-                this.members.add(new Member(api, members.getJSONObject(i)));
+                membersL.add(new Member(api, members.getJSONObject(i)));
             }
         }
+        this.members = TreePVector.from(membersL);
 
         this.remotePoster = StringParser.get(obj, "remotePoster");
         this.path = FileParser.get(obj, "path");
@@ -102,11 +112,13 @@ public class ArtistResource extends AbstractAPIObject {
         this.folder = FileParser.get(obj, "folder");
 
         JSONArray genres = obj.has("genres") && obj.get("genres") != null ? obj.getJSONArray("genres") : null;
+        Set<@NotNull String> genresL = new HashSet<>();
         if (genres != null) {
             for (int i = 0; i < genres.length(); i++) {
-                this.genres.add(genres.getString(i));
+                genresL.add(genres.getString(i));
             }
         }
+        this.genres = TreePSet.from(genresL);
 
         this.cleanName = StringParser.get(obj, "cleanName");
         this.sortName = StringParser.get(obj, "sortName");
@@ -172,7 +184,7 @@ public class ArtistResource extends AbstractAPIObject {
         return disambiguation;
     }
 
-    public @NotNull List<@NotNull Links> links() {
+    public @NotNull PVector<@NotNull Links> links() {
         return links;
     }
 
@@ -184,11 +196,11 @@ public class ArtistResource extends AbstractAPIObject {
         return lastAlbum;
     }
 
-    public @NotNull List<@NotNull MediaCover> images() {
+    public @NotNull PVector<@NotNull MediaCover> images() {
         return images;
     }
 
-    public @NotNull List<@NotNull Member> members() {
+    public @NotNull PVector<@NotNull Member> members() {
         return members;
     }
 
@@ -224,7 +236,7 @@ public class ArtistResource extends AbstractAPIObject {
         return folder;
     }
 
-    public @NotNull Set<@NotNull String> genres() {
+    public @NotNull PSet<@NotNull String> genres() {
         return genres;
     }
 
@@ -236,7 +248,7 @@ public class ArtistResource extends AbstractAPIObject {
         return sortName;
     }
 
-    public @NotNull List<@NotNull Tag> tags() {
+    public @NotNull PVector<@NotNull Tag> tags() {
         List<@NotNull Tag> r = new ArrayList<>();
         for (int id : this.tags) {
             Tag t = api.fetch(Tag.class, id);
@@ -244,7 +256,7 @@ public class ArtistResource extends AbstractAPIObject {
                 r.add(t);
             }
         }
-        return r;
+        return TreePVector.from(r);
     }
 
     public @Nullable Instant added() {

@@ -9,6 +9,8 @@ import me.egg82.arr.parse.ObjectParser;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,8 +19,8 @@ import java.util.Objects;
 public class MetadataProfileResource extends AbstractAPIObject {
     private final int id;
     private final String name;
-    private final List<@NotNull PrimaryAlbumType> primaryAlbumTypes = new ArrayList<>();
-    private final List<@NotNull SecondaryAlbumType> secondaryAlbumTypes = new ArrayList<>();
+    private final PVector<@NotNull PrimaryAlbumType> primaryAlbumTypes;
+    private final PVector<@NotNull SecondaryAlbumType> secondaryAlbumTypes;
     private final ProfileReleaseStatusItemResource releaseStatuses;
 
     public MetadataProfileResource(@NotNull ArrAPI api, @NotNull JSONObject obj) {
@@ -28,18 +30,22 @@ public class MetadataProfileResource extends AbstractAPIObject {
         this.name = StringParser.get(obj, "name");
 
         JSONArray primaryAlbumTypes = obj.has("primaryAlbumTypes") && obj.get("primaryAlbumTypes") != null ? obj.getJSONArray("primaryAlbumTypes") : null;
+        List<@NotNull PrimaryAlbumType> primaryAlbumTypesL = new ArrayList<>();
         if (primaryAlbumTypes != null) {
             for (int i = 0; i < primaryAlbumTypes.length(); i++) {
-                this.primaryAlbumTypes.add(new PrimaryAlbumType(api, primaryAlbumTypes.getJSONObject(i)));
+                primaryAlbumTypesL.add(new PrimaryAlbumType(api, primaryAlbumTypes.getJSONObject(i)));
             }
         }
+        this.primaryAlbumTypes = TreePVector.from(primaryAlbumTypesL);
 
         JSONArray secondaryAlbumTypes = obj.has("secondaryAlbumTypes") && obj.get("secondaryAlbumTypes") != null ? obj.getJSONArray("secondaryAlbumTypes") : null;
+        List<@NotNull SecondaryAlbumType> secondaryAlbumTypesL = new ArrayList<>();
         if (secondaryAlbumTypes != null) {
             for (int i = 0; i < secondaryAlbumTypes.length(); i++) {
-                this.secondaryAlbumTypes.add(new SecondaryAlbumType(api, secondaryAlbumTypes.getJSONObject(i)));
+                secondaryAlbumTypesL.add(new SecondaryAlbumType(api, secondaryAlbumTypes.getJSONObject(i)));
             }
         }
+        this.secondaryAlbumTypes = TreePVector.from(secondaryAlbumTypesL);
 
         this.releaseStatuses = ObjectParser.get(ProfileReleaseStatusItemResource.class, api, obj, "releaseStatuses");
     }
@@ -52,11 +58,11 @@ public class MetadataProfileResource extends AbstractAPIObject {
         return name;
     }
 
-    public @NotNull List<@NotNull PrimaryAlbumType> primaryAlbumTypes() {
+    public @NotNull PVector<@NotNull PrimaryAlbumType> primaryAlbumTypes() {
         return primaryAlbumTypes;
     }
 
-    public @NotNull List<@NotNull SecondaryAlbumType> secondaryAlbumTypes() {
+    public @NotNull PVector<@NotNull SecondaryAlbumType> secondaryAlbumTypes() {
         return secondaryAlbumTypes;
     }
 

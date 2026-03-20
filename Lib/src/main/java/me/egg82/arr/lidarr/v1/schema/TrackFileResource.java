@@ -9,6 +9,8 @@ import me.egg82.arr.lidarr.v1.Artist;
 import me.egg82.arr.parse.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.io.File;
 import java.time.Instant;
@@ -27,7 +29,7 @@ public class TrackFileResource extends AbstractAPIObject {
     private final String releaseGroup;
     private final QualityModel quality;
     private final int qualityWeight;
-    private final List<@NotNull CustomFormatResource> customFormats = new ArrayList<>();
+    private final PVector<@NotNull CustomFormatResource> customFormats;
     private final int customFormatScore;
     private final int indexerFlags;
     private final MediaInfoResource mediaInfo;
@@ -49,11 +51,13 @@ public class TrackFileResource extends AbstractAPIObject {
         this.qualityWeight = NumberParser.getInt(-1, obj, "qualityWeight");
 
         JSONArray customFormats = obj.has("customFormats") && obj.get("customFormats") != null ? obj.getJSONArray("customFormats") : null;
+        List<@NotNull CustomFormatResource> customFormatsL = new ArrayList<>();
         if (customFormats != null) {
             for (int i = 0; i < customFormats.length(); i++) {
-                this.customFormats.add(new CustomFormatResource(api, customFormats.getJSONObject(i)));
+                customFormatsL.add(new CustomFormatResource(api, customFormats.getJSONObject(i)));
             }
         }
+        this.customFormats = TreePVector.from(customFormatsL);
 
         this.customFormatScore = NumberParser.getInt(-1, obj, "customFormatScore");
         this.indexerFlags = NumberParser.getInt(-1, obj, "indexerFlags");
@@ -102,7 +106,7 @@ public class TrackFileResource extends AbstractAPIObject {
         return qualityWeight;
     }
 
-    public @NotNull List<@NotNull CustomFormatResource> customFormats() {
+    public @NotNull PVector<@NotNull CustomFormatResource> customFormats() {
         return customFormats;
     }
 

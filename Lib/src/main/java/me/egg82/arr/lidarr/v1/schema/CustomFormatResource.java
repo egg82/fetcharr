@@ -9,6 +9,8 @@ import me.egg82.arr.parse.NumberParser;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +20,7 @@ public class CustomFormatResource extends AbstractAPIObject {
     private final int id;
     private final String name;
     private final boolean includeCustomFormatWhenRenaming;
-    private final List<@NotNull CustomFormatSpecificationSchema> specifications = new ArrayList<>();
+    private final PVector<@NotNull CustomFormatSpecificationSchema> specifications;
 
     public CustomFormatResource(@NotNull ArrAPI api, @NotNull JSONObject obj) {
         super(api, obj);
@@ -28,11 +30,13 @@ public class CustomFormatResource extends AbstractAPIObject {
         this.includeCustomFormatWhenRenaming = BooleanParser.get(false, obj, "includeCustomFormatWhenRenaming");
 
         JSONArray specifications = obj.has("specifications") && obj.get("specifications") != null ? obj.getJSONArray("specifications") : null;
+        List<@NotNull CustomFormatSpecificationSchema> specificationsL = new ArrayList<>();
         if (specifications != null) {
             for (int i = 0; i < specifications.length(); i++) {
-                this.specifications.add(new CustomFormatSpecificationSchema(api, specifications.getJSONObject(i)));
+                specificationsL.add(new CustomFormatSpecificationSchema(api, specifications.getJSONObject(i)));
             }
         }
+        this.specifications = TreePVector.from(specificationsL);
     }
 
     public int id() {
@@ -47,7 +51,7 @@ public class CustomFormatResource extends AbstractAPIObject {
         return includeCustomFormatWhenRenaming;
     }
 
-    public @NotNull List<@NotNull CustomFormatSpecificationSchema> specifications() {
+    public @NotNull PVector<@NotNull CustomFormatSpecificationSchema> specifications() {
         return specifications;
     }
 
