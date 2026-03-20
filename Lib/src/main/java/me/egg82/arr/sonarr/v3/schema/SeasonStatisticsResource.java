@@ -8,6 +8,8 @@ import me.egg82.arr.parse.InstantParser;
 import me.egg82.arr.parse.NumberParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PSet;
+import org.pcollections.TreePSet;
 
 import java.time.Instant;
 import java.util.HashSet;
@@ -20,7 +22,7 @@ public class SeasonStatisticsResource extends AbstractAPIObject {
     private final Instant nextAiring;
     private final float percentOfEpisodes;
     private final Instant previousAiring;
-    private final Set<@NotNull String> releaseGroups = new HashSet<>();
+    private final PSet<@NotNull String> releaseGroups;
     private final long sizeOnDisk;
     private final int totalEpisodeCount;
 
@@ -34,11 +36,13 @@ public class SeasonStatisticsResource extends AbstractAPIObject {
         this.previousAiring = InstantParser.get(obj, "previousAiring");
 
         JSONArray releaseGroups = obj.has("releaseGroups") && obj.get("releaseGroups") != null ? obj.getJSONArray("releaseGroups") : null;
+        Set<@NotNull String> releaseGroupsL = new HashSet<>();
         if (releaseGroups != null) {
             for (int i = 0; i < releaseGroups.length(); i++) {
-                this.releaseGroups.add(releaseGroups.getString(i));
+                releaseGroupsL.add(releaseGroups.getString(i));
             }
         }
+        this.releaseGroups = TreePSet.from(releaseGroupsL);
 
         this.sizeOnDisk = NumberParser.getLong(-1L, obj, "sizeOnDisk");
         this.totalEpisodeCount = NumberParser.getInt(-1, obj, "totalEpisodeCount");
@@ -64,7 +68,7 @@ public class SeasonStatisticsResource extends AbstractAPIObject {
         return previousAiring;
     }
 
-    public @NotNull Set<@NotNull String> getReleaseGroups() {
+    public @NotNull PSet<@NotNull String> getReleaseGroups() {
         return releaseGroups;
     }
 

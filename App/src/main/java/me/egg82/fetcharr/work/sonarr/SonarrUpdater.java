@@ -60,6 +60,7 @@ public class SonarrUpdater extends AbstractUpdater {
             logger.error("SONARR_{} returned bad result for {}", api.id(), Series.UNKNOWN.apiPath());
             return;
         }
+        logger.debug("Fetched {} series", allSeries.resources().size());
 
         List<WeightedSeries> wrapped = new ArrayList<>();
         for (SeriesResource s : allSeries.resources()) {
@@ -68,6 +69,7 @@ public class SonarrUpdater extends AbstractUpdater {
                 logger.warn("SONARR_{} returned bad result for {}", api.id(), Episode.UNKNOWN.apiPath());
                 continue;
             }
+            logger.debug("Fetched {} episodes for series {} (\"{}\")", allEpisodes.resources().size(), s.id(), s.title());
 
             wrapped.add(new WeightedSeries(s, allEpisodes.resources()));
         }

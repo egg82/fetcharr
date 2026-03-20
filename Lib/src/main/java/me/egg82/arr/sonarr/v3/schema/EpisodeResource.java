@@ -7,6 +7,8 @@ import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.parse.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -25,7 +27,7 @@ public class EpisodeResource extends AbstractAPIObject {
     private final Instant grabDate;
     private final boolean hasFile;
     private final int id;
-    private final List<@NotNull MediaCover> images = new ArrayList<>();
+    private final PVector<@NotNull MediaCover> images;
     private final Instant lastSearchTime;
     private final boolean monitored;
     private final String overview;
@@ -54,11 +56,13 @@ public class EpisodeResource extends AbstractAPIObject {
         this.id = NumberParser.getInt(-1, obj, "id");
 
         JSONArray images = obj.has("images") && obj.get("images") != null ? obj.getJSONArray("images") : null;
+        List<@NotNull MediaCover> imagesL = new ArrayList<>();
         if (images != null) {
             for (int i = 0; i < images.length(); i++) {
-                this.images.add(new MediaCover(api, images.getJSONObject(i)));
+                imagesL.add(new MediaCover(api, images.getJSONObject(i)));
             }
         }
+        this.images = TreePVector.from(imagesL);
 
         this.lastSearchTime = InstantParser.get(Instant.EPOCH, obj, "lastSearchTime");
         this.monitored = BooleanParser.get(false, obj, "monitored");
@@ -114,7 +118,7 @@ public class EpisodeResource extends AbstractAPIObject {
         return id;
     }
 
-    public @NotNull List<@NotNull MediaCover> images() {
+    public @NotNull PVector<@NotNull MediaCover> images() {
         return images;
     }
 

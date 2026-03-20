@@ -87,10 +87,10 @@ Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
 | CONNECT_TTL | integer | 0-2147483647 | 300000 | HTTP connection TTL in milliseconds |
 | USE_FILE_CACHE | tristate | auto, true, false | auto | Use file-based cache |
 | USE_MEMORY_CACHE | tristate | auto, true, false | auto | Use in-memory cache |
-| SHORT_CACHE_TIME | time | 5minutes, 3hours, etc | 65minutes | Expiration time for short-lived cached values |
-| LONG_CACHE_TIME | time | 5minutes, 3hours, etc | 6hours | Expiration time for long-lived cached values |
+| SHORT_CACHE_TIME | time | 5minutes, 3hours, 1day, etc | 65minutes | Expiration time for short-lived cached values |
+| LONG_CACHE_TIME | time | 5minutes, 3hours, 1day, etc | 6hours | Expiration time for long-lived cached values |
 | SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
-| SEARCH_INTERVAL | time | 5minutes, 3hours, etc | 1hour | How often to perform searches |
+| SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
 | MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
 | MISSING_ONLY | boolean | true, false | false | Select for missing items |
 | USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
@@ -124,7 +124,7 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | RADARR_X_URL | string | \<URL\> | \<none\> | Base URL |
 | RADARR_X_API_KEY | string | \<key\> | \<none\> | API key |
 | RADARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
-| RADARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, etc | 1hour | How often to perform searches |
+| RADARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
 | RADARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
 | RADARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
 | RADARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
@@ -139,7 +139,7 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | SONARR_X_URL | string | \<URL\> | \<none\> | Base URL |
 | SONARR_X_API_KEY | string | \<key\> | \<none\> | API key |
 | SONARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
-| SONARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, etc | 1hour | How often to perform searches |
+| SONARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
 | SONARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
 | SONARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
 | SONARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
@@ -154,7 +154,7 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | LIDARR_X_URL | string | \<URL\> | \<none\> | Base URL |
 | LIDARR_X_API_KEY | string | \<key\> | \<none\> | API key |
 | LIDARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
-| LIDARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, etc | 1hour | How often to perform searches |
+| LIDARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
 | LIDARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
 | LIDARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
 | LIDARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
@@ -169,7 +169,7 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | WHISPARR_X_URL | string | \<URL\> | \<none\> | Base URL |
 | WHISPARR_X_API_KEY | string | \<key\> | \<none\> | API key |
 | WHISPARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
-| WHISPARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, etc | 1hour | How often to perform searches |
+| WHISPARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
 | WHISPARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
 | WHISPARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
 | WHISPARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |

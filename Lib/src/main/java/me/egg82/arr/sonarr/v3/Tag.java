@@ -10,6 +10,8 @@ import me.egg82.arr.sonarr.v3.schema.TagResource;
 import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -19,23 +21,26 @@ import java.util.Objects;
 public class Tag extends AbstractFetchableAPIObject {
     public static final Tag UNKNOWN = new Tag();
 
-    private final List<@NotNull TagResource> resources = new ArrayList<>();
+    private final PVector<@NotNull TagResource> resources;
 
     public Tag(@NotNull ArrAPI api, @NotNull JsonNode node, @NotNull Instant lastFetched) {
         super(api, node, lastFetched);
 
         if (node.isArray()) {
             JSONArray resources = node.getArray();
+            List<@NotNull TagResource> resourcesL = new ArrayList<>();
             for (int i = 0; i < resources.length(); i++) {
-                this.resources.add(new TagResource(api, resources.getJSONObject(i)));
+                resourcesL.add(new TagResource(api, resources.getJSONObject(i)));
             }
+            this.resources = TreePVector.from(resourcesL);
         } else {
-            this.resources.add(new TagResource(api, node.getObject()));
+            this.resources = TreePVector.singleton(new TagResource(api, node.getObject()));
         }
     }
 
     private Tag() {
         super(NullArrAPI.INSTANCE, new JsonNode("{}"), Instant.EPOCH);
+        this.resources = TreePVector.empty();
     }
 
     @Override
@@ -48,7 +53,7 @@ public class Tag extends AbstractFetchableAPIObject {
         return CacheConfigVars.getTimeValue(CacheConfigVars.LONG_CACHE_TIME);
     }
 
-    public @NotNull List<@NotNull TagResource> resources() {
+    public @NotNull PVector<@NotNull TagResource> resources() {
         return resources;
     }
 

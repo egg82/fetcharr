@@ -1,7 +1,7 @@
 package me.egg82.arr.sonarr.v3.schema;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractAPIObject;
@@ -11,6 +11,8 @@ import me.egg82.arr.sonarr.v3.QualityProfile;
 import me.egg82.arr.sonarr.v3.Tag;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.io.File;
 import java.time.Duration;
@@ -21,7 +23,7 @@ public class SeriesResource extends AbstractAPIObject {
     private final Instant added;
     private final AddSeriesOptions addOptions;
     private final Duration airTime;
-    private final List<@NotNull AlternateTitleResource> alternateTitles = new ArrayList<>();
+    private final PVector<@NotNull AlternateTitleResource> alternateTitles;
     private final String certification;
     private final String cleanTitle;
     private final boolean ended;
@@ -30,7 +32,7 @@ public class SeriesResource extends AbstractAPIObject {
     private final File folder;
     private final Set<@NotNull String> genres = new HashSet<>();
     private final int id;
-    private final List<@NotNull MediaCover> images = new ArrayList<>();
+    private final PVector<@NotNull MediaCover> images;
     private final String imdbId;
     private final Instant lastAired;
     private final boolean monitored;
@@ -48,12 +50,12 @@ public class SeriesResource extends AbstractAPIObject {
     private final File rootFolderPath;
     private final Duration runtime;
     private final boolean seasonFolder;
-    private final List<@NotNull SeasonResource> seasons = new ArrayList<>();
+    private final PVector<@NotNull SeasonResource> seasons;
     private final SeriesType seriesType;
     private final String sortTitle;
     private final SeriesStatisticsResource statistics;
     private final SeriesStatusType status;
-    private final IntList tags = new IntArrayList();
+    private final IntSet tags = new IntArraySet();
     private final String title;
     private final String titleSlug;
     private final int tmdbId;
@@ -71,11 +73,13 @@ public class SeriesResource extends AbstractAPIObject {
         this.airTime = DurationParser.get(obj, "airTime");
 
         JSONArray alternateTitles = obj.has("alternateTitles") && obj.get("alternateTitles") != null ? obj.getJSONArray("alternateTitles") : null;
+        List<@NotNull AlternateTitleResource> alternateTitlesL = new ArrayList<>();
         if (alternateTitles != null) {
             for (int i = 0; i < alternateTitles.length(); i++) {
-                this.alternateTitles.add(new AlternateTitleResource(api, alternateTitles.getJSONObject(i)));
+                alternateTitlesL.add(new AlternateTitleResource(api, alternateTitles.getJSONObject(i)));
             }
         }
+        this.alternateTitles = TreePVector.from(alternateTitlesL);
 
         this.certification = StringParser.get(obj, "certification");
         this.cleanTitle = StringParser.get(obj, "cleanTitle");
@@ -92,6 +96,16 @@ public class SeriesResource extends AbstractAPIObject {
         }
 
         this.id = NumberParser.getInt(-1, obj, "id");
+
+        JSONArray images = obj.has("images") && obj.get("images") != null ? obj.getJSONArray("images") : null;
+        List<@NotNull MediaCover> imagesL = new ArrayList<>();
+        if (images != null) {
+            for (int i = 0; i < images.length(); i++) {
+                imagesL.add(new MediaCover(api, images.getJSONObject(i)));
+            }
+        }
+        this.images = TreePVector.from(imagesL);
+
         this.imdbId = StringParser.get(obj, "imdbId");
         this.lastAired = InstantParser.get(obj, "lastAired");
         this.monitored = BooleanParser.get(false, obj, "monitored");
@@ -111,16 +125,26 @@ public class SeriesResource extends AbstractAPIObject {
         this.seasonFolder = BooleanParser.get(false, obj, "seasonFolder");
 
         JSONArray seasons = obj.has("seasons") && obj.get("seasons") != null ? obj.getJSONArray("seasons") : null;
+        List<@NotNull SeasonResource> seasonsL = new ArrayList<>();
         if (seasons != null) {
             for (int i = 0; i < seasons.length(); i++) {
-                this.seasons.add(new SeasonResource(api, seasons.getJSONObject(i)));
+                seasonsL.add(new SeasonResource(api, seasons.getJSONObject(i)));
             }
         }
+        this.seasons = TreePVector.from(seasonsL);
 
         this.seriesType = SeriesType.get(SeriesType.STANDARD, obj, "seriesType");
         this.sortTitle = StringParser.get(obj, "sortTitle");
         this.statistics = ObjectParser.get(SeriesStatisticsResource.class, api, obj, "statistics");
         this.status = SeriesStatusType.get(SeriesStatusType.DELETED, obj, "status");
+
+        JSONArray tags = obj.has("tags") && obj.get("tags") != null ? obj.getJSONArray("tags") : null;
+        if (tags != null) {
+            for (int i = 0; i < tags.length(); i++) {
+                this.tags.add(tags.getInt(i));
+            }
+        }
+
         this.title = StringParser.get(obj, "title");
         this.titleSlug = StringParser.get(obj, "titleSlug");
         this.tmdbId = NumberParser.getInt(-1, obj, "tmdbId");
@@ -143,7 +167,7 @@ public class SeriesResource extends AbstractAPIObject {
         return airTime;
     }
 
-    public @NotNull List<@NotNull AlternateTitleResource> alternateTitles() {
+    public @NotNull PVector<@NotNull AlternateTitleResource> alternateTitles() {
         return alternateTitles;
     }
 
@@ -179,7 +203,7 @@ public class SeriesResource extends AbstractAPIObject {
         return id;
     }
 
-    public @NotNull List<@NotNull MediaCover> images() {
+    public @NotNull PVector<@NotNull MediaCover> images() {
         return images;
     }
 
@@ -251,7 +275,7 @@ public class SeriesResource extends AbstractAPIObject {
         return seasonFolder;
     }
 
-    public @NotNull List<@NotNull SeasonResource> seasons() {
+    public @NotNull PVector<@NotNull SeasonResource> seasons() {
         return seasons;
     }
 
@@ -271,7 +295,7 @@ public class SeriesResource extends AbstractAPIObject {
         return status;
     }
 
-    public @NotNull List<Tag> tags() {
+    public @NotNull PVector<@NotNull Tag> tags() {
         List<@NotNull Tag> r = new ArrayList<>();
         for (int id : this.tags) {
             Tag t = api.fetch(Tag.class, id);
@@ -279,7 +303,7 @@ public class SeriesResource extends AbstractAPIObject {
                 r.add(t);
             }
         }
-        return r;
+        return TreePVector.from(r);
     }
 
     public @Nullable String title() {

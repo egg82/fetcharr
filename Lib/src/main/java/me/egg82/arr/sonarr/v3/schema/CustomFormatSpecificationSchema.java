@@ -9,6 +9,8 @@ import me.egg82.arr.parse.NumberParser;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,8 +24,8 @@ public class CustomFormatSpecificationSchema extends AbstractAPIObject {
     private final String infoLink;
     private final boolean negate;
     private final boolean required;
-    private final List<@NotNull Field> fields = new ArrayList<>();
-    private final List<@NotNull CustomFormatSpecificationSchema> presets = new ArrayList<>();
+    private final PVector<@NotNull Field> fields;
+    private final PVector<@NotNull CustomFormatSpecificationSchema> presets;
 
     public CustomFormatSpecificationSchema(@NotNull ArrAPI api, @NotNull JSONObject obj) {
         super(api, obj);
@@ -37,18 +39,22 @@ public class CustomFormatSpecificationSchema extends AbstractAPIObject {
         this.required = BooleanParser.get(false, obj, "required");
 
         JSONArray fields = obj.has("fields") && obj.get("fields") != null ? obj.getJSONArray("fields") : null;
+        List<@NotNull Field> fieldsL = new ArrayList<>();
         if (fields != null) {
             for (int i = 0; i < fields.length(); i++) {
-                this.fields.add(new Field(api, fields.getJSONObject(i)));
+                fieldsL.add(new Field(api, fields.getJSONObject(i)));
             }
         }
+        this.fields = TreePVector.from(fieldsL);
 
         JSONArray presets = obj.has("presets") && obj.get("presets") != null ? obj.getJSONArray("presets") : null;
+        List<@NotNull CustomFormatSpecificationSchema> presetsL = new ArrayList<>();
         if (presets != null) {
             for (int i = 0; i < presets.length(); i++) {
-                this.presets.add(new CustomFormatSpecificationSchema(api, presets.getJSONObject(i)));
+                presetsL.add(new CustomFormatSpecificationSchema(api, presets.getJSONObject(i)));
             }
         }
+        this.presets = TreePVector.from(presetsL);
     }
 
     public int id() {
@@ -79,11 +85,11 @@ public class CustomFormatSpecificationSchema extends AbstractAPIObject {
         return required;
     }
 
-    public @NotNull List<@NotNull Field> fields() {
+    public @NotNull PVector<@NotNull Field> fields() {
         return fields;
     }
 
-    public @NotNull List<@NotNull CustomFormatSpecificationSchema> presets() {
+    public @NotNull PVector<@NotNull CustomFormatSpecificationSchema> presets() {
         return presets;
     }
 

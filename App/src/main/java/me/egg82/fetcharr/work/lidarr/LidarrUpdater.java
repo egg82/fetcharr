@@ -61,6 +61,7 @@ public class LidarrUpdater extends AbstractUpdater {
             logger.error("LIDARR_{} returned bad result for {}", api.id(), Artist.UNKNOWN.apiPath());
             return;
         }
+        logger.debug("Fetched {} artists", allArtists.resources().size());
 
         List<WeightedArtist> wrapped = new ArrayList<>();
         for (ArtistResource s : allArtists.resources()) {
@@ -69,6 +70,7 @@ public class LidarrUpdater extends AbstractUpdater {
                 logger.warn("LIDARR_{} returned bad result for {}", api.id(), Album.UNKNOWN.apiPath());
                 continue;
             }
+            logger.debug("Fetched {} albums for artist {} (\"{}\")", allAlbums.resources().size(), s.id(), s.artistName());
 
             wrapped.add(new WeightedArtist(s, allAlbums.resources()));
         }
@@ -104,6 +106,7 @@ public class LidarrUpdater extends AbstractUpdater {
                     logger.warn("LIDARR_{} returned bad result for {}", api.id(), Track.UNKNOWN.apiPath());
                     continue;
                 }
+                logger.debug("Fetched {} tracks for artist {} (\"{}\")", allTracks.resources().size(), a.artist().id(), a.artist().artistName());
 
                 boolean hasFiles = true;
                 for (TrackResource t : allTracks.resources()) {
@@ -123,6 +126,7 @@ public class LidarrUpdater extends AbstractUpdater {
                     logger.warn("LIDARR_{} returned bad result for {}", api.id(), Track.UNKNOWN.apiPath());
                     continue;
                 }
+                logger.debug("Fetched {} tracks for artist {} (\"{}\")", allTracks.resources().size(), a.artist().id(), a.artist().artistName());
 
                 boolean cutoffMet = true;
                 for (TrackResource t : allTracks.resources()) {

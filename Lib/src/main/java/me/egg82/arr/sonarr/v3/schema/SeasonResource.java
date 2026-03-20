@@ -9,13 +9,15 @@ import me.egg82.arr.parse.NumberParser;
 import me.egg82.arr.parse.ObjectParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class SeasonResource extends AbstractAPIObject {
-    private final List<@NotNull MediaCover> images = new ArrayList<>();
+    private final PVector<@NotNull MediaCover> images;
     private final boolean monitored;
     private final int seasonNumber;
     private final SeasonStatisticsResource statistics;
@@ -24,18 +26,20 @@ public class SeasonResource extends AbstractAPIObject {
         super(api, obj);
 
         JSONArray images = obj.has("images") && obj.get("images") != null ? obj.getJSONArray("images") : null;
+        List<@NotNull MediaCover> imagesL = new ArrayList<>();
         if (images != null) {
             for (int i = 0; i < images.length(); i++) {
-                this.images.add(new MediaCover(api, images.getJSONObject(i)));
+                imagesL.add(new MediaCover(api, images.getJSONObject(i)));
             }
         }
+        this.images = TreePVector.from(imagesL);
 
         this.monitored = BooleanParser.get(false, obj, "monitored");
         this.seasonNumber = NumberParser.getInt(-1, obj, "seasonNumber");
         this.statistics = ObjectParser.get(SeasonStatisticsResource.class, api, obj, "statistics");
     }
 
-    public @NotNull List<@NotNull MediaCover> getImages() {
+    public @NotNull PVector<@NotNull MediaCover> getImages() {
         return images;
     }
 

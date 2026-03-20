@@ -57,6 +57,7 @@ public class RadarrUpdater extends AbstractUpdater {
             logger.error("RADARR_{} returned bad result for {}", api.id(), Movie.UNKNOWN.apiPath());
             return;
         }
+        logger.debug("Fetched {} movies", all.resources().size());
 
         List<WeightedMovie> wrapped = new ArrayList<>();
         for (MovieResource m : all.resources()) {

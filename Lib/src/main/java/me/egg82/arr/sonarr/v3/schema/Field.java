@@ -9,6 +9,8 @@ import me.egg82.arr.parse.NumberParser;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +27,7 @@ public class Field extends AbstractAPIObject {
     private final Object value;
     private final String type;
     private final boolean advanced;
-    private final List<@NotNull SelectOption> selectOptions = new ArrayList<>();
+    private final PVector<@NotNull SelectOption> selectOptions;
     private final String selectOptionsProviderAction;
     private final String section;
     private final String hidden;
@@ -48,11 +50,13 @@ public class Field extends AbstractAPIObject {
         this.advanced = BooleanParser.get(false, obj, "advanced");
 
         JSONArray selectOptions = obj.has("selectOptions") && obj.get("selectOptions") != null ? obj.getJSONArray("selectOptions") : null;
+        List<@NotNull SelectOption> selectOptionsL = new ArrayList<>();
         if (selectOptions != null) {
             for (int i = 0; i < selectOptions.length(); i++) {
-                this.selectOptions.add(new SelectOption(api, selectOptions.getJSONObject(i)));
+                selectOptionsL.add(new SelectOption(api, selectOptions.getJSONObject(i)));
             }
         }
+        this.selectOptions = TreePVector.from(selectOptionsL);
 
         this.selectOptionsProviderAction = StringParser.get(obj, "selectOptionsProviderAction");
         this.section = StringParser.get(obj, "section");
@@ -102,7 +106,7 @@ public class Field extends AbstractAPIObject {
         return advanced;
     }
 
-    public @NotNull List<@NotNull SelectOption> selectOptions() {
+    public @NotNull PVector<@NotNull SelectOption> selectOptions() {
         return selectOptions;
     }
 

@@ -10,6 +10,8 @@ import me.egg82.arr.sonarr.v3.schema.SeriesResource;
 import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -19,23 +21,26 @@ import java.util.Objects;
 public class Series extends AbstractFetchableAPIObject {
     public static final Series UNKNOWN = new Series();
 
-    private final List<@NotNull SeriesResource> resources = new ArrayList<>();
+    private final PVector<@NotNull SeriesResource> resources;
 
     public Series(@NotNull ArrAPI api, @NotNull JsonNode node, @NotNull Instant lastFetched) {
         super(api, node, lastFetched);
 
         if (node.isArray()) {
             JSONArray resources = node.getArray();
+            List<@NotNull SeriesResource> resourcesL = new ArrayList<>();
             for (int i = 0; i < resources.length(); i++) {
-                this.resources.add(new SeriesResource(api, resources.getJSONObject(i)));
+                resourcesL.add(new SeriesResource(api, resources.getJSONObject(i)));
             }
+            this.resources = TreePVector.from(resourcesL);
         } else {
-            this.resources.add(new SeriesResource(api, node.getObject()));
+            this.resources = TreePVector.singleton(new SeriesResource(api, node.getObject()));
         }
     }
 
     private Series() {
         super(NullArrAPI.INSTANCE, new JsonNode("{}"), Instant.EPOCH);
+        this.resources = TreePVector.empty();
     }
 
     @Override
@@ -48,7 +53,7 @@ public class Series extends AbstractFetchableAPIObject {
         return CacheConfigVars.getTimeValue(CacheConfigVars.SHORT_CACHE_TIME);
     }
 
-    public @NotNull List<@NotNull SeriesResource> resources() {
+    public @NotNull PVector<@NotNull SeriesResource> resources() {
         return resources;
     }
 

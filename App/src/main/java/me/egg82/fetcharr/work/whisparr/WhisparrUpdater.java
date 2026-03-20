@@ -57,6 +57,7 @@ public class WhisparrUpdater extends AbstractUpdater {
             logger.error("WHISPARR_{} returned bad result for {}", api.id(), Movie.UNKNOWN.apiPath());
             return;
         }
+        logger.debug("Fetched {} scenes/movies", all.resources().size());
 
         List<WeightedMovie> wrapped = new ArrayList<>();
         for (MovieResource m : all.resources()) {

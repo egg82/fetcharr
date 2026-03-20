@@ -6,6 +6,8 @@ import me.egg82.arr.common.AbstractAPIObject;
 import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.parse.NumberParser;
 import org.jetbrains.annotations.NotNull;
+import org.pcollections.PSet;
+import org.pcollections.TreePSet;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -15,7 +17,7 @@ public class SeriesStatisticsResource extends AbstractAPIObject {
     private final int episodeCount;
     private final int episodeFileCount;
     private final float percentOfEpisodes;
-    private final Set<@NotNull String> releaseGroups = new HashSet<>();
+    private final PSet<@NotNull String> releaseGroups;
     private final int seasonCount;
     private final long sizeOnDisk;
     private final int totalEpisodeCount;
@@ -28,11 +30,13 @@ public class SeriesStatisticsResource extends AbstractAPIObject {
         this.percentOfEpisodes = NumberParser.getFloat(-1.0F, obj, "percentOfEpisodes");
 
         JSONArray releaseGroups = obj.has("releaseGroups") && obj.get("releaseGroups") != null ? obj.getJSONArray("releaseGroups") : null;
+        Set<@NotNull String> releaseGroupsL = new HashSet<>();
         if (releaseGroups != null) {
             for (int i = 0; i < releaseGroups.length(); i++) {
-                this.releaseGroups.add(releaseGroups.getString(i));
+                releaseGroupsL.add(releaseGroups.getString(i));
             }
         }
+        this.releaseGroups = TreePSet.from(releaseGroupsL);
 
         this.seasonCount = NumberParser.getInt(-1, obj, "seasonCount");
         this.sizeOnDisk = NumberParser.getLong(-1L, obj, "sizeOnDisk");
@@ -51,7 +55,7 @@ public class SeriesStatisticsResource extends AbstractAPIObject {
         return percentOfEpisodes;
     }
 
-    public @NotNull Set<@NotNull String> getReleaseGroups() {
+    public @NotNull PSet<@NotNull String> getReleaseGroups() {
         return releaseGroups;
     }
 
