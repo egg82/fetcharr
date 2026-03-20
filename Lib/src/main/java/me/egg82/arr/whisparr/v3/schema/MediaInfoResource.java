@@ -10,19 +10,19 @@ import me.egg82.arr.parse.StringParser;
 import me.egg82.arr.unit.ResolutionValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PSet;
+import org.pcollections.TreePSet;
 
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
 
 public class MediaInfoResource extends AbstractAPIObject {
     private final int id;
     private final long audioBitrate;
     private final float audioChannels;
     private final String audioCodec;
-    private final Set<@NotNull String> audioLanguages = new HashSet<>();
+    private final PSet<@NotNull String> audioLanguages;
     private final int audioStreamCount;
     private final int videoBitDepth;
     private final long videoBitrate;
@@ -33,7 +33,7 @@ public class MediaInfoResource extends AbstractAPIObject {
     private final ResolutionValue resolution;
     private final Duration runTime;
     private final String scanType;
-    private final Set<@NotNull String> subtitles = new HashSet<>();
+    private final PSet<@NotNull String> subtitles;
 
     public MediaInfoResource(@NotNull ArrAPI api, @NotNull JSONObject obj) {
         super(api, obj);
@@ -44,9 +44,7 @@ public class MediaInfoResource extends AbstractAPIObject {
         this.audioCodec = StringParser.get(obj, "audioCodec");
 
         String audioLanguages = StringParser.get(obj, "audioLanguages");
-        if (audioLanguages != null) {
-            this.audioLanguages.addAll(Arrays.asList(audioLanguages.trim().split(",")));
-        }
+        this.audioLanguages = audioLanguages != null ? TreePSet.from(Arrays.asList(audioLanguages.trim().split(","))) : TreePSet.empty();
 
         this.audioStreamCount = NumberParser.getInt(-1, obj, "audioStreamCount");
         this.videoBitDepth = NumberParser.getInt(-1, obj, "videoBitDepth");
@@ -60,9 +58,7 @@ public class MediaInfoResource extends AbstractAPIObject {
         this.scanType = StringParser.get(obj, "scanType");
 
         String subtitles = StringParser.get(obj, "subtitles");
-        if (subtitles != null) {
-            this.subtitles.addAll(Arrays.asList(subtitles.trim().split(",")));
-        }
+        this.subtitles = subtitles != null ? TreePSet.from(Arrays.asList(subtitles.trim().split(","))) : TreePSet.empty();
     }
 
     public int id() {
@@ -81,7 +77,7 @@ public class MediaInfoResource extends AbstractAPIObject {
         return audioCodec;
     }
 
-    public @NotNull Set<@NotNull String> audioLanguages() {
+    public @NotNull PSet<@NotNull String> audioLanguages() {
         return audioLanguages;
     }
 
@@ -125,7 +121,7 @@ public class MediaInfoResource extends AbstractAPIObject {
         return scanType;
     }
 
-    public @NotNull Set<@NotNull String> subtitles() {
+    public @NotNull PSet<@NotNull String> subtitles() {
         return subtitles;
     }
 

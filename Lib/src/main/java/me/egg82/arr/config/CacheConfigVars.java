@@ -1,5 +1,6 @@
 package me.egg82.arr.config;
 
+import me.egg82.arr.parse.BooleanParser;
 import me.egg82.arr.parse.FileParser;
 import me.egg82.arr.parse.TimeValueParser;
 import me.egg82.arr.unit.TimeValue;

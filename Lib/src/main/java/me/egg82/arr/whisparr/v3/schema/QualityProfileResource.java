@@ -10,6 +10,8 @@ import me.egg82.arr.parse.ObjectParser;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,11 +22,11 @@ public class QualityProfileResource extends AbstractAPIObject {
     private final String name;
     private final boolean upgradeAllowed;
     private final int cutoff;
-    private final List<@NotNull QualityProfileQualityItemResource> items = new ArrayList<>();
+    private final PVector<@NotNull QualityProfileQualityItemResource> items;
     private final int minFormatScore;
     private final int cutoffFormatScore;
     private final int minUpgradeFormatScore;
-    private final List<@NotNull ProfileFormatItemResource> formatItems = new ArrayList<>();
+    private final PVector<@NotNull ProfileFormatItemResource> formatItems;
     private final Language language;
 
     public QualityProfileResource(@NotNull ArrAPI api, @NotNull JSONObject obj) {
@@ -36,22 +38,26 @@ public class QualityProfileResource extends AbstractAPIObject {
         this.cutoff = NumberParser.getInt(-1, obj, "cutoff");
 
         JSONArray items = obj.has("items") && obj.get("items") != null ? obj.getJSONArray("items") : null;
+        List<@NotNull QualityProfileQualityItemResource> itemsL = new ArrayList<>();
         if (items != null) {
             for (int i = 0; i < items.length(); i++) {
-                this.items.add(new QualityProfileQualityItemResource(api, items.getJSONObject(i)));
+                itemsL.add(new QualityProfileQualityItemResource(api, items.getJSONObject(i)));
             }
         }
+        this.items = TreePVector.from(itemsL);
 
         this.minFormatScore = NumberParser.getInt(-1, obj, "minFormatScore");
         this.cutoffFormatScore = NumberParser.getInt(-1, obj, "cutoffFormatScore");
         this.minUpgradeFormatScore = NumberParser.getInt(-1, obj, "minUpgradeFormatScore");
 
         JSONArray formatItems = obj.has("formatItems") && obj.get("formatItems") != null ? obj.getJSONArray("formatItems") : null;
+        List<@NotNull ProfileFormatItemResource> formatItemsL = new ArrayList<>();
         if (formatItems != null) {
             for (int i = 0; i < formatItems.length(); i++) {
-                this.formatItems.add(new ProfileFormatItemResource(api, formatItems.getJSONObject(i)));
+                formatItemsL.add(new ProfileFormatItemResource(api, formatItems.getJSONObject(i)));
             }
         }
+        this.formatItems = TreePVector.from(formatItemsL);
 
         this.language = ObjectParser.get(Language.class, api, obj, "language");
     }
@@ -72,7 +78,7 @@ public class QualityProfileResource extends AbstractAPIObject {
         return cutoff;
     }
 
-    public @NotNull List<@NotNull QualityProfileQualityItemResource> items() {
+    public @NotNull PVector<@NotNull QualityProfileQualityItemResource> items() {
         return items;
     }
 
@@ -88,7 +94,7 @@ public class QualityProfileResource extends AbstractAPIObject {
         return minUpgradeFormatScore;
     }
 
-    public @NotNull List<@NotNull ProfileFormatItemResource> formatItems() {
+    public @NotNull PVector<@NotNull ProfileFormatItemResource> formatItems() {
         return formatItems;
     }
 

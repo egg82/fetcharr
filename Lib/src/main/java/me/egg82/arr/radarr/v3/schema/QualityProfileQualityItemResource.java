@@ -10,6 +10,8 @@ import me.egg82.arr.parse.ObjectParser;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +21,7 @@ public class QualityProfileQualityItemResource extends AbstractAPIObject {
     private final int id;
     private final String name;
     private final Quality quality;
-    private final List<@NotNull Object> items = new ArrayList<>();
+    private final PVector<@NotNull Object> items;
     private final boolean allowed;
 
     public QualityProfileQualityItemResource(@NotNull ArrAPI api, @NotNull JSONObject obj) {
@@ -30,11 +32,13 @@ public class QualityProfileQualityItemResource extends AbstractAPIObject {
         this.quality = ObjectParser.get(Quality.class, api, obj, "quality");
 
         JSONArray items = obj.has("items") && obj.get("items") != null ? obj.getJSONArray("items") : null;
+        List<@NotNull Object> itemsL = new ArrayList<>();
         if (items != null) {
             for (int i = 0; i < items.length(); i++) {
-                this.items.add(items.get(i));
+                itemsL.add(items.get(i));
             }
         }
+        this.items = TreePVector.from(itemsL);
 
         this.allowed = BooleanParser.get(false, obj, "allowed");
     }
@@ -51,7 +55,7 @@ public class QualityProfileQualityItemResource extends AbstractAPIObject {
         return quality;
     }
 
-    public @NotNull List<@NotNull Object> items() {
+    public @NotNull PVector<@NotNull Object> items() {
         return items;
     }
 

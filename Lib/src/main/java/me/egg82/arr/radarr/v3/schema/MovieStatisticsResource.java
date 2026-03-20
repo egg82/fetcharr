@@ -6,6 +6,8 @@ import me.egg82.arr.common.AbstractAPIObject;
 import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.parse.NumberParser;
 import org.jetbrains.annotations.NotNull;
+import org.pcollections.PSet;
+import org.pcollections.TreePSet;
 
 import java.util.HashSet;
 import java.util.Objects;
@@ -14,7 +16,7 @@ import java.util.Set;
 public class MovieStatisticsResource extends AbstractAPIObject {
     private final int movieFileCount;
     private final long sizeOnDisk;
-    private final Set<@NotNull String> releaseGroups = new HashSet<>();
+    private final PSet<@NotNull String> releaseGroups;
 
     public MovieStatisticsResource(@NotNull ArrAPI api, @NotNull JSONObject obj) {
         super(api, obj);
@@ -23,11 +25,13 @@ public class MovieStatisticsResource extends AbstractAPIObject {
         this.sizeOnDisk = NumberParser.getLong(-1L, obj, "sizeOnDisk");
 
         JSONArray releaseGroups = obj.has("releaseGroups") && obj.get("releaseGroups") != null ? obj.getJSONArray("releaseGroups") : null;
+        Set<@NotNull String> releaseGroupsL = new HashSet<>();
         if (releaseGroups != null) {
             for (int i = 0; i < releaseGroups.length(); i++) {
-                this.releaseGroups.add(releaseGroups.getString(i));
+                releaseGroupsL.add(releaseGroups.getString(i));
             }
         }
+        this.releaseGroups = TreePSet.from(releaseGroupsL);
     }
 
     public int movieFileCount() {
@@ -38,7 +42,7 @@ public class MovieStatisticsResource extends AbstractAPIObject {
         return sizeOnDisk;
     }
 
-    public @NotNull Set<@NotNull String> releaseGroups() {
+    public @NotNull PSet<@NotNull String> releaseGroups() {
         return releaseGroups;
     }
 

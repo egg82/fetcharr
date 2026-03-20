@@ -10,6 +10,8 @@ import me.egg82.arr.radarr.v3.schema.QualityProfileResource;
 import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -19,23 +21,26 @@ import java.util.Objects;
 public class QualityProfile extends AbstractFetchableAPIObject {
     public static final QualityProfile UNKNOWN = new QualityProfile();
 
-    private final List<@NotNull QualityProfileResource> resources = new ArrayList<>();
+    private final PVector<@NotNull QualityProfileResource> resources;
 
     public QualityProfile(@NotNull ArrAPI api, @NotNull JsonNode node, @NotNull Instant lastFetched) {
         super(api, node, lastFetched);
 
         if (node.isArray()) {
             JSONArray resources = node.getArray();
+            List<@NotNull QualityProfileResource> resourcesL = new ArrayList<>();
             for (int i = 0; i < resources.length(); i++) {
-                this.resources.add(new QualityProfileResource(api, resources.getJSONObject(i)));
+                resourcesL.add(new QualityProfileResource(api, resources.getJSONObject(i)));
             }
+            this.resources = TreePVector.from(resourcesL);
         } else {
-            this.resources.add(new QualityProfileResource(api, node.getObject()));
+            this.resources = TreePVector.singleton(new QualityProfileResource(api, node.getObject()));
         }
     }
 
     private QualityProfile() {
         super(NullArrAPI.INSTANCE, new JsonNode("{}"), Instant.EPOCH);
+        this.resources = TreePVector.empty();
     }
 
     @Override
@@ -48,7 +53,7 @@ public class QualityProfile extends AbstractFetchableAPIObject {
         return CacheConfigVars.getTimeValue(CacheConfigVars.LONG_CACHE_TIME);
     }
 
-    public @NotNull List<@NotNull QualityProfileResource> resources() {
+    public @NotNull PVector<@NotNull QualityProfileResource> resources() {
         return resources;
     }
 

@@ -175,6 +175,14 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | WHISPARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
 | WHISPARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 
+### Plugin/API settings
+
+Plugin support coming in another release. More explanation on what it is/does when it comes.
+
+| variable | type    | values | default  | description |
+| -------- |---------| ------ |----------| ----------- |
+| PROVIDE_RAW_API_OBJ | boolean | true, false | false | Provide raw API objects to plugins. Uses more memory |
+
 ## Wall of oddities
 
 Note that this is *not* a wall of shame. Just some odd comments, funny moments, and other strange

@@ -58,10 +58,6 @@ public enum CommonConfigVars {
         return r != null ? r.split(",") : var.def();
     }
 
-    public static @NotNull LogMode getLogMode(@NotNull CommonConfigVars var) {
-        return LogMode.parse(var.def(), System.getenv(var.name()));
-    }
-
     public static boolean getBool(@NotNull CommonConfigVars var) {
         return BooleanParser.parse(var.def(), System.getenv(var.name()));
     }

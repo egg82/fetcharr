@@ -1,7 +1,7 @@
 package me.egg82.arr.whisparr.v3.schema;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractAPIObject;
@@ -11,6 +11,10 @@ import me.egg82.arr.whisparr.v3.QualityProfile;
 import me.egg82.arr.whisparr.v3.Tag;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PSet;
+import org.pcollections.PVector;
+import org.pcollections.TreePSet;
+import org.pcollections.TreePVector;
 
 import java.io.File;
 import java.time.Duration;
@@ -22,7 +26,7 @@ public class MovieResource extends AbstractAPIObject {
     private final String title;
     private final String originalTitle;
     private final Language originalLanguage;
-    private final List<@NotNull AlternativeTitleResource> alternateTitles = new ArrayList<>();
+    private final PVector<@NotNull AlternativeTitleResource> alternateTitles;
     private final int secondaryYear;
     private final int secondaryYearSourceId;
     private final String sortTitle;
@@ -34,7 +38,7 @@ public class MovieResource extends AbstractAPIObject {
     private final Instant digitalRelease;
     private final Instant releaseDate;
     private final String physicalReleaseNote;
-    private final List<@NotNull MediaCover> images = new ArrayList<>();
+    private final PVector<@NotNull MediaCover> images;
     private final String website;
     private final String remotePoster;
     private final int year;
@@ -55,9 +59,9 @@ public class MovieResource extends AbstractAPIObject {
     private final File rootFolderPath;
     private final File folder;
     private final String certification;
-    private final Set<@NotNull String> genres = new HashSet<>();
-    private final Set<@NotNull String> keywords = new HashSet<>();
-    private final IntList tags = new IntArrayList();
+    private final PSet<@NotNull String> genres;
+    private final PSet<@NotNull String> keywords;
+    private final IntSet tags = new IntArraySet();
     private final Instant added;
     private final AddMovieOptions addOptions;
     private final Ratings ratings;
@@ -76,11 +80,13 @@ public class MovieResource extends AbstractAPIObject {
         this.originalLanguage = ObjectParser.get(Language.class, api, obj, "language");
 
         JSONArray alternateTitles = obj.has("alternateTitles") && obj.get("alternateTitles") != null ? obj.getJSONArray("alternateTitles") : null;
+        List<@NotNull AlternativeTitleResource> alternateTitlesL = new ArrayList<>();
         if (alternateTitles != null) {
             for (int i = 0; i < alternateTitles.length(); i++) {
-                this.alternateTitles.add(new AlternativeTitleResource(api, alternateTitles.getJSONObject(i)));
+                alternateTitlesL.add(new AlternativeTitleResource(api, alternateTitles.getJSONObject(i)));
             }
         }
+        this.alternateTitles = TreePVector.from(alternateTitlesL);
 
         this.secondaryYear = NumberParser.getInt(-1, obj, "secondaryYear");
         this.secondaryYearSourceId = NumberParser.getInt(-1, obj, "secondaryYearSourceId");
@@ -95,11 +101,13 @@ public class MovieResource extends AbstractAPIObject {
         this.physicalReleaseNote = StringParser.get(obj, "physicalReleaseNote");
 
         JSONArray images = obj.has("images") && obj.get("images") != null ? obj.getJSONArray("images") : null;
+        List<@NotNull MediaCover> imagesL = new ArrayList<>();
         if (images != null) {
             for (int i = 0; i < images.length(); i++) {
-                this.images.add(new MediaCover(api, images.getJSONObject(i)));
+                imagesL.add(new MediaCover(api, images.getJSONObject(i)));
             }
         }
+        this.images = TreePVector.from(imagesL);
 
         this.website = StringParser.get(obj, "website");
         this.remotePoster = StringParser.get(obj, "remotePoster");
@@ -123,18 +131,22 @@ public class MovieResource extends AbstractAPIObject {
         this.certification = StringParser.get(obj, "certification");
 
         JSONArray genres = obj.has("genres") && obj.get("genres") != null ? obj.getJSONArray("genres") : null;
+        Set<@NotNull String> genresL = new HashSet<>();
         if (genres != null) {
             for (int i = 0; i < genres.length(); i++) {
-                this.genres.add(genres.getString(i));
+                genresL.add(genres.getString(i));
             }
         }
+        this.genres = TreePSet.from(genresL);
 
         JSONArray keywords = obj.has("keywords") && obj.get("keywords") != null ? obj.getJSONArray("keywords") : null;
+        Set<@NotNull String> keywordsL = new HashSet<>();
         if (keywords != null) {
             for (int i = 0; i < keywords.length(); i++) {
-                this.keywords.add(keywords.getString(i));
+                keywordsL.add(keywords.getString(i));
             }
         }
+        this.keywords = TreePSet.from(keywordsL);
 
         JSONArray tags = obj.has("tags") && obj.get("tags") != null ? obj.getJSONArray("tags") : null;
         if (tags != null) {
@@ -169,7 +181,7 @@ public class MovieResource extends AbstractAPIObject {
         return originalLanguage;
     }
 
-    public @NotNull List<@NotNull AlternativeTitleResource> alternateTitles() {
+    public @NotNull PVector<@NotNull AlternativeTitleResource> alternateTitles() {
         return alternateTitles;
     }
 
@@ -217,7 +229,7 @@ public class MovieResource extends AbstractAPIObject {
         return physicalReleaseNote;
     }
 
-    public @NotNull List<@NotNull MediaCover> images() {
+    public @NotNull PVector<@NotNull MediaCover> images() {
         return images;
     }
 
@@ -301,15 +313,15 @@ public class MovieResource extends AbstractAPIObject {
         return certification;
     }
 
-    public @NotNull Set<@NotNull String> genres() {
+    public @NotNull PSet<@NotNull String> genres() {
         return genres;
     }
 
-    public @NotNull Set<@NotNull String> keywords() {
+    public @NotNull PSet<@NotNull String> keywords() {
         return keywords;
     }
 
-    public @NotNull List<@NotNull Tag> tags() {
+    public @NotNull PVector<@NotNull Tag> tags() {
         List<@NotNull Tag> r = new ArrayList<>();
         for (int id : this.tags) {
             Tag t = api.fetch(Tag.class, id);
@@ -317,7 +329,7 @@ public class MovieResource extends AbstractAPIObject {
                 r.add(t);
             }
         }
-        return r;
+        return TreePVector.from(r);
     }
 
     public @NotNull Instant added() {

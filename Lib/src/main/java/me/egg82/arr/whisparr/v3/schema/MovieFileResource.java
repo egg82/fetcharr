@@ -8,6 +8,8 @@ import me.egg82.arr.parse.*;
 import me.egg82.arr.whisparr.v3.Movie;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
 import java.io.File;
 import java.time.Instant;
@@ -25,9 +27,9 @@ public class MovieFileResource extends AbstractAPIObject {
     private final String sceneName;
     private final String releaseGroup;
     private final String edition;
-    private final List<@NotNull Language> languages = new ArrayList<>();
+    private final PVector<@NotNull Language> languages;
     private final QualityModel quality;
-    private final List<@NotNull CustomFormatResource> customFormats = new ArrayList<>();
+    private final PVector<@NotNull CustomFormatResource> customFormats;
     private final int customFormatScore;
     private final int indexerFlags;
     private final MediaInfoResource mediaInfo;
@@ -48,20 +50,24 @@ public class MovieFileResource extends AbstractAPIObject {
         this.edition = StringParser.get(obj, "edition");
 
         JSONArray languages = obj.has("languages") && obj.get("languages") != null ? obj.getJSONArray("languages") : null;
+        List<@NotNull Language> languagesL = new ArrayList<>();
         if (languages != null) {
             for (int i = 0; i < languages.length(); i++) {
-                this.languages.add(new Language(api, languages.getJSONObject(i)));
+                languagesL.add(new Language(api, languages.getJSONObject(i)));
             }
         }
+        this.languages = TreePVector.from(languagesL);
 
         this.quality = ObjectParser.get(QualityModel.class, api, obj, "quality");
 
         JSONArray customFormats = obj.has("customFormats") && obj.get("customFormats") != null ? obj.getJSONArray("customFormats") : null;
+        List<@NotNull CustomFormatResource> customFormatsL = new ArrayList<>();
         if (customFormats != null) {
             for (int i = 0; i < customFormats.length(); i++) {
-                this.customFormats.add(new CustomFormatResource(api, customFormats.getJSONObject(i)));
+                customFormatsL.add(new CustomFormatResource(api, customFormats.getJSONObject(i)));
             }
         }
+        this.customFormats = TreePVector.from(customFormatsL);
 
         this.customFormatScore = NumberParser.getInt(-1, obj, "customFormatScore");
         this.indexerFlags = NumberParser.getInt(-1, obj, "indexerFlags");
@@ -106,7 +112,7 @@ public class MovieFileResource extends AbstractAPIObject {
         return edition;
     }
 
-    public @NotNull List<@NotNull Language> languages() {
+    public @NotNull PVector<@NotNull Language> languages() {
         return languages;
     }
 
@@ -114,7 +120,7 @@ public class MovieFileResource extends AbstractAPIObject {
         return quality;
     }
 
-    public @NotNull List<@NotNull CustomFormatResource> customFormats() {
+    public @NotNull PVector<@NotNull CustomFormatResource> customFormats() {
         return customFormats;
     }
 
