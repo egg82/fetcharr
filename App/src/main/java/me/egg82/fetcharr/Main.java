@@ -1,8 +1,14 @@
 package me.egg82.fetcharr;
 
+import kong.unirest.core.JsonNode;
 import kong.unirest.core.Proxy;
 import kong.unirest.core.Unirest;
+import kong.unirest.core.json.JSONObject;
+import me.egg82.arr.config.CacheConfigVars;
+import me.egg82.arr.config.Tristate;
+import me.egg82.arr.file.JSONFile;
 import me.egg82.arr.lidarr.LidarrV1API;
+import me.egg82.arr.parse.BooleanParser;
 import me.egg82.arr.radarr.RadarrV3API;
 import me.egg82.arr.sonarr.SonarrV3API;
 import me.egg82.arr.whisparr.WhisparrV3API;
@@ -28,6 +34,7 @@ import java.security.cert.CertificateFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.*;
 
 public class Main {
@@ -70,7 +77,30 @@ public class Main {
         LOGGER.info("Logging mode set to {}", LogConfigVars.getLogMode(LogConfigVars.LOG_MODE).name());
         LOGGER.info("Thread pool size set to {}", Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
 
+        Tristate memoryCache = CacheConfigVars.getTristate(CacheConfigVars.USE_MEMORY_CACHE);
+        Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
+        boolean cacheWritable = isCacheWritable();
+
+        if ((fileCache == Tristate.AUTO && cacheWritable) || fileCache == Tristate.TRUE) {
+            LOGGER.info("Using disk-based cache");
+        } else {
+            LOGGER.warn("Not using disk-based cache");
+        }
+        if ((memoryCache == Tristate.AUTO && fileCache == Tristate.AUTO && !cacheWritable) || (memoryCache == Tristate.AUTO && fileCache == Tristate.FALSE) || memoryCache == Tristate.TRUE) {
+            LOGGER.info("Using memory-based cache");
+        } else {
+            LOGGER.info("Not using memory-based cache");
+        }
+
         setupUnirest();
+
+        LOGGER.info("---");
+
+        try {
+            Thread.sleep(3_000);
+        } catch (InterruptedException ignored) {
+            Thread.currentThread().interrupt();
+        }
 
         for (int i = 0; i < 100; i++) {
             setupRadarr(i);
@@ -290,5 +320,18 @@ public class Main {
 
         whisparr.add(new WhisparrUpdater(api));
         LOGGER.info("Added WHISPARR_{} instance at {}", num, url);
+    }
+
+    private static boolean isCacheWritable() {
+        JSONFile testFile = new JSONFile(new File(CacheConfigVars.getFile(CacheConfigVars.CACHE_DIR), "touch.json"));
+        try {
+            boolean writable = BooleanParser.get(false, testFile.read().getObject(), "writable");
+            if (!writable) {
+                testFile.write(new JsonNode(new JSONObject(Map.of("writable", true)).toString()));
+            }
+        } catch (IOException ignored) {
+            return false;
+        }
+        return true;
     }
 }
