@@ -13,12 +13,12 @@ import java.io.File;
 public enum LidarrConfigVars {
     URL(String.class, "LIDARR_{}_URL", null),
     API_KEY(String.class, "LIDARR_{}_API_KEY", null),
-    SEARCH_AMOUNT(Integer.class, "LIDARR_{}_SEARCH_AMOUNT", ConfigVars.getInt(ConfigVars.SEARCH_AMOUNT)),
-    SEARCH_INTERVAL(TimeValue.class, "LIDARR_{}_SEARCH_INTERVAL", ConfigVars.getTimeValue(ConfigVars.SEARCH_INTERVAL)),
-    MONITORED_ONLY(Boolean.class, "LIDARR_{}_MONITORED_ONLY", ConfigVars.getBool(ConfigVars.MONITORED_ONLY)),
-    MISSING_ONLY(Boolean.class, "LIDARR_{}_MISSING_ONLY", ConfigVars.getBool(ConfigVars.MISSING_ONLY)),
-    SKIP_TAGS(String[].class, "LIDARR_{}_SKIP_TAGS", ConfigVars.getArr(ConfigVars.SKIP_TAGS)),
-    USE_CUTOFF(Boolean.class, "LIDARR_{}_USE_CUTOFF", ConfigVars.getBool(ConfigVars.USE_CUTOFF));
+    SEARCH_AMOUNT(Integer.class, "LIDARR_{}_SEARCH_AMOUNT", CommonConfigVars.getInt(CommonConfigVars.SEARCH_AMOUNT)),
+    SEARCH_INTERVAL(TimeValue.class, "LIDARR_{}_SEARCH_INTERVAL", CommonConfigVars.getTimeValue(CommonConfigVars.SEARCH_INTERVAL)),
+    MONITORED_ONLY(Boolean.class, "LIDARR_{}_MONITORED_ONLY", CommonConfigVars.getBool(CommonConfigVars.MONITORED_ONLY)),
+    MISSING_ONLY(Boolean.class, "LIDARR_{}_MISSING_ONLY", CommonConfigVars.getBool(CommonConfigVars.MISSING_ONLY)),
+    SKIP_TAGS(String[].class, "LIDARR_{}_SKIP_TAGS", CommonConfigVars.getArr(CommonConfigVars.SKIP_TAGS)),
+    USE_CUTOFF(Boolean.class, "LIDARR_{}_USE_CUTOFF", CommonConfigVars.getBool(CommonConfigVars.USE_CUTOFF));
 
     private final Class<?> type;
     private final String envName;

@@ -146,32 +146,32 @@ public class Main {
     }
 
     private static void setupUnirest() {
-        String proxyHost = ConfigVars.get(ConfigVars.PROXY_HOST);
-        int proxyPort = ConfigVars.getInt(ConfigVars.PROXY_PORT);
+        String proxyHost = CommonConfigVars.get(CommonConfigVars.PROXY_HOST);
+        int proxyPort = CommonConfigVars.getInt(CommonConfigVars.PROXY_PORT);
         if (proxyHost != null && proxyPort > 0) {
             Unirest.config().proxy(new Proxy(proxyHost, proxyPort));
         }
 
-        int connectTimeout = ConfigVars.getInt(ConfigVars.CONNECT_TIMEOUT);
+        int connectTimeout = CommonConfigVars.getInt(CommonConfigVars.CONNECT_TIMEOUT);
         if (connectTimeout > 0) {
             Unirest.config().connectTimeout(connectTimeout);
         }
 
-        int requestTimeout = ConfigVars.getInt(ConfigVars.REQUEST_TIMEOUT);
+        int requestTimeout = CommonConfigVars.getInt(CommonConfigVars.REQUEST_TIMEOUT);
         if (requestTimeout > 0) {
             Unirest.config().requestTimeout(requestTimeout);
         }
 
-        int connectTTL = ConfigVars.getInt(ConfigVars.CONNECT_TTL);
+        int connectTTL = CommonConfigVars.getInt(CommonConfigVars.CONNECT_TTL);
         if (connectTTL > 0) {
             Unirest.config().connectionTTL(connectTTL, TimeUnit.MILLISECONDS);
         }
 
-        boolean verifyCerts = ConfigVars.getBool(ConfigVars.VERIFY_CERTS);
+        boolean verifyCerts = CommonConfigVars.getBool(CommonConfigVars.VERIFY_CERTS);
         Unirest.config().disableHostNameVerification(!verifyCerts);
         Unirest.config().verifySsl(verifyCerts);
 
-        File certsPath = ConfigVars.getFile(ConfigVars.SSL_PATH);
+        File certsPath = CommonConfigVars.getFile(CommonConfigVars.SSL_PATH);
         try {
             CertificateFactory cf = CertificateFactory.getInstance("X.509");
             Collection<? extends Certificate> certs = null;

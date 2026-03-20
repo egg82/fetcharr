@@ -14,7 +14,7 @@ import me.egg82.arr.lidarr.v1.schema.TagResource;
 import me.egg82.arr.lidarr.v1.schema.TrackFileResource;
 import me.egg82.arr.lidarr.v1.schema.TrackResource;
 import me.egg82.arr.unit.TimeValue;
-import me.egg82.fetcharr.env.ConfigVars;
+import me.egg82.fetcharr.env.CommonConfigVars;
 import me.egg82.fetcharr.env.LidarrConfigVars;
 import me.egg82.fetcharr.util.WeightedRandom;
 import me.egg82.fetcharr.work.AbstractUpdater;
@@ -79,7 +79,7 @@ public class LidarrUpdater extends AbstractUpdater {
         boolean useCutoff = LidarrConfigVars.getBool(LidarrConfigVars.USE_CUTOFF, api.id());
         String[] skipTags = LidarrConfigVars.getArr(LidarrConfigVars.SKIP_TAGS, api.id());
 
-        boolean dryRun = ConfigVars.getBool(ConfigVars.DRY_RUN);
+        boolean dryRun = CommonConfigVars.getBool(CommonConfigVars.DRY_RUN);
 
         IntList ids = new IntArrayList();
         int attempts = 100;

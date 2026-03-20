@@ -13,7 +13,7 @@ import me.egg82.arr.sonarr.v3.schema.EpisodeResource;
 import me.egg82.arr.sonarr.v3.schema.SeriesResource;
 import me.egg82.arr.sonarr.v3.schema.TagResource;
 import me.egg82.arr.unit.TimeValue;
-import me.egg82.fetcharr.env.ConfigVars;
+import me.egg82.fetcharr.env.CommonConfigVars;
 import me.egg82.fetcharr.env.SonarrConfigVars;
 import me.egg82.fetcharr.util.WeightedRandom;
 import me.egg82.fetcharr.work.AbstractUpdater;
@@ -78,7 +78,7 @@ public class SonarrUpdater extends AbstractUpdater {
         boolean useCutoff = SonarrConfigVars.getBool(SonarrConfigVars.USE_CUTOFF, api.id());
         String[] skipTags = SonarrConfigVars.getArr(SonarrConfigVars.SKIP_TAGS, api.id());
 
-        boolean dryRun = ConfigVars.getBool(ConfigVars.DRY_RUN);
+        boolean dryRun = CommonConfigVars.getBool(CommonConfigVars.DRY_RUN);
 
         IntList ids = new IntArrayList();
         int attempts = 100;

@@ -11,7 +11,7 @@ import me.egg82.arr.radarr.v3.schema.MovieFileResource;
 import me.egg82.arr.radarr.v3.schema.MovieResource;
 import me.egg82.arr.radarr.v3.schema.TagResource;
 import me.egg82.arr.unit.TimeValue;
-import me.egg82.fetcharr.env.ConfigVars;
+import me.egg82.fetcharr.env.CommonConfigVars;
 import me.egg82.fetcharr.env.RadarrConfigVars;
 import me.egg82.fetcharr.util.WeightedRandom;
 import me.egg82.fetcharr.work.AbstractUpdater;
@@ -69,7 +69,7 @@ public class RadarrUpdater extends AbstractUpdater {
         boolean useCutoff = RadarrConfigVars.getBool(RadarrConfigVars.USE_CUTOFF, api.id());
         String[] skipTags = RadarrConfigVars.getArr(RadarrConfigVars.SKIP_TAGS, api.id());
 
-        boolean dryRun = ConfigVars.getBool(ConfigVars.DRY_RUN);
+        boolean dryRun = CommonConfigVars.getBool(CommonConfigVars.DRY_RUN);
 
         IntList ids = new IntArrayList();
         int attempts = 100;
