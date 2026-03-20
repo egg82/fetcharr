@@ -10,7 +10,7 @@ import java.util.*;
 
 public class WeightedRandom<T extends Weighted> {
     private List<T> objs;
-    private final Random r = new SecureRandom();
+    private final Random r = new SecureRandom(); // Doesn't really need to be SecureRandom, but I mean, why not use it?
 
     public WeightedRandom() {
         objs = List.of();
@@ -24,10 +24,16 @@ public class WeightedRandom<T extends Weighted> {
         this(Arrays.asList(arr));
     }
 
-    public void updateList(T[] arr) { updateList(Arrays.asList(arr)); }
+    public void updateList(T[] arr) {
+        updateList(Arrays.asList(arr));
+    }
 
     public void updateList(Collection<T> arr) {
         objs = new ArrayList<>(arr);
+    }
+
+    public void clear() {
+        objs.clear();
     }
 
     public @Nullable T selectOne() {

@@ -152,6 +152,8 @@ public class LidarrUpdater extends AbstractUpdater {
             api.search(ids);
         }
 
+        random.clear();
+
         this.metaFile.lastUpdate(lastUpdate);
         Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
         if ((fileCache == Tristate.AUTO && isCacheWritable()) || fileCache == Tristate.TRUE) {
