@@ -65,7 +65,7 @@ public class SonarrUpdater extends AbstractUpdater {
         for (SeriesResource s : allSeries.resources()) {
             Episode allEpisodes = api.fetch(Episode.class, Map.of("seriesId", s.id()));
             if (allEpisodes == null) {
-                logger.error("SONARR_{} returned bad result for {}", api.id(), Episode.UNKNOWN.apiPath());
+                logger.warn("SONARR_{} returned bad result for {}", api.id(), Episode.UNKNOWN.apiPath());
                 continue;
             }
 

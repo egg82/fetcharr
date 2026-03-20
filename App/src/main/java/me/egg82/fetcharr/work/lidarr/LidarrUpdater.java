@@ -66,7 +66,7 @@ public class LidarrUpdater extends AbstractUpdater {
         for (ArtistResource s : allArtists.resources()) {
             Album allAlbums = api.fetch(Album.class, Map.of("artistId", s.id()));
             if (allAlbums == null) {
-                logger.error("LIDARR_{} returned bad result for {}", api.id(), Album.UNKNOWN.apiPath());
+                logger.warn("LIDARR_{} returned bad result for {}", api.id(), Album.UNKNOWN.apiPath());
                 continue;
             }
 
@@ -101,7 +101,7 @@ public class LidarrUpdater extends AbstractUpdater {
             if (missingOnly) {
                 Track allTracks = api.fetch(Track.class, Map.of("artistId", a.artist().id()));
                 if (allTracks == null) {
-                    logger.error("LIDARR_{} returned bad result for {}", api.id(), Track.UNKNOWN.apiPath());
+                    logger.warn("LIDARR_{} returned bad result for {}", api.id(), Track.UNKNOWN.apiPath());
                     continue;
                 }
 
@@ -120,7 +120,7 @@ public class LidarrUpdater extends AbstractUpdater {
             if (useCutoff) {
                 Track allTracks = api.fetch(Track.class, Map.of("artistId", a.artist().id()));
                 if (allTracks == null) {
-                    logger.error("LIDARR_{} returned bad result for {}", api.id(), Track.UNKNOWN.apiPath());
+                    logger.warn("LIDARR_{} returned bad result for {}", api.id(), Track.UNKNOWN.apiPath());
                     continue;
                 }
 
