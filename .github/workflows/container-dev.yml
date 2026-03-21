@@ -1,6 +1,6 @@
 # Almost entirely written by ChatGPT
 
-name: Build and publish container
+name: Build and publish dev container
 
 on:
   push:
@@ -64,18 +64,7 @@ jobs:
           fi
 
           jar_file="$(printf '%s\n' "${candidates[@]}" | awk -F/ '{print length($NF), $0}' | sort -n | head -n1 | cut -d' ' -f2-)"
-          jar_basename="$(basename "$jar_file")"
-
-          if [[ "$jar_basename" =~ ^fetcharr-(.+)\.jar$ ]]; then
-            version="${BASH_REMATCH[1]}"
-          else
-            echo "Could not determine version from JAR name: $jar_basename" >&2
-            exit 1
-          fi
-
           echo "jar_file=$jar_file" >> "$GITHUB_OUTPUT"
-          echo "jar_basename=$jar_basename" >> "$GITHUB_OUTPUT"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -96,18 +85,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract container metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: |
-            docker.io/egg82/fetcharr
-            ghcr.io/${{ github.repository_owner }}/fetcharr
-          tags: |
-            type=raw,value=latest
-            type=raw,value=${{ steps.jar.outputs.version }}
-
-      - name: Build and push multi-arch image
+      - name: Build and push multi-arch dev image
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -116,7 +94,8 @@ jobs:
           platforms: linux/amd64,linux/arm64,linux/ppc64le
           build-args: |
             JAR_FILE=${{ steps.jar.outputs.jar_file }}
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            docker.io/egg82/fetcharr:dev
+            ghcr.io/${{ github.repository_owner }}/fetcharr:dev
           cache-from: type=gha
           cache-to: type=gha,mode=max
