@@ -1,43 +1,54 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-# ChatGPT cleaned this original script up a bit
+# ChatGPT wrote almost 100% of this, with minor edits
 
-TERM_GRACE_PERIOD="${TERM_GRACE_PERIOD:-10}"
-
-_term() {
-  printf "\nCaught SIGTERM, forwarding to app..\n" >&2
-  kill -TERM "$child" 2>/dev/null || true
-
-  (
-    sleep "$TERM_GRACE_PERIOD"
-    if kill -0 "$child" 2>/dev/null; then
-      echo "App didn't exit in ${TERM_GRACE_PERIOD}s - force-killing.." >&2
-      kill -KILL "$child" 2>/dev/null || true
-    fi
-  ) &
+fix_permissions() {
+  local path
+  for path in /app/config /app/cache /app/logs /data /tmp; do
+    mkdir -p "$path"
+    chown -R "${PUID}:${PGID}" "$path"
+  done
 }
 
-_int() {
-  printf "\nCaught SIGINT, forwarding to app..\n" >&2
-  kill -INT "$child" 2>/dev/null || true
+remap_user_group() {
+  local current_group current_uid
 
-  (
-    sleep "$TERM_GRACE_PERIOD"
-    if kill -0 "$child" 2>/dev/null; then
-      echo "App didn't exit in ${TERM_GRACE_PERIOD}s - force-killing.." >&2
-      kill -KILL "$child" 2>/dev/null || true
+  if getent group "${APP_USER}" >/dev/null 2>&1; then
+    current_group="$(getent group "${APP_USER}" | cut -d: -f3)"
+    if [[ "${current_group}" != "${PGID}" ]]; then
+      groupmod -o -g "${PGID}" "${APP_USER}"
     fi
-  ) &
+  else
+    groupadd -o -g "${PGID}" "${APP_USER}"
+  fi
+
+  if id -u "${APP_USER}" >/dev/null 2>&1; then
+    current_uid="$(id -u "${APP_USER}")"
+    if [[ "${current_uid}" != "${PUID}" ]]; then
+      usermod -o -u "${PUID}" -g "${PGID}" "${APP_USER}"
+    else
+      usermod -g "${PGID}" "${APP_USER}" >/dev/null 2>&1 || true
+    fi
+  else
+    useradd -o -u "${PUID}" -g "${PGID}" -d /app -s /sbin/nologin -M "${APP_USER}"
+  fi
 }
 
-trap _term SIGTERM
-trap _int SIGINT
+if [[ "$(id -u)" == "0" ]]; then
+  echo "Running as root, enabling UID/GID remap"
+  echo "APP_USER=${APP_USER} PUID=${PUID} PGID=${PGID}"
 
-echo "Starting Fetcharr.."
+  remap_user_group
+  fix_permissions
 
-java -jar /app/fetcharr.jar "$@" &
-child=$!
+  exec setpriv \
+    --reuid="${PUID}" \
+    --regid="${PGID}" \
+    --clear-groups \
+    /app/start.sh "$@"
+  # Editor's note: no exit (usually required because fallthrough) because we're running the exec syscall which replaces the running proc entirely
+fi
 
-wait "$child"
-exit $?
+echo "Running as non-root ($(id -u):$(id -g)), skipping remap"
+exec /app/start.sh "$@"

@@ -73,6 +73,8 @@ Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
 
 | variable | type    | values | default  | description |
 | -------- |---------| ------ |----------| ----------- |
+| PUID | int | 0-65535 | 1000 | Process UID override, eg. Unraid would be 99 |
+| PGID | int | 0-65535 | 1000 | Process GID override, eg. Unraid would be 100 |
 | LOG_MODE | string | trace, debug, info, warn, error | info | Logging mode |
 | DRY_RUN | boolean | true, false | false | Run in dry-run mode, which will list (but **not** perform) searches |
 | CONFIG_DIR | directory | /any/directory/path | /app/config | Configuration storage directory |

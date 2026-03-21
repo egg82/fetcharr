@@ -6,44 +6,45 @@ LABEL org.opencontainers.image.title="Fetcharr" \
       org.opencontainers.image.description="Hunts for missing or upgradable media in your *arr stack" \
       org.opencontainers.image.source="https://github.com/egg82/fetcharr" \
       org.opencontainers.image.documentation="https://github.com/egg82/fetcharr/blob/main/README.md" \
-      org.opencontainers.image.authors=["egg82"] \
+      org.opencontainers.image.authors="egg82" \
       org.opencontainers.image.licenses="MIT"
 
-ARG APP_USER=app
-ARG APP_UID=1000
-ARG APP_GID=1000
-ARG JAR_FILE=App/target/fetcharr-2.0.1.jar
+ARG JAR_FILE=App/target/fetcharr-2.0.2.jar
+
+ENV APP_USER=app \
+    PUID=1000 \
+    PGID=1000 \
+    LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8 \
+    JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/urandom -Dfile.encoding=UTF-8"
 
 USER root
 
 RUN microdnf install -y \
       java-21-openjdk-headless \
-      shadow-utils \
+      shadow-utils util-linux \
       tzdata \
       glibc-langpack-en \
     && microdnf clean all \
     && rm -rf /var/cache/dnf
 
-RUN groupadd -g "${APP_GID}" "${APP_USER}" \
-    && useradd -u "${APP_UID}" -g "${APP_GID}" -d /app -s /sbin/nologin -M "${APP_USER}" \
+RUN RUN groupadd -g "${PGID}" "${APP_USER}" \
+    && useradd -u "${PUID}" -g "${PGID}" -d /app -s /sbin/nologin -M "${APP_USER}" \
     && mkdir -p /app /data /tmp \
-    && chown -R "${APP_UID}:${APP_GID}" /app /data /tmp \
+    && chown -R "${PUID}:${PGID}" /app /data /tmp \
     && chmod 1777 /tmp
-
-ENV LANG=en_US.UTF-8 \
-    LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8 \
-    JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/urandom -Dfile.encoding=UTF-8"
 
 WORKDIR /app
 
 COPY entrypoint.sh /app/entrypoint.sh
+COPY start.sh /app/start.sh
 COPY ${JAR_FILE} /app/fetcharr.jar
 
-RUN chown "${APP_UID}:${APP_GID}" /app/entrypoint.sh /app/fetcharr.jar \
-  && chmod 0755 /app/entrypoint.sh
+RUN chown "${PUID}:${PGID}" /app/start.sh /app/entrypoint.sh /app/fetcharr.jar \
+  && chmod 0755 /app/start.sh /app/entrypoint.sh
 
-USER ${APP_UID}:${APP_GID}
+USER ${PUID}:${PGID}
 
 VOLUME ["/app/config", "/app/cache", "/app/logs"]
 
