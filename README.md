@@ -4,6 +4,8 @@
 
 ###### Icon is LLM-generated and temporary until one from an artist can be sourced.
 
+<img src=".doc-misc/example-screenshot.png" width="1000"/>
+
 ## What is it?
 
 Since Huntarr died, I still needed an application that scanned and upgraded my media.
