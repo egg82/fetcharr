@@ -1,0 +1,124 @@
+# Almost entirely written by ChatGPT
+
+name: Build and publish container
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE_NAME: fetcharr
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Editor's note: Could probably just be a clean/package at the top level but I didn't want to make multiple pushes to verify
+      - name: Build Lib
+        run: mvn -B -f Lib/pom.xml clean install
+
+      - name: Build API
+        run: mvn -B -f API/pom.xml clean install
+
+      - name: Build App
+        run: mvn -B -f App/pom.xml clean package
+
+      - name: Find main JAR
+        id: jar
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          shopt -s nullglob
+
+          candidates=()
+          for f in ./App/target/*.jar; do
+            name="$(basename "$f")"
+            case "$name" in
+              *-sources.jar|*-javadoc.jar|*-javadoc-resources.jar|*-test-javadoc-resources.jar|original-*.jar)
+                continue
+                ;;
+              *)
+                candidates+=("$f")
+                ;;
+            esac
+          done
+
+          if (( ${#candidates[@]} == 0 )); then
+            echo "No usable JAR found in ./App/target" >&2
+            exit 1
+          fi
+
+          jar_file="$(printf '%s\n' "${candidates[@]}" | awk -F/ '{print length($NF), $0}' | sort -n | head -n1 | cut -d' ' -f2-)"
+          jar_basename="$(basename "$jar_file")"
+
+          if [[ "$jar_basename" =~ ^fetcharr-(.+)\.jar$ ]]; then
+            version="${BASH_REMATCH[1]}"
+          else
+            echo "Could not determine version from JAR name: $jar_basename" >&2
+            exit 1
+          fi
+
+          echo "jar_file=$jar_file" >> "$GITHUB_OUTPUT"
+          echo "jar_basename=$jar_basename" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract container metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            docker.io/egg82/fetcharr
+            ghcr.io/${{ github.repository_owner }}/fetcharr
+          tags: |
+            type=raw,value=latest
+            type=raw,value=${{ steps.jar.outputs.version }}
+
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Containerfile
+          push: true
+          platforms: linux/amd64,linux/arm64,linux/ppc64le
+          build-args: |
+            JAR_FILE=${{ steps.jar.outputs.jar_file }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
