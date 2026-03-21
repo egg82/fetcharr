@@ -1,0 +1,50 @@
+# ChatGPT largely wrote this, with tweaks to messaging and inputs
+
+name: "💡 Feature Request"
+description: Suggest an idea or enhancement for Fetcharr.
+type: "Feature"
+labels:
+  - "enhancement"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion.
+
+        Before submitting:
+        1. Search existing issues to make sure this hasn't already been suggested.
+        2. Explain the problem you're trying to solve, not just the feature itself.
+        3. Include alternatives or workarounds you've already considered.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the pain point or missing capability.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: What would you like Fetcharr to do?
+      description: Describe the feature or behavior you want.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What alternatives have you considered, if any?
+      description: Workarounds, other tools, configuration changes, etc.
+    validations:
+      required: false
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Optional additional context or use case that could be helpful
+      description: Explain how this would help in real usage.
+    validations:
+      required: false

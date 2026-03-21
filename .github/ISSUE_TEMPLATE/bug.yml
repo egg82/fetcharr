@@ -1,0 +1,89 @@
+# ChatGPT largely wrote this, with tweaks to messaging and inputs
+
+name: "🐛 Bug Report"
+description: Report a bug, regression, or unexpected behavior in Fetcharr.
+type: "Bug"
+labels:
+  - "bug"
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug.
+
+        Before submitting:
+        1. Make sure you're using the latest Fetcharr image or release available.
+        2. Search existing issues to make sure this hasn't already been reported.
+        3. Include logs, stack traces, and exact version information where possible.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the bug or incorrect behavior.
+      placeholder: |
+        Fetcharr is making repeated API calls to an endpoint that should not be used...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+      description: Describe the correct behavior.
+      placeholder: |
+        API lookups should not cause errors on *arr apps.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Give enough detail for someone else to reproduce the issue.
+      placeholder: |
+        1. Run Fetcharr against Radarr
+        2. Sync a library with movie files that include languages
+        3. Watch Radarr logs for repeated GET /api/v3/language/{movieFileId} calls
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Paste stack traces, API errors, or screenshots here if applicable.
+      render: text
+    validations:
+      required: false
+
+  - type: textarea
+    id: root-cause
+    attributes:
+      label: Suspected root cause
+      description: Optional, but very helpful if you already tracked it down.
+      placeholder: |
+        MovieFile.parse() uses MovieFile.id instead of the language object's id from movieFile.languages.
+    validations:
+      required: false
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Include app versions and anything else relevant.
+      placeholder: |
+        - Fetcharr version/image (NOT "latest"):
+        - Radarr/Sonarr/Lidarr version:
+        - OS / Docker / Kubernetes:
+    validations:
+      required: true
+
+  - type: textarea
+    id: other
+    attributes:
+      label: Other context
+      description: Add anything else that might help.
+    validations:
+      required: false
