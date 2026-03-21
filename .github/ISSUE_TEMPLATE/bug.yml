@@ -2,7 +2,7 @@
 
 name: "🐛 Bug Report"
 description: Report a bug, regression, or unexpected behavior in Fetcharr.
-title: "[Bug]: "
+title: "[Bug] "
 labels:
   - "bug"
 
