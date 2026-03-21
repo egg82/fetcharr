@@ -51,14 +51,16 @@ and if you want to add it to your stack.
 
 ## How do I use it?
 
-Docker, kubernetes, whatever container system you currently use. Use the `latest` tag for the latest production build or
+Docker, Kubernetes, whatever container system you currently use. Use the `latest` tag for the latest production build or
 the `dev` tag for the latest development build.
 
 Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
 
 Also available on GitHub: https://github.com/users/egg82/packages/container/package/fetcharr
 
-Docker:
+<details open>
+<summary>Docker</summary>
+
 ```bash
 docker run \
   -e VERIFY_CERTS=true \
@@ -76,8 +78,11 @@ docker run \
   -v ./logs:/app/logs \
   egg82/fetcharr:latest
 ```
+</details>
 
-Docker compose:
+<details>
+<summary>Docker Compose</summary>
+
 ```dockerfile
 services:
   fetcharr:
@@ -101,8 +106,11 @@ services:
       - ./logs:/app/logs
     restart: unless-stopped
 ```
+</details>
 
-Kubernetes:
+<details>
+<summary>Kubernetes</summary>
+
 ```yaml
 apiVersion: v1
 kind: Namespace
@@ -168,7 +176,7 @@ spec:
         seccompProfile:
           type: RuntimeDefault
       containers:
-        - image: egg82/fetcharr:<insert-version-tag-here>
+        - image: egg82/fetcharr:<use-real-version>
           name: fetcharr
           securityContext:
             runAsUser: 1000
@@ -223,6 +231,7 @@ spec:
           persistentVolumeClaim:
             claimName: logs
 ```
+</details>
 
 ## Environment variables
 
