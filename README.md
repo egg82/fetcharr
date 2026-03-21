@@ -51,10 +51,16 @@ and if you want to add it to your stack.
 
 ## How do I use it?
 
-Docker, kubernetes, whatever container system you currently use.
+Docker, kubernetes, whatever container system you currently use. Use the `latest` tag for the latest production build or
+the `dev` tag for the latest development build.
 
+Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
+
+Also available on GitHub: https://github.com/users/egg82/packages/container/package/fetcharr
+
+Docker:
 ```bash
-docker run egg82/fetcharr:latest \
+docker run \
   -e VERIFY_CERTS=true \
   -e SSL_PATH=/etc/ssl/certs/ca-bundle.crt \
   -e SEARCH_AMOUNT=5 \
@@ -64,12 +70,168 @@ docker run egg82/fetcharr:latest \
   -e SONARR_0_URL=https://sonarr.home.lab \
   -e SONARR_0_API_KEY=71730b5dfaa4293fe0c050844c10df66 \
   -e SONARR_1_URL=https://anime.home.lab \
-  -e SONARR_1_API_KEY=bdb84dc8e4b787c76be8aae2dfe9bd19
+  -e SONARR_1_API_KEY=bdb84dc8e4b787c76be8aae2dfe9bd19 \
+  -v ./config:/app/config \
+  -v ./cache:/app/cache \
+  -v ./logs:/app/logs \
+  egg82/fetcharr:latest
 ```
 
-Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
+Docker compose:
+```dockerfile
+services:
+  fetcharr:
+    image: egg82/fetcharr:latest
+    container_name: fetcharr
+    hostname: fetcharr
+    environment:
+      - VERIFY_CERTS=true
+      - SSL_PATH=/etc/ssl/certs/ca-bundle.crt
+      - SEARCH_AMOUNT=5
+      - SEARCH_INTERVAL=1hour
+      - RADARR_0_URL=https://radarr.home.lab
+      - RADARR_0_API_KEY=e8ea891d72ff973fa6db0d34369a60a7
+      - SONARR_0_URL=https://sonarr.home.lab
+      - SONARR_0_API_KEY=71730b5dfaa4293fe0c050844c10df66
+      - SONARR_1_URL=https://anime.home.lab
+      - SONARR_1_API_KEY=bdb84dc8e4b787c76be8aae2dfe9bd19
+    volumes:
+      - ./config:/app/config
+      - ./cache:/app/cache
+      - ./logs:/app/logs
+    restart: unless-stopped
+```
 
-Also available on GitHub: https://github.com/users/egg82/packages/container/package/fetcharr
+Kubernetes:
+```yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - fetcharr-ns.yaml
+  - config-pvc.yaml
+  - cache-pvc.yaml
+  - logs-pvc.yaml
+  - fetcharr-deploy.yaml
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: fetcharr
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: config
+  namespace: fetcharr
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: cache
+  namespace: fetcharr
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: logs
+  namespace: fetcharr
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubernetes.io/name: fetcharr
+  name: fetcharr
+  namespace: fetcharr
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: fetcharr
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: fetcharr
+    spec:
+      securityContext:
+        fsGroup: 1000
+        fsGroupChangePolicy: OnRootMismatch
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - image: egg82/fetcharr:<insert-version-tag-here>
+          name: fetcharr
+          securityContext:
+            runAsUser: 1000
+            runAsGroup: 1000
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            requests:
+              cpu: 50m
+              memory: 150Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+          env:
+            - name: VERIFY_CERTS
+              value: "true"
+            - name: SSL_PATH
+              value: /etc/ssl/certs/ca-bundle.crt
+            - name: SEARCH_AMOUNT
+              value: "5"
+            - name: SEARCH_INTERVAL
+              value: 1hour
+            - name: RADARR_0_URL
+              value: https://radarr.home.lab
+            - name: RADARR_0_API_KEY
+              value: e8ea891d72ff973fa6db0d34369a60a7
+            - name: SONARR_0_URL
+              value: https://sonarr.home.lab
+            - name: SONARR_0_API_KEY
+              value: 71730b5dfaa4293fe0c050844c10df66
+            - name: SONARR_1_URL
+              value: https://anime.home.lab
+            - name: SONARR_1_API_KEY
+              value: bdb84dc8e4b787c76be8aae2dfe9bd19
+          volumeMounts:
+            - mountPath: /app/config
+              name: config
+            - mountPath: /app/cache
+              name: cache
+            - mountPath: /app/logs
+              name: logs
+      volumes:
+        - name: config
+          persistentVolumeClaim:
+            claimName: config
+        - name: cache
+          persistentVolumeClaim:
+            claimName: cache
+        - name: logs
+          persistentVolumeClaim:
+            claimName: logs
+```
 
 ## Environment variables
 
