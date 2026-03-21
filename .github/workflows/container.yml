@@ -30,15 +30,8 @@ jobs:
           java-version: '21'
           cache: maven
 
-      # Editor's note: Could probably just be a clean/package at the top level but I didn't want to make multiple pushes to verify
-      - name: Build Lib
-        run: mvn -B -f Lib/pom.xml clean install
-
-      - name: Build API
-        run: mvn -B -f API/pom.xml clean install
-
-      - name: Build App
-        run: mvn -B -f App/pom.xml clean package
+      - name: Build project
+        run: mvn -B clean package
 
       - name: Find main JAR
         id: jar
