@@ -104,15 +104,6 @@ services:
 
 Kubernetes:
 ```yaml
-apiVersion: kustomize.config.k8s.io/v1beta1
-kind: Kustomization
-resources:
-  - fetcharr-ns.yaml
-  - config-pvc.yaml
-  - cache-pvc.yaml
-  - logs-pvc.yaml
-  - fetcharr-deploy.yaml
----
 apiVersion: v1
 kind: Namespace
 metadata:
