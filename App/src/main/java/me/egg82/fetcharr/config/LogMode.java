@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.env;
+package me.egg82.fetcharr.config;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

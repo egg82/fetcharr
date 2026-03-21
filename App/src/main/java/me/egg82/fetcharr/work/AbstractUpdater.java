@@ -34,7 +34,7 @@ public abstract class AbstractUpdater implements Runnable {
         try {
             doWork();
         } catch (Exception ex) {
-            logger.warn("Exception in {} doWork method", getClass().getSimpleName(), ex);
+            logger.error("Exception in {} doWork method", getClass().getSimpleName(), ex);
         }
     }
 

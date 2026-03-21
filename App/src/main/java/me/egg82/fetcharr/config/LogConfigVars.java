@@ -1,6 +1,5 @@
 package me.egg82.fetcharr.config;
 
-import me.egg82.fetcharr.env.LogMode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

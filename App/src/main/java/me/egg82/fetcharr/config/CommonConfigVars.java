@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.env;
+package me.egg82.fetcharr.config;
 
 import me.egg82.arr.parse.BooleanParser;
 import me.egg82.arr.parse.FileParser;
