@@ -62,10 +62,12 @@ docker run egg82/fetcharr:latest \
   -e SONARR_0_URL=https://sonarr.home.lab \
   -e SONARR_0_API_KEY=71730b5dfaa4293fe0c050844c10df66 \
   -e SONARR_1_URL=https://anime.home.lab \
-  -e SONARR_1_API_KEY=bdb84dc8e4b787c76be8aae2dfe9bd19 \
+  -e SONARR_1_API_KEY=bdb84dc8e4b787c76be8aae2dfe9bd19
 ```
 
 Or by immutable tag: https://hub.docker.com/r/egg82/fetcharr/tags
+
+Also available on GitHub: https://github.com/users/egg82/packages/container/package/fetcharr
 
 ## Environment variables
 
