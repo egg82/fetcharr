@@ -29,7 +29,7 @@ RUN microdnf install -y \
     && microdnf clean all \
     && rm -rf /var/cache/dnf
 
-RUN RUN groupadd -g "${PGID}" "${APP_USER}" \
+RUN groupadd -g "${PGID}" "${APP_USER}" \
     && useradd -u "${PUID}" -g "${PGID}" -d /app -s /sbin/nologin -M "${APP_USER}" \
     && mkdir -p /app /data /tmp \
     && chown -R "${PUID}:${PGID}" /app /data /tmp \
