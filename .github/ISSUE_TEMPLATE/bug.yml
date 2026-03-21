@@ -2,7 +2,7 @@
 
 name: "🐛 Bug Report"
 description: Report a bug, regression, or unexpected behavior in Fetcharr.
-type: "Bug"
+title: "[Bug]: "
 labels:
   - "bug"
 
@@ -59,7 +59,7 @@ body:
       required: false
 
   - type: textarea
-    id: root-cause
+    id: root_cause
     attributes:
       label: Suspected root cause
       description: Optional, but very helpful if you already tracked it down.

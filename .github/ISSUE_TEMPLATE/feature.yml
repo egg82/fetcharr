@@ -2,7 +2,7 @@
 
 name: "💡 Feature Request"
 description: Suggest an idea or enhancement for Fetcharr.
-type: "Feature"
+title: "[Feat]: "
 labels:
   - "enhancement"
 
@@ -42,7 +42,7 @@ body:
       required: false
 
   - type: textarea
-    id: use-case
+    id: use_case
     attributes:
       label: Optional additional context or use case that could be helpful
       description: Explain how this would help in real usage.
