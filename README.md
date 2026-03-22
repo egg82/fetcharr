@@ -76,6 +76,7 @@ docker run \
   -v ./config:/app/config \
   -v ./cache:/app/cache \
   -v ./logs:/app/logs \
+  -v ./plugins:/app/plugins \
   egg82/fetcharr:latest
 ```
 </details>
@@ -104,6 +105,7 @@ services:
       - ./config:/app/config
       - ./cache:/app/cache
       - ./logs:/app/logs
+      - ./plugins:/app/plugins
     restart: unless-stopped
 ```
 </details>
@@ -152,6 +154,18 @@ spec:
   resources:
     requests:
       storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plugins
+  namespace: fetcharr
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -220,6 +234,8 @@ spec:
               name: cache
             - mountPath: /app/logs
               name: logs
+            - mountPath: /app/plugins
+              name: plugins
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -230,6 +246,9 @@ spec:
         - name: logs
           persistentVolumeClaim:
             claimName: logs
+        - name: plugins
+          persistentVolumeClaim:
+            claimName: plugins
 ```
 </details>
 
@@ -343,13 +362,31 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | WHISPARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
 | WHISPARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 
-### Plugin/API settings
+## Plugins
 
-Plugin support coming in another release. More explanation on what it is/does when it comes.
+Fetcharr offers plugin support, which allows for customization and extensibility beyond the base application.
+This keeps Fetcharr reasonably clean and minimal while still providing an avenue for niche use-cases.
+
+### Plugin/API environment variables
 
 | variable | type    | values | default  | description |
 | -------- |---------| ------ |----------| ----------- |
+| PLUGIN_DIR | directory | /any/directory/path | /app/plugins | Plugin directory |
 | PROVIDE_RAW_API_OBJ | boolean | true, false | false | Provide raw API objects to plugins. Uses more memory |
+
+### Plugin usage
+
+Plugins are `.jar` files that are picked up in the `plugins` directory automatically (controlled via the
+`PLUGIN_DIR` environment variable). Plugins are loaded in the natural list order for the directory. This
+means that a plugin named `10-my-plugin.jar` will be loaded before `20-alpha-plugin.jar` and
+after `00-zzz-plugin.jar`.
+
+Simply dropping the jar files in that directory and starting (or re-starting) Fetcharr will enable
+the plugins during Fetcharr's next startup.
+
+### Plugin development
+
+TBD, WIP
 
 ## Wall of oddities
 

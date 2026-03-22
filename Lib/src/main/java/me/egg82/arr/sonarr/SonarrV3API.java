@@ -55,4 +55,12 @@ public class SonarrV3API extends AbstractArrAPI {
             }
         }
     }
+
+    @Override
+    public String toString() {
+        return "SonarrV3API{" +
+                "baseUrl='" + baseUrl + '\'' +
+                ", apiKey='" + apiKey + '\'' +
+                '}';
+    }
 }

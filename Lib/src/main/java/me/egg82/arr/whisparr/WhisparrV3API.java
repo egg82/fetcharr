@@ -53,4 +53,12 @@ public class WhisparrV3API extends AbstractArrAPI {
             logger.warn("WHISPARR_{} returned unexpected response for URL {}: {}", id(), baseUrl + "/api/" + version() + "/command", response.getObject().toString());
         }
     }
+
+    @Override
+    public String toString() {
+        return "WhisparrV3API{" +
+                "baseUrl='" + baseUrl + '\'' +
+                ", apiKey='" + apiKey + '\'' +
+                '}';
+    }
 }

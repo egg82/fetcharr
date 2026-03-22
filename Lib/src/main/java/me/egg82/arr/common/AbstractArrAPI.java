@@ -27,6 +27,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -42,22 +43,20 @@ public abstract class AbstractArrAPI implements ArrAPI {
 
     protected final String baseUrl;
     protected final String apiKey;
-    private final int id;
 
-    public AbstractArrAPI(@NotNull String baseUrl, @NotNull String apiKey, int id) {
+    public AbstractArrAPI(@NotNull String baseUrl, @NotNull String apiKey) {
         this.baseUrl = baseUrl;
         this.apiKey = apiKey;
-        this.id = id;
-    }
-
-    @Override
-    public int id() {
-        return id;
     }
 
     @Override
     public @NotNull String baseUrl() {
         return this.baseUrl;
+    }
+
+    @Override
+    public @NotNull String apiKey() {
+        return this.apiKey;
     }
 
     @Override
@@ -380,5 +379,26 @@ public abstract class AbstractArrAPI implements ArrAPI {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof AbstractArrAPI that)) return false;
+        return Objects.equals(baseUrl, that.baseUrl);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(baseUrl);
+    }
+
+    @Override
+    public String toString() {
+        return "AbstractArrAPI{" +
+                ", cache=" + cache +
+                ", idCache=" + idCache +
+                ", baseUrl='" + baseUrl + '\'' +
+                ", apiKey='" + apiKey + '\'' +
+                '}';
     }
 }

@@ -53,4 +53,12 @@ public class RadarrV3API extends AbstractArrAPI {
             logger.warn("RADARR_{} returned unexpected response for URL {}: {}", id(), baseUrl + "/api/" + version() + "/command", response.getObject().toString());
         }
     }
+
+    @Override
+    public String toString() {
+        return "RadarrV3API{" +
+                "baseUrl='" + baseUrl + '\'' +
+                ", apiKey='" + apiKey + '\'' +
+                '}';
+    }
 }

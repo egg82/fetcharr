@@ -17,7 +17,6 @@ import me.egg82.arr.unit.TimeValue;
 import me.egg82.fetcharr.config.CommonConfigVars;
 import me.egg82.fetcharr.config.LidarrConfigVars;
 import me.egg82.fetcharr.util.WeightedRandom;
-import me.egg82.fetcharr.work.AbstractUpdater;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;

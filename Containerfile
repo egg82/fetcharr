@@ -9,7 +9,7 @@ LABEL org.opencontainers.image.title="Fetcharr" \
       org.opencontainers.image.authors="egg82" \
       org.opencontainers.image.licenses="MIT"
 
-ARG JAR_FILE=App/target/fetcharr-2.0.2.jar
+ARG JAR_FILE=App/target/fetcharr-2.1.0.jar
 
 ENV APP_USER=app \
     PUID=1000 \
@@ -31,8 +31,8 @@ RUN microdnf install -y \
 
 RUN groupadd -g "${PGID}" "${APP_USER}" \
     && useradd -u "${PUID}" -g "${PGID}" -d /app -s /sbin/nologin -M "${APP_USER}" \
-    && mkdir -p /app /data /tmp \
-    && chown -R "${PUID}:${PGID}" /app /data /tmp \
+    && mkdir -p /app /tmp \
+    && chown -R "${PUID}:${PGID}" /app /tmp \
     && chmod 1777 /tmp
 
 WORKDIR /app
@@ -46,6 +46,6 @@ RUN chown "${PUID}:${PGID}" /app/start.sh /app/entrypoint.sh /app/fetcharr.jar \
 
 USER ${PUID}:${PGID}
 
-VOLUME ["/app/config", "/app/cache", "/app/logs"]
+VOLUME ["/app/config", "/app/cache", "/app/logs", "/app/plugins"]
 
 ENTRYPOINT ["/app/entrypoint.sh"]

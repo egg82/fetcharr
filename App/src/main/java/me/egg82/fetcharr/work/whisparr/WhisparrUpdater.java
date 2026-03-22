@@ -14,7 +14,6 @@ import me.egg82.arr.whisparr.v3.schema.TagResource;
 import me.egg82.fetcharr.config.CommonConfigVars;
 import me.egg82.fetcharr.config.WhisparrConfigVars;
 import me.egg82.fetcharr.util.WeightedRandom;
-import me.egg82.fetcharr.work.AbstractUpdater;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;

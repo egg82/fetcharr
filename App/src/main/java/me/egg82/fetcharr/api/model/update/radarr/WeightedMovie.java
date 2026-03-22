@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.work.radarr;
+package me.egg82.fetcharr.api.model.update.radarr;
 
 import me.egg82.arr.radarr.v3.schema.MovieResource;
 import me.egg82.fetcharr.util.Weighted;

@@ -55,4 +55,12 @@ public class LidarrV1API extends AbstractArrAPI {
             }
         }
     }
+
+    @Override
+    public String toString() {
+        return "LidarrV1API{" +
+                "baseUrl='" + baseUrl + '\'' +
+                ", apiKey='" + apiKey + '\'' +
+                '}';
+    }
 }

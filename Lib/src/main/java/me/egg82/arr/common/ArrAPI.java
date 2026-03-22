@@ -9,8 +9,8 @@ import java.util.Map;
 public interface ArrAPI {
     boolean valid();
 
-    int id();
     @NotNull String baseUrl();
+    @NotNull String apiKey();
     @NotNull ArrType type();
     @NotNull String version();
 

@@ -166,5 +166,16 @@
             <artifactId>event-api</artifactId>
             <version>${event.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.spongepowered</groupId>
+            <artifactId>configurate-core</artifactId>
+            <version>${configurate.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.spongepowered</groupId>
+            <artifactId>configurate-yaml</artifactId>
+            <version>${configurate.version}</version>
+        </dependency>
     </dependencies>
 </project>

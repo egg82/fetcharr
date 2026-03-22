@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.work.sonarr;
+package me.egg82.fetcharr.api.model.update.sonarr;
 
 import me.egg82.arr.sonarr.v3.schema.EpisodeResource;
 import me.egg82.arr.sonarr.v3.schema.SeriesResource;
