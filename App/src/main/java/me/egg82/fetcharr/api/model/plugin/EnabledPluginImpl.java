@@ -26,7 +26,7 @@ public class EnabledPluginImpl implements EnabledPlugin {
     private final Plugin plugin;
     private final PluginDescriptor descriptor;
     private final PluginContext context;
-    private final URLClassLoader pluginClassLoader;
+    private final PluginClassLoader classLoader;
 
     private static final String @NotNull [] YAML_PATHS = new String[] {
             "plugin.yaml",
@@ -35,29 +35,29 @@ public class EnabledPluginImpl implements EnabledPlugin {
             "META-INF/plugin.yml",
     };
 
-    public EnabledPluginImpl(@NotNull File jarFile) {
+    public EnabledPluginImpl(@NotNull File jarFile, @NotNull PluginClassLoaderPolicy loaderPolicy, @NotNull PluginClassLoaderResolver resolver) {
         if (!jarFile.exists() || !jarFile.isFile()) {
             throw new IllegalArgumentException("Plugin file " + jarFile.getAbsolutePath() + " does not exist or is not a file");
         }
 
-        URLClassLoader pluginClassLoader = null;
+        PluginClassLoader classLoader = null;
         try {
             this.descriptor = readDescriptor(jarFile);
-            pluginClassLoader = new URLClassLoader(new URL[] { jarFile.toURI().toURL() }, Plugin.class.getClassLoader());
+            classLoader = new PluginClassLoader(this, new URL[] { jarFile.toURI().toURL() }, Plugin.class.getClassLoader(), loaderPolicy, resolver);
             this.context = createContext(jarFile, descriptor);
-            this.plugin = createPlugin(pluginClassLoader, descriptor);
-            this.pluginClassLoader = pluginClassLoader;
+            this.plugin = createPlugin(classLoader, descriptor);
+            this.classLoader = classLoader;
         } catch (PluginLoadException ex) {
-            if (pluginClassLoader != null) {
+            if (classLoader != null) {
                 try {
-                    pluginClassLoader.close();
+                    classLoader.close();
                 } catch (IOException ignored) { }
             }
             throw ex;
         } catch (Exception ex) {
-            if (pluginClassLoader != null) {
+            if (classLoader != null) {
                 try {
-                    pluginClassLoader.close();
+                    classLoader.close();
                 } catch (IOException ignored) { }
             }
             throw new PluginLoadException(jarFile, "Plugin at " + jarFile.getAbsolutePath() + " could not be loaded", ex);
@@ -79,9 +79,13 @@ public class EnabledPluginImpl implements EnabledPlugin {
         return this.context;
     }
 
+    public @NotNull PluginClassLoader classLoader() {
+        return classLoader;
+    }
+
     public void close() {
         try {
-            pluginClassLoader.close();
+            classLoader.close();
         } catch (IOException ignored) { }
     }
 
@@ -107,7 +111,7 @@ public class EnabledPluginImpl implements EnabledPlugin {
                 if (!id.matches("[a-z0-9._-]+")) {
                     throw new IllegalStateException("id " + id + " is invalid in plugin.yaml for plugin at " + jarFile.getAbsolutePath());
                 }
-                return new PluginDescriptorImpl(id, requiredString(jarFile, node, "name"), node.node("description").getString(), optionalStringSet(node, "authors"), requiredString(jarFile, node, "version"), requiredString(jarFile, node, "class"));
+                return new PluginDescriptorImpl(id, requiredString(jarFile, node, "name"), node.node("description").getString(), optionalStringSet(node, "authors"), requiredString(jarFile, node, "version"), requiredString(jarFile, node, "class"), optionalStringSet(node, "exports"));
             }
         }
     }
@@ -162,7 +166,7 @@ public class EnabledPluginImpl implements EnabledPlugin {
                 "plugin=" + plugin +
                 ", descriptor=" + descriptor +
                 ", context=" + context +
-                ", pluginClassLoader=" + pluginClassLoader +
+                ", classLoader=" + classLoader +
                 '}';
     }
 }

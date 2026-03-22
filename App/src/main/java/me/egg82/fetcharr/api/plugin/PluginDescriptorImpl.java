@@ -15,14 +15,16 @@ public class PluginDescriptorImpl implements PluginDescriptor {
     private final Set<@NotNull String> authors;
     private final String version;
     private final String className;
+    private final Set<@NotNull String> exports;
 
-    public PluginDescriptorImpl(@NotNull String id, @NotNull String name, @Nullable String description, @Nullable Set<@NotNull String> authors, @NotNull String version, @NotNull String className) {
+    public PluginDescriptorImpl(@NotNull String id, @NotNull String name, @Nullable String description, @Nullable Set<@NotNull String> authors, @NotNull String version, @NotNull String className, @Nullable Set<@NotNull String> exports) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.authors = authors;
         this.version = version;
         this.className = className;
+        this.exports = exports;
     }
 
     @Override
@@ -56,6 +58,11 @@ public class PluginDescriptorImpl implements PluginDescriptor {
     }
 
     @Override
+    public @Nullable PSet<@NotNull String> exports() {
+        return this.exports != null ? TreePSet.from(exports) : null;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (!(o instanceof PluginDescriptorImpl that)) return false;
         return Objects.equals(id, that.id);
@@ -75,6 +82,7 @@ public class PluginDescriptorImpl implements PluginDescriptor {
                 ", authors=" + authors +
                 ", version='" + version + '\'' +
                 ", className='" + className + '\'' +
+                ", exports=" + exports +
                 '}';
     }
 }

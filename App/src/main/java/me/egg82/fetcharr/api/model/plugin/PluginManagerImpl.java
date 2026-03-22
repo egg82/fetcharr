@@ -6,6 +6,7 @@ import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.config.CommonConfigVars;
 import me.egg82.fetcharr.config.PluginConfigVars;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.pcollections.PVector;
 import org.pcollections.TreePVector;
 import org.slf4j.Logger;
@@ -24,6 +25,17 @@ public class PluginManagerImpl implements PluginManager {
     private final FetcharrAPI api;
 
     private final List<@NotNull EnabledPluginImpl> plugins = new ArrayList<>();
+
+    private final PluginClassLoaderPolicy loaderPolicy = new PluginClassLoaderPolicy(List.of(
+            "java.",
+            "javax.",
+            "jdk.",
+            "sun.",
+            "org.slf4j.",
+            "org.jetbrains.annotations.",
+            "org.spongepowered.configurate.",
+            "me.egg82.fetcharr.api."
+    ));
 
     public PluginManagerImpl(@NotNull FetcharrAPI api) {
         this.api = api;
@@ -46,7 +58,7 @@ public class PluginManagerImpl implements PluginManager {
         for (File f : files) {
             EnabledPluginImpl plugin;
             try {
-                plugin = new EnabledPluginImpl(f);
+                plugin = new EnabledPluginImpl(f, loaderPolicy, this::resolveClass);
             } catch (Exception ex) {
                 logger.warn("Could not load plugin at {}", f.getAbsolutePath(), ex);
                 continue;
@@ -122,6 +134,26 @@ public class PluginManagerImpl implements PluginManager {
             }
             p.close();
         }
+    }
+
+    private @Nullable EnabledPluginImpl resolveClass(@NotNull EnabledPluginImpl requester, @NotNull String className) {
+        for (EnabledPluginImpl p : plugins) {
+            if (p == requester) { // == works in this instance
+                continue;
+            }
+            Set<@NotNull String> exports = p.descriptor().exports();
+            if (exports == null || exports.isEmpty()) {
+                continue;
+            }
+            for (String e : exports) {
+                // Is exact match? If not, is in package (or sub-package) of exported?
+                if (className.equals(e) || className.startsWith(e + ".")) {
+                    logger.debug("Using {} as provider for {}", p.descriptor().id(), className);
+                    return p;
+                }
+            }
+        }
+        return null;
     }
 
     private void downloadPlugins(@NotNull File manifest, @NotNull File pluginDir) {

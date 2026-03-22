@@ -50,4 +50,11 @@ public interface PluginDescriptor {
      * @return the plugin class name
      */
     @NotNull String className();
+
+    /**
+     * Gets the plugin exports
+     *
+     * @return the plugin exports
+     */
+    @Nullable PSet<@NotNull String> exports();
 }
