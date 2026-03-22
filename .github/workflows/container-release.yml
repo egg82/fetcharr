@@ -43,20 +43,20 @@ jobs:
             <servers>
               <server>
                 <id>egg82-repo-releases</id>
-                <username>${env.REPO_82_USERNAME}</username>
-                <password>${env.REPO_82_TOKEN}</password>
+                <username>${env.REPOSILITE_USERNAME}</username>
+                <password>${env.REPOSILITE_TOKEN}</password>
               </server>
               <server>
                 <id>egg82-repo-snapshots</id>
-                <username>${env.REPO_82_USERNAME}</username>
-                <password>${env.REPO_82_TOKEN}</password>
+                <username>${env.REPOSILITE_USERNAME}</username>
+                <password>${env.REPOSILITE_TOKEN}</password>
               </server>
             </servers>
           </settings>
           EOF
         env:
-          REPO_82_USERNAME: ${{ vars.REPOSILITE_USERNAME }}
-          REPO_82_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
+          REPOSILITE_USERNAME: ${{ vars.REPOSILITE_USERNAME }}
+          REPOSILITE_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
 
       - name: Build everything and deploy allowed Maven artifacts
         run: >
