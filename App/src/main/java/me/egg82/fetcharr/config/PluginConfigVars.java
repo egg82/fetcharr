@@ -1,10 +1,7 @@
 package me.egg82.fetcharr.config;
 
-import me.egg82.arr.config.CacheConfigVars;
-import me.egg82.arr.parse.BooleanParser;
 import me.egg82.arr.parse.FileParser;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
@@ -31,7 +28,7 @@ public enum PluginConfigVars {
         return System.getenv(var.name()) != null;
     }
 
-    public static @NotNull File getFile(@NotNull CacheConfigVars var) {
+    public static @NotNull File getFile(@NotNull PluginConfigVars var) {
         return FileParser.parse(var.def(), System.getenv(var.name()), true);
     }
 }

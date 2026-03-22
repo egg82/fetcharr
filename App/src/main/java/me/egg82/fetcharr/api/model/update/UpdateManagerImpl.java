@@ -167,4 +167,14 @@ public class UpdateManagerImpl implements UpdateManager {
         }
         return true;
     }
+
+    @Override
+    public String toString() {
+        return "UpdateManagerImpl{" +
+                "api=" + api +
+                ", updaters=" + updaters +
+                ", lock=" + lock +
+                ", updateTimes=" + updateTimes +
+                '}';
+    }
 }

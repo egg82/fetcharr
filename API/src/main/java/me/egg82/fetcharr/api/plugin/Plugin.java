@@ -11,15 +11,15 @@ public interface Plugin {
      *
      * @param context Any context the plugin may need for initialization.
      */
-    void init(@NotNull PluginContext context);
+    void init(@NotNull PluginContext context) throws Exception;
 
     /**
-     * Plugin start. Called on startup, after initialization.
+     * Plugin start. Called on startup, after {@link #init(PluginContext)}.
      */
-    void start();
+    void start() throws Exception;
 
     /**
      * Plugin stop. Called on shutdown.
      */
-    void stop();
+    void stop() throws Exception;
 }

@@ -3,6 +3,7 @@ package me.egg82.fetcharr.api;
 import com.sasorio.event.bus.EventBus;
 import com.sasorio.event.registry.EventRegistry;
 import me.egg82.fetcharr.api.event.FetcharrEvent;
+import me.egg82.fetcharr.api.model.plugin.PluginManager;
 import me.egg82.fetcharr.api.model.update.UpdateManager;
 import me.egg82.fetcharr.api.model.update.Updater;
 import org.jetbrains.annotations.NotNull;
@@ -47,14 +48,25 @@ public interface FetcharrAPI {
      * <p>This manager can be used to register
      * and hook into {@link Updater} instances.</p>
      *
-     * @return the current arr manager
+     * @return the current update manager
      */
-    @NotNull UpdateManager arrManager();
+    @NotNull UpdateManager updateManager();
 
     /**
      * Sets the {@link UpdateManager} instance.
      *
      * @param manager the update manager
      */
-    void arrManager(@NotNull UpdateManager manager);
+    void updateManager(@NotNull UpdateManager manager);
+
+    /**
+     * Gets the {@link PluginManager}, responsible for
+     * managing plugins.
+     *
+     * <p>This manager can be used to view
+     * all currently-enabled plugins.</p>
+     *
+     * @return the current plugin manager
+     */
+    @NotNull PluginManager pluginManager();
 }

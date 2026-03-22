@@ -5,6 +5,8 @@ import com.sasorio.event.bus.SimpleEventBus;
 import com.sasorio.event.registry.EventRegistry;
 import com.sasorio.event.registry.SimpleEventRegistry;
 import me.egg82.fetcharr.api.event.FetcharrEvent;
+import me.egg82.fetcharr.api.model.plugin.PluginManager;
+import me.egg82.fetcharr.api.model.plugin.PluginManagerImpl;
 import me.egg82.fetcharr.api.model.update.UpdateManager;
 import me.egg82.fetcharr.api.model.update.UpdateManagerImpl;
 import org.jetbrains.annotations.NotNull;
@@ -16,6 +18,7 @@ public class FetcharrAPIImpl implements FetcharrAPI {
     private final EventBus<@NotNull FetcharrEvent> bus;
 
     private UpdateManager updateManager = new UpdateManagerImpl(this, Executors.newScheduledThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors() / 2)));
+    private final PluginManager pluginManager = new PluginManagerImpl(this);
 
     public FetcharrAPIImpl() {
         this.bus = new SimpleEventBus<>(registry, new EventExceptionHandlerImpl());
@@ -32,12 +35,27 @@ public class FetcharrAPIImpl implements FetcharrAPI {
     }
 
     @Override
-    public @NotNull UpdateManager arrManager() {
+    public @NotNull UpdateManager updateManager() {
         return this.updateManager;
     }
 
     @Override
-    public void arrManager(@NotNull UpdateManager manager) {
+    public void updateManager(@NotNull UpdateManager manager) {
         this.updateManager = manager;
+    }
+
+    @Override
+    public @NotNull PluginManager pluginManager() {
+        return this.pluginManager;
+    }
+
+    @Override
+    public String toString() {
+        return "FetcharrAPIImpl{" +
+                "registry=" + registry +
+                ", bus=" + bus +
+                ", updateManager=" + updateManager +
+                ", pluginManager=" + pluginManager +
+                '}';
     }
 }

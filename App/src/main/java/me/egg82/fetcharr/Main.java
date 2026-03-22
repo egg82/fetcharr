@@ -110,7 +110,8 @@ public class Main {
             LOGGER.info("Shutting down..");
 
             FetcharrAPI api = FetcharrAPIProvider.instance();
-            api.arrManager().shutdown(10_000L);
+            api.updateManager().shutdown(10_000L);
+            api.pluginManager().shutdown();
             APIRegistrationUtil.deregister();
 
             Unirest.shutDown();
@@ -204,7 +205,7 @@ public class Main {
         }
 
         FetcharrAPI api = FetcharrAPIProvider.instance();
-        if (api.arrManager().register(new RadarrUpdater(api, arrApi, num))) {
+        if (api.updateManager().register(new RadarrUpdater(api, arrApi, num))) {
             LOGGER.info("Added RADARR_{} instance at {}", num, url);
         } else {
             LOGGER.info("Did not add RADARR_{} instance at {} - registration cancelled", num, url);
@@ -237,7 +238,7 @@ public class Main {
         }
 
         FetcharrAPI api = FetcharrAPIProvider.instance();
-        if (api.arrManager().register(new SonarrUpdater(api, arrApi, num))) {
+        if (api.updateManager().register(new SonarrUpdater(api, arrApi, num))) {
             LOGGER.info("Added SONARR_{} instance at {}", num, url);
         } else {
             LOGGER.info("Did not add SONARR_{} instance at {} - registration cancelled", num, url);
@@ -270,7 +271,7 @@ public class Main {
         }
 
         FetcharrAPI api = FetcharrAPIProvider.instance();
-        if (api.arrManager().register(new LidarrUpdater(api, arrApi, num))) {
+        if (api.updateManager().register(new LidarrUpdater(api, arrApi, num))) {
             LOGGER.info("Added LIDARR_{} instance at {}", num, url);
         } else {
             LOGGER.info("Did not add LIDARR_{} instance at {} - registration cancelled", num, url);
@@ -303,7 +304,7 @@ public class Main {
         }
 
         FetcharrAPI api = FetcharrAPIProvider.instance();
-        if (api.arrManager().register(new WhisparrUpdater(api, arrApi, num))) {
+        if (api.updateManager().register(new WhisparrUpdater(api, arrApi, num))) {
             LOGGER.info("Added WHISPARR_{} instance at {}", num, url);
         } else {
             LOGGER.info("Did not add WHISPARR_{} instance at {} - registration cancelled", num, url);

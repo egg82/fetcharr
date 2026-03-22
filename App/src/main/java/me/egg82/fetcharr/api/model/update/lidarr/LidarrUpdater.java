@@ -70,7 +70,7 @@ public class LidarrUpdater extends AbstractUpdater {
         boolean useCutoff = config.useCutoff();
         PSet<@NotNull String> skipTags = config.skipTags();
 
-        boolean dryRun = api.arrManager().dryRun();
+        boolean dryRun = api.updateManager().dryRun();
 
         IntList ids = new IntArrayList();
         int attempts = 100;
