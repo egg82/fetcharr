@@ -67,7 +67,7 @@ public abstract class AbstractArrAPI implements ArrAPI {
         Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
         if ((memoryCache == Tristate.AUTO && fileCache == Tristate.AUTO && !isCacheWritable()) || (memoryCache == Tristate.AUTO && fileCache == Tristate.FALSE) || memoryCache == Tristate.TRUE) {
             Pair<Class<? extends FetchableAPIObject>, String> key = Pair.of(type, encode(params));
-            T r = (T) cache.computeIfAbsent(key, k -> fetchInternal(type, params));
+            T r = type.cast(cache.computeIfAbsent(key, k -> fetchInternal(type, params)));
             if (r != null) {
                 Duration expires = r.expiresIn();
                 cache.setExpiration(key, expires.toMillis(), TimeUnit.MILLISECONDS);
@@ -119,7 +119,7 @@ public abstract class AbstractArrAPI implements ArrAPI {
         Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
         if ((memoryCache == Tristate.AUTO && fileCache == Tristate.AUTO && !isCacheWritable()) || (memoryCache == Tristate.AUTO && fileCache == Tristate.FALSE) || memoryCache == Tristate.TRUE) {
             Pair<ObjectIntPair<Class<? extends FetchableAPIObject>>, String> key = Pair.of(ObjectIntPair.of(type, id), encode(params));
-            T r = (T) idCache.computeIfAbsent(key, k -> fetchInternal(type, id, params));
+            T r = type.cast(idCache.computeIfAbsent(key, k -> fetchInternal(type, id, params)));
             if (r != null) {
                 Duration expires = r.expiresIn();
                 idCache.setExpiration(key, expires.toMillis(), TimeUnit.MILLISECONDS);
@@ -188,8 +188,12 @@ public abstract class AbstractArrAPI implements ArrAPI {
             return null;
         });
 
+        if (c == null) {
+            return null;
+        }
+
         try {
-            return (T) c.newInstance(this, node, lastFetched);
+            return type.cast(c.newInstance(this, node, lastFetched));
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
             logger.error("Could not create new instance of class {}", type.getName(), ex);
         }
@@ -197,7 +201,7 @@ public abstract class AbstractArrAPI implements ArrAPI {
     }
 
     private <T extends FetchableAPIObject> @Nullable T buildUnknown(@NotNull Class<T> type) {
-        return (T) unknowns.computeIfAbsent(type, k -> {
+        return type.cast(unknowns.computeIfAbsent(type, k -> {
             try {
                 return type.getField("UNKNOWN").get(null);
             } catch (NoSuchFieldException ex) {
@@ -206,7 +210,7 @@ public abstract class AbstractArrAPI implements ArrAPI {
                 logger.error("Could not get UNKNOWN for class {}", type.getName(), ex);
             }
             return null;
-        });
+        }));
     }
 
     private <T extends FetchableAPIObject> @Nullable T getCache(@NotNull Class<T> type, @Nullable Map<String, @NotNull Object> params) {

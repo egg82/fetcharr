@@ -4,6 +4,7 @@ import com.sasorio.event.bus.EventBus;
 import com.sasorio.event.registry.EventRegistry;
 import me.egg82.fetcharr.api.event.FetcharrEvent;
 import me.egg82.fetcharr.api.model.plugin.PluginManager;
+import me.egg82.fetcharr.api.model.registry.Registry;
 import me.egg82.fetcharr.api.model.update.UpdateManager;
 import me.egg82.fetcharr.api.model.update.Updater;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +32,7 @@ public interface FetcharrAPI {
      *
      * @return the Fetcharr event registry
      */
-    @NotNull EventRegistry<@NotNull FetcharrEvent> registry();
+    @NotNull EventRegistry<@NotNull FetcharrEvent> events();
 
     /**
      * Gets the main Fetcharr {@link EventBus},
@@ -69,4 +70,16 @@ public interface FetcharrAPI {
      * @return the current plugin manager
      */
     @NotNull PluginManager pluginManager();
+
+    /**
+     * Gets the {@link Registry}, responsible
+     * for managing the plugin API registry.
+     *
+     * <p>This is useful for plugins registering
+     * their own API objects to be used by other
+     * plugins.</p>
+     *
+     * @return the registry
+     */
+    @NotNull Registry registry();
 }
