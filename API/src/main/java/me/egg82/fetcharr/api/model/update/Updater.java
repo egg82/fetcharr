@@ -11,12 +11,20 @@ import java.time.Instant;
  */
 public interface Updater {
     /**
-     * Run the updater, providing the {@link Instant}
-     * for the previous run.
+     * True if this updater should run, when compared to
+     * the {@link Instant} for the previous run.
      *
      * @param previousRun the instant of the previous run
+     * @return true if the updater successfully ran, false if not
      */
-    void run(@NotNull Instant previousRun);
+    boolean shouldRun(@NotNull Instant previousRun);
+
+    /**
+     * Run the updater.
+     *
+     * @return true if the updater successfully ran, false if not
+     */
+    boolean run();
 
     /**
      * Gets the {@link ArrAPI} associated with

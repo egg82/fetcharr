@@ -11,7 +11,6 @@ import me.egg82.arr.sonarr.v3.schema.EpisodeFileResource;
 import me.egg82.arr.sonarr.v3.schema.EpisodeResource;
 import me.egg82.arr.sonarr.v3.schema.SeriesResource;
 import me.egg82.arr.sonarr.v3.schema.TagResource;
-import me.egg82.arr.unit.TimeValue;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.APISearchEvent;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
@@ -22,8 +21,6 @@ import me.egg82.fetcharr.util.WeightedRandom;
 import org.jetbrains.annotations.NotNull;
 import org.pcollections.PSet;
 
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -37,18 +34,11 @@ public class SonarrUpdater extends AbstractUpdater {
     }
 
     @Override
-    protected void doWork(@NotNull Instant previousRun) {
-        TimeValue interval = config.searchInterval();
-        long intervalSeconds = interval.unit().toSeconds(interval.time());
-        Instant now = Instant.now();
-        if (Duration.between(previousRun, now).getSeconds() < intervalSeconds) {
-            return;
-        }
-
+    protected boolean doWork() {
         int searchAmount = config.searchAmount();
         if (searchAmount <= 0) {
             logger.info("Skipping updating items (search amount {}) for {}_{}: {}", searchAmount, config.type().name(), config.id(), arrApi.baseUrl());
-            return;
+            return true;
         }
 
         logger.info("Updating up to {} items for for {}_{}: {}", searchAmount, config.type().name(), config.id(), arrApi.baseUrl());
@@ -56,7 +46,7 @@ public class SonarrUpdater extends AbstractUpdater {
         Series allSeries = arrApi.fetch(Series.class);
         if (allSeries == null) {
             logger.error("{}_{} returned bad result for {}", config.type().name(), config.id(), Series.UNKNOWN.apiPath());
-            return;
+            return false; // Bad config, no need to retry every run
         }
         logger.debug("Fetched {} series", allSeries.resources().size());
         api.bus().post(new SonarrFetchSeriesEvent(allSeries, this, api));
@@ -185,6 +175,7 @@ public class SonarrUpdater extends AbstractUpdater {
         }
 
         random.clear();
+        return true;
     }
 
     private boolean hasAnyTag(@NotNull Collection<@NotNull String> needles, @NotNull Collection<@NotNull Tag> haystack) {

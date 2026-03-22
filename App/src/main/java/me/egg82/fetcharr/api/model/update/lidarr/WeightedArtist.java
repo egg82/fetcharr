@@ -1,8 +1,7 @@
-package me.egg82.fetcharr.work.lidarr;
+package me.egg82.fetcharr.api.model.update.lidarr;
 
 import me.egg82.arr.lidarr.v1.schema.AlbumResource;
 import me.egg82.arr.lidarr.v1.schema.ArtistResource;
-import me.egg82.arr.lidarr.v1.schema.TrackResource;
 import me.egg82.fetcharr.util.Weighted;
 import org.jetbrains.annotations.NotNull;
 

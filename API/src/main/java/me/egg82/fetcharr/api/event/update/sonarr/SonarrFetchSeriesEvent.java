@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 /**
- * Fired after a {@link Series} is fetched from the API.
+ * Fired after a {@link Series} is fetched from the API for updating.
  */
 public class SonarrFetchSeriesEvent extends AbstractUpdaterEvent {
     private final Series series;

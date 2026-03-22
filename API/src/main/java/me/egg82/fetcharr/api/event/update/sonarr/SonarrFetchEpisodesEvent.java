@@ -10,7 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Objects;
 
 /**
- * Fired after a {@link Episode} is fetched from the API.
+ * Fired after a {@link Episode} is fetched from the API for updating.
  */
 public class SonarrFetchEpisodesEvent extends AbstractUpdaterEvent {
     private final Episode episodes;

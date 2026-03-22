@@ -16,8 +16,10 @@ import me.egg82.fetcharr.api.APIRegistrationUtil;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.FetcharrAPIImpl;
 import me.egg82.fetcharr.api.FetcharrAPIProvider;
+import me.egg82.fetcharr.api.model.update.lidarr.LidarrUpdater;
 import me.egg82.fetcharr.api.model.update.radarr.RadarrUpdater;
 import me.egg82.fetcharr.api.model.update.sonarr.SonarrUpdater;
+import me.egg82.fetcharr.api.model.update.whisparr.WhisparrUpdater;
 import me.egg82.fetcharr.config.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +108,11 @@ public class Main {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             LOGGER.info("Shutting down..");
-            FetcharrAPIProvider.instance().arrManager().shutdown(10_000L);
+
+            FetcharrAPI api = FetcharrAPIProvider.instance();
+            api.arrManager().shutdown(10_000L);
+            APIRegistrationUtil.deregister();
+
             Unirest.shutDown();
         }));
     }

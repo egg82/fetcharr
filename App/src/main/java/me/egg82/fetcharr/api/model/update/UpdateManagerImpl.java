@@ -1,16 +1,21 @@
 package me.egg82.fetcharr.api.model.update;
 
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
 import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONObject;
+import me.egg82.arr.common.ArrType;
 import me.egg82.arr.config.CacheConfigVars;
+import me.egg82.arr.config.Tristate;
 import me.egg82.arr.file.JSONFile;
 import me.egg82.arr.parse.BooleanParser;
+import me.egg82.arr.unit.TimeValue;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.UpdaterPostDeregistrationEvent;
 import me.egg82.fetcharr.api.event.update.UpdaterPostRegistrationEvent;
 import me.egg82.fetcharr.api.event.update.UpdaterPreDeregistrationEvent;
 import me.egg82.fetcharr.api.event.update.UpdaterPreRegistrationEvent;
 import me.egg82.fetcharr.config.CommonConfigVars;
+import me.egg82.fetcharr.file.UpdaterMeta;
 import org.jetbrains.annotations.NotNull;
 import org.pcollections.PVector;
 import org.pcollections.TreePVector;
@@ -19,9 +24,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -35,6 +44,8 @@ public class UpdateManagerImpl implements UpdateManager {
 
     private final List<@NotNull Updater> updaters = new ArrayList<>();
     private final ReadWriteLock lock = new ReentrantReadWriteLock();
+
+    private final ConcurrentMap<ObjectIntPair<@NotNull ArrType>, @NotNull Instant> updateTimes = new ConcurrentHashMap<>();
 
     public UpdateManagerImpl(@NotNull FetcharrAPI api, @NotNull ScheduledExecutorService pool) {
         this.api = api;
@@ -117,7 +128,25 @@ public class UpdateManagerImpl implements UpdateManager {
     private void run() {
         pool.schedule(this::run, 5, TimeUnit.SECONDS);
 
-        // TODO: run updaters
+        for (Updater u : updaters) {
+            ObjectIntPair<@NotNull ArrType> key = ObjectIntPair.of(u.config().type(), u.config().id());
+            Instant last = updateTimes.computeIfAbsent(key, k -> new UpdaterMeta(new JSONFile(new File(getBasePath(u), "meta.json"))).lastUpdate());
+            if (!u.shouldRun(last)) {
+                continue;
+            }
+
+            Instant current = Instant.now();
+            updateTimes.put(key, current);
+
+            if (u.run()) {
+                UpdaterMeta meta = new UpdaterMeta(new JSONFile(new File(getBasePath(u), "meta.json")));
+                meta.lastUpdate(current);
+                Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
+                if ((fileCache == Tristate.AUTO && isCacheWritable()) || fileCache == Tristate.TRUE) {
+                    meta.write();
+                }
+            }
+        }
     }
 
     private @NotNull File getBasePath(@NotNull Updater updater) {

@@ -1,12 +1,14 @@
 package me.egg82.fetcharr.api.model.update;
 
 import me.egg82.arr.common.ArrAPI;
+import me.egg82.arr.unit.TimeValue;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Objects;
 
@@ -34,15 +36,24 @@ public abstract class AbstractUpdater implements Updater {
     }
 
     @Override
-    public void run(@NotNull Instant previousRun) {
+    public boolean shouldRun(@NotNull Instant previousRun) {
+        TimeValue interval = config.searchInterval();
+        long intervalSeconds = interval.unit().toSeconds(interval.time());
+        Instant now = Instant.now();
+        return Duration.between(previousRun, now).getSeconds() >= intervalSeconds;
+    }
+
+    @Override
+    public boolean run() {
         try {
-            doWork(previousRun);
+            return doWork();
         } catch (Exception ex) {
             logger.error("Exception in {} doWork method", getClass().getSimpleName(), ex);
         }
+        return false;
     }
 
-    abstract protected void doWork(@NotNull Instant previousRun);
+    abstract protected boolean doWork();
 
     @Override
     public boolean equals(Object o) {

@@ -1,4 +1,4 @@
-package me.egg82.fetcharr.work.whisparr;
+package me.egg82.fetcharr.api.model.update.whisparr;
 
 import me.egg82.arr.whisparr.v3.schema.MovieResource;
 import me.egg82.fetcharr.util.Weighted;

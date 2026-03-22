@@ -1,18 +1,21 @@
-package me.egg82.fetcharr.api.model.update.radarr;
+package me.egg82.fetcharr.api.model.update.whisparr;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import me.egg82.arr.common.ArrType;
-import me.egg82.arr.radarr.RadarrV3API;
-import me.egg82.arr.radarr.v3.Movie;
-import me.egg82.arr.radarr.v3.Tag;
-import me.egg82.arr.radarr.v3.schema.MovieFileResource;
-import me.egg82.arr.radarr.v3.schema.MovieResource;
-import me.egg82.arr.radarr.v3.schema.TagResource;
+import me.egg82.arr.whisparr.WhisparrV3API;
+import me.egg82.arr.whisparr.v3.Movie;
+import me.egg82.arr.whisparr.v3.Tag;
+import me.egg82.arr.whisparr.v3.schema.MovieFileResource;
+import me.egg82.arr.whisparr.v3.schema.MovieResource;
+import me.egg82.arr.whisparr.v3.schema.TagResource;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.APISearchEvent;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
-import me.egg82.fetcharr.api.event.update.radarr.*;
+import me.egg82.fetcharr.api.event.update.whisparr.WhisparrFetchMovieEvent;
+import me.egg82.fetcharr.api.event.update.whisparr.WhisparrSelectMovieEvent;
+import me.egg82.fetcharr.api.event.update.whisparr.WhisparrSkipMovieSelectionEvent;
+import me.egg82.fetcharr.api.event.update.whisparr.WhisparrUpdateMovieEvent;
 import me.egg82.fetcharr.api.model.update.AbstractUpdater;
 import me.egg82.fetcharr.api.model.update.UpdaterConfigImpl;
 import me.egg82.fetcharr.util.WeightedRandom;
@@ -23,11 +26,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class RadarrUpdater extends AbstractUpdater {
+public class WhisparrUpdater extends AbstractUpdater {
     private final WeightedRandom<WeightedMovie> random = new WeightedRandom<>();
 
-    public RadarrUpdater(@NotNull FetcharrAPI api, @NotNull RadarrV3API arrApi, int id) {
-        super(api, arrApi, new UpdaterConfigImpl(ArrType.RADARR, id));
+    public WhisparrUpdater(@NotNull FetcharrAPI api, @NotNull WhisparrV3API arrApi, int id) {
+        super(api, arrApi, new UpdaterConfigImpl(ArrType.WHISPARR, id));
     }
 
     @Override
@@ -45,8 +48,8 @@ public class RadarrUpdater extends AbstractUpdater {
             logger.error("{}_{} returned bad result for {}", config.type().name(), config.id(), Movie.UNKNOWN.apiPath());
             return false;
         }
-        logger.debug("Fetched {} movies", all.resources().size());
-        api.bus().post(new RadarrFetchMovieEvent(all, this, api));
+        logger.debug("Fetched {} scenes/movies", all.resources().size());
+        api.bus().post(new WhisparrFetchMovieEvent(all, this, api));
 
         List<WeightedMovie> wrapped = new ArrayList<>();
         for (MovieResource m : all.resources()) {
@@ -71,66 +74,66 @@ public class RadarrUpdater extends AbstractUpdater {
                 continue;
             }
 
-            RadarrSelectMovieEvent selectMovieEvent = new RadarrSelectMovieEvent(m.resource(), this, api);
+            WhisparrSelectMovieEvent selectMovieEvent = new WhisparrSelectMovieEvent(m.resource(), this, api);
             api.bus().post(selectMovieEvent);
             if (selectMovieEvent.cancelled()) {
-                RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.PLUGIN, this, api);
+                WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.PLUGIN, this, api);
                 if (skipMovieSelectionEvent.cancelled()) {
-                    logger.info("{} cancelled, but {} also cancelled - continuing with movie {} (\"{}\")", selectMovieEvent.getClass().getSimpleName(), skipMovieSelectionEvent.getClass().getSimpleName(), m.resource().id(), m.resource().title());
+                    logger.info("{} cancelled, but {} also cancelled - continuing with scene/movie {} (\"{}\")", selectMovieEvent.getClass().getSimpleName(), skipMovieSelectionEvent.getClass().getSimpleName(), m.resource().id(), m.resource().title());
                 } else {
-                    logger.info("Skipping movie {} (\"{}\") due to {} cancellation", m.resource().id(), m.resource().title(), selectMovieEvent.getClass().getSimpleName());
+                    logger.info("Skipping scene/movie {} (\"{}\") due to {} cancellation", m.resource().id(), m.resource().title(), selectMovieEvent.getClass().getSimpleName());
                     continue;
                 }
             }
 
             if (monitoredOnly && !m.resource().monitored()) {
-                RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.UNMONITORED, this, api);
+                WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.UNMONITORED, this, api);
                 if (skipMovieSelectionEvent.cancelled()) {
-                    logger.info("Unmonitored movie {} (\"{}\"), but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
+                    logger.info("Unmonitored scene/movie {} (\"{}\"), but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
-                    logger.info("Skipping movie {} (\"{}\") due to unmonitored status", m.resource().id(), m.resource().title());
+                    logger.info("Skipping scene/movie {} (\"{}\") due to unmonitored status", m.resource().id(), m.resource().title());
                     continue;
                 }
             }
             if (missingOnly && m.resource().hasFile()) {
-                RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.NOT_MISSING, this, api);
+                WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.NOT_MISSING, this, api);
                 if (skipMovieSelectionEvent.cancelled()) {
-                    logger.info("Movie {} (\"{}\") not missing a movie file, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
+                    logger.info("Scene/movie {} (\"{}\") not missing a movie file, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
-                    logger.info("Skipping movie {} (\"{}\") because it is not missing a movie file", m.resource().id(), m.resource().title());
+                    logger.info("Skipping scene/movie {} (\"{}\") because it is not missing a movie file", m.resource().id(), m.resource().title());
                     continue;
                 }
             }
             MovieFileResource movieFile = m.resource().movieFile();
             if (useCutoff && movieFile != null && !movieFile.qualityCutoffNotMet()) {
-                RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
+                WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
                 if (skipMovieSelectionEvent.cancelled()) {
-                    logger.info("Movie {} (\"{}\") quality cutoff met, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
+                    logger.info("Scene/movie {} (\"{}\") quality cutoff met, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
-                    logger.info("Skipping movie {} (\"{}\") because it meets the quality cutoff", m.resource().id(), m.resource().title());
+                    logger.info("Skipping scene/movie {} (\"{}\") because it meets the quality cutoff", m.resource().id(), m.resource().title());
                     continue;
                 }
             }
             if (!skipTags.isEmpty() && hasAnyTag(skipTags, m.resource().tags())) {
-                RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.SKIP_TAG_FOUND, this, api);
+                WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.SKIP_TAG_FOUND, this, api);
                 if (skipMovieSelectionEvent.cancelled()) {
-                    logger.info("Movie {} (\"{}\") has skip-tag set, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
+                    logger.info("Scene/ovie {} (\"{}\") has skip-tag set, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
-                    logger.info("Skipping movie {} (\"{}\") because skip-tag is set", m.resource().id(), m.resource().title());
+                    logger.info("Skipping scene/movie {} (\"{}\") because skip-tag is set", m.resource().id(), m.resource().title());
                     continue;
                 }
             }
 
-            RadarrUpdateMovieEvent updateMovieEvent = new RadarrUpdateMovieEvent(m.resource(), this, api);
+            WhisparrUpdateMovieEvent updateMovieEvent = new WhisparrUpdateMovieEvent(m.resource(), this, api);
             if (updateMovieEvent.cancelled()) {
-                logger.info("Skipping movie {} (\"{}\") due to {} cancellation", m.resource().id(), m.resource().title(), updateMovieEvent.getClass().getSimpleName());
+                logger.info("Skipping scene/movie {} (\"{}\") due to {} cancellation", m.resource().id(), m.resource().title(), updateMovieEvent.getClass().getSimpleName());
                 continue;
             }
 
             if (dryRun) {
-                logger.info("Would update movie {} (\"{}\") if not in dry-run mode", m.resource().id(), m.resource().title());
+                logger.info("Would update scene/movie {} (\"{}\") if not in dry-run mode", m.resource().id(), m.resource().title());
             } else {
-                logger.info("Updating movie {} (\"{}\")", m.resource().id(), m.resource().title());
+                logger.info("Updating scene/movie {} (\"{}\")", m.resource().id(), m.resource().title());
             }
             ids.add(m.resource().id());
             arrApi.invalidate(Movie.class, m.resource().id()); // Force refresh on next
