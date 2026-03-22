@@ -1,5 +1,7 @@
 package me.egg82.fetcharr.api.model.plugin;
 
+import kong.unirest.core.HttpResponse;
+import kong.unirest.core.Unirest;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.config.CommonConfigVars;
 import me.egg82.fetcharr.config.PluginConfigVars;
@@ -8,8 +10,12 @@ import org.pcollections.PVector;
 import org.pcollections.TreePVector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.spongepowered.configurate.CommentedConfigurationNode;
+import org.spongepowered.configurate.yaml.YamlConfigurationLoader;
 
-import java.io.File;
+import java.io.*;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 public class PluginManagerImpl implements PluginManager {
@@ -25,6 +31,8 @@ public class PluginManagerImpl implements PluginManager {
         File pluginDir = PluginConfigVars.getFile(PluginConfigVars.PLUGIN_DIR);
         File dataDir = new File(pluginDir, "data");
         File configDir = new File(CommonConfigVars.getFile(CommonConfigVars.CONFIG_DIR), "plugin");
+
+        downloadPlugins(new File(configDir, "plugins.yaml"), pluginDir);
 
         File[] files = pluginDir.listFiles((dir, name) -> name.toLowerCase(Locale.ROOT).endsWith(".jar"));
         if (files == null || files.length == 0) {
@@ -73,7 +81,7 @@ public class PluginManagerImpl implements PluginManager {
                     logger.warn("Could not delete file {}", c.getAbsolutePath());
                 }
             }
-            if (!d.exists() && !c.mkdirs()) {
+            if (!c.exists() && !c.mkdirs()) {
                 logger.warn("Could not create directory {}", c.getAbsolutePath());
             }
 
@@ -113,6 +121,81 @@ public class PluginManagerImpl implements PluginManager {
                 logger.warn("Plugin {} (\"{}\") encountered an error during stop()", p.descriptor().id(), p.descriptor().name());
             }
             p.close();
+        }
+    }
+
+    private void downloadPlugins(@NotNull File manifest, @NotNull File pluginDir) {
+        if (!manifest.exists() || !manifest.isFile()) {
+            return;
+        }
+
+        if (pluginDir.exists() && !pluginDir.isDirectory()) {
+            if (!pluginDir.delete()) {
+                logger.warn("Could not delete file {}", pluginDir.getAbsolutePath());
+                return;
+            }
+        }
+        if (!pluginDir.exists() && !pluginDir.mkdirs()) {
+            logger.warn("Could not create directory {}", pluginDir.getAbsolutePath());
+            return;
+        }
+
+        logger.debug("Processing manifest {}", manifest.getAbsolutePath());
+
+        Set<@NotNull String> urls = new HashSet<>();
+        PluginManifest r = new PluginManifest();
+
+        try (FileReader file = new FileReader(manifest); BufferedReader reader = new BufferedReader(file)) {
+            YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
+                    .source(() -> reader)
+                    .build();
+            readManifest(loader.load(), urls);
+        } catch (IOException ex) {
+            logger.error("Could not process manifest at {}", manifest.getAbsolutePath(), ex);
+            return;
+        }
+
+        downloadPlugins(r, pluginDir);
+    }
+
+    private void readManifest(@NotNull CommentedConfigurationNode node, @NotNull Set<@NotNull String> urls) {
+
+    }
+
+    private void downloadPlugins(@NotNull PluginManifest manifest, @NotNull File pluginDir) {
+        for (PluginManifestEntry e : manifest.direct()) {
+            HttpResponse<byte[]> resp = Unirest.get(e.url())
+                    .accept("application/java-archive")
+                    .asBytes();
+
+            if (!resp.isSuccess()) {
+                logger.warn("Could not download plugin (code {}) at URL {}", resp.getStatus(), resp.getRequestSummary().getUrl());
+                continue;
+            }
+
+            byte[] file = resp.getBody();
+            if (file == null || file.length == 0) {
+                logger.warn("Could not download plugin (no content) at URL {}", resp.getRequestSummary().getUrl());
+                continue;
+            }
+
+            if (e.sha256() != null) {
+                try {
+                    byte[] digest = MessageDigest.getInstance("SHA-256").digest(file);
+                } catch (NoSuchAlgorithmException ex) {
+                    logger.warn("SHA256 for {} could not be calculated", e.url(), ex);
+                }
+            }
+
+            try (FileWriter writer = new FileWriter(new File(pluginDir, e.filename() + ".tmp"))) {
+
+            } catch (IOException ex) {
+                logger.warn("Could not write temp plugin file at {}", e.filename() + ".tmp", ex);
+                continue;
+            }
+        }
+        for (PluginManifest m : manifest.manifests()) {
+            downloadPlugins(m, pluginDir);
         }
     }
 }

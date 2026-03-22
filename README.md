@@ -404,7 +404,7 @@ Each item under `plugins` must be one of the following:
 - A direct plugin download
   - `url`: the URL of the plugin to download
   - `filename`: the name of the file that will be placed in the plugin directory
-  - `sha256`: an optional (but recommended) SHA256 of the jar file. Without it, Fetcharr will re-download the plugin on every startup.
+  - `sha256`: an optional (but recommended) SHA256 of the jar file
 - A manifest reference
   - `manifest`: the URL of another YAML-formatted plugin list
 
