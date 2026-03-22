@@ -22,7 +22,7 @@ public class SonarrV3API extends AbstractArrAPI {
         }
         String current = response.getObject().getString("current");
         if (current == null || !current.equalsIgnoreCase(version())) {
-            logger.warn("SONARR_{} returned unexpected response for URL {}: {}", id(), baseUrl + "/api", response.getObject().toString());
+            logger.warn("SONARR_{} returned unexpected response for URL {}: {}", this.id, this.baseUrl + "/api", response.getObject().toString());
             return false;
         }
         return true;
@@ -51,7 +51,7 @@ public class SonarrV3API extends AbstractArrAPI {
             }
             int id = NumberParser.getInt(-1, response.getObject(), "id");
             if (id < 0) {
-                logger.warn("SONARR_{} returned unexpected response for URL {}: {}", id(), baseUrl + "/api/" + version() + "/command", response.getObject().toString());
+                logger.warn("SONARR_{} returned unexpected response for URL {}: {}", this.id, this.baseUrl + "/api/" + version() + "/command", response.getObject().toString());
             }
         }
     }

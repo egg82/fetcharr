@@ -43,10 +43,12 @@ public abstract class AbstractArrAPI implements ArrAPI {
 
     protected final String baseUrl;
     protected final String apiKey;
+    protected final int id;
 
-    public AbstractArrAPI(@NotNull String baseUrl, @NotNull String apiKey) {
+    public AbstractArrAPI(@NotNull String baseUrl, @NotNull String apiKey, int id) {
         this.baseUrl = baseUrl;
         this.apiKey = apiKey;
+        this.id = id;
     }
 
     @Override
