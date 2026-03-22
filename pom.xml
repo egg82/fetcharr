@@ -19,6 +19,7 @@
         <app.version>2.1.0</app.version>
         <api.version>2.0.0</api.version>
         <lib.version>1.0.1</lib.version>
+        <webhook.version>1.0.0</webhook.version>
 
         <jetbrains.version>26.1.0</jetbrains.version>
 
@@ -177,5 +178,6 @@
         <module>Lib</module>
         <module>API</module>
         <module>App</module>
+        <module>Webhook</module>
     </modules>
 </project>

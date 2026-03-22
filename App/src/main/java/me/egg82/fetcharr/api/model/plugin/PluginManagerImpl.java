@@ -64,7 +64,7 @@ public class PluginManagerImpl implements PluginManager {
                     logger.warn("Could not delete file {}", d.getAbsolutePath());
                 }
             }
-            if (!d.mkdirs()) {
+            if (!d.exists() && !d.mkdirs()) {
                 logger.warn("Could not create directory {}", d.getAbsolutePath());
             }
 
@@ -73,7 +73,7 @@ public class PluginManagerImpl implements PluginManager {
                     logger.warn("Could not delete file {}", c.getAbsolutePath());
                 }
             }
-            if (!c.mkdirs()) {
+            if (!d.exists() && !c.mkdirs()) {
                 logger.warn("Could not create directory {}", c.getAbsolutePath());
             }
 
