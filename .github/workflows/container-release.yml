@@ -32,8 +32,37 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - name: Build project
-        run: mvn -B clean package
+      - name: Configure Maven credentials for Reposilite
+        shell: bash
+        run: |
+          mkdir -p ~/.m2
+          cat > ~/.m2/settings.xml <<'EOF'
+          <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+            <servers>
+              <server>
+                <id>egg82-repo-releases</id>
+                <username>${env.REPO_82_USERNAME}</username>
+                <password>${env.REPO_82_TOKEN}</password>
+              </server>
+              <server>
+                <id>egg82-repo-snapshots</id>
+                <username>${env.REPO_82_USERNAME}</username>
+                <password>${env.REPO_82_TOKEN}</password>
+              </server>
+            </servers>
+          </settings>
+          EOF
+        env:
+          REPO_82_USERNAME: ${{ vars.REPOSILITE_USERNAME }}
+          REPO_82_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
+
+      - name: Build everything and deploy allowed Maven artifacts
+        run: >
+          mvn -B -ntp clean deploy -DdeployAtEnd=true
+          -DaltReleaseDeploymentRepository=egg82-repo-releases::https://repo.egg82.me/releases/
+          -DaltSnapshotDeploymentRepository=egg82-repo-snapshots::https://repo.egg82.me/snapshots/
 
       - name: Find main JAR
         id: jar
