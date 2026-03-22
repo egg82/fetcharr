@@ -377,12 +377,43 @@ This keeps Fetcharr reasonably clean and minimal while still providing an avenue
 ### Plugin usage
 
 Plugins are `.jar` files that are picked up in the `plugins` directory automatically (controlled via the
-`PLUGIN_DIR` environment variable). Plugins are loaded in the natural list order for the directory. This
+`PLUGIN_DIR` environment variable). Plugins are loaded in the natural sort/list order for the directory. This
 means that a plugin named `10-my-plugin.jar` will be loaded before `20-alpha-plugin.jar` and
 after `00-zzz-plugin.jar`.
 
 Simply dropping the jar files in that directory and starting (or re-starting) Fetcharr will enable
 the plugins during Fetcharr's next startup.
+
+To make this easier, Fetcharr can use a `plugins.yaml` in the configuration directory which will download
+plugins from specified URLs automatically at startup.
+
+Simply create a `<config-dir>/plugins.yaml` with data similar to the following:
+```yaml
+plugins:
+  - url: https://some.web.domain/some/path/some-plugin-1.0.0.jar
+    filename: 01-some-plugin.jar
+
+  - url: https://another.web.domain/another/path/v1.2.3/another-plugin.jar
+    filename: 02-another-plugin.jar
+    sha256: 396d448073cf44195508216fca8668cfd6ab395bb447a077227b17d521dec80b
+
+  - manifest: https://some.web.domain/whatever/path/manifest.yaml
+```
+
+Each item under `plugins` must be one of the following:
+- A direct plugin download
+  - `url`: the URL of the plugin to download
+  - `filename`: the name of the file that will be placed in the plugin directory
+  - `sha256`: an optional (but recommended) SHA256 of the jar file. Without it, Fetcharr will re-download the plugin on every startup.
+- A manifest reference
+  - `manifest`: the URL of another YAML-formatted plugin list
+
+Manifest references are the same format as the above plugin YAML, and may reference other
+manifests within them. Recursion! Manifest loops are detected and ignored.
+
+If plugin filenames are duplicated, later entries overwrite earlier ones. In other words, if a later
+direct plugin or manifest uses the filename of an existing file, that file will be replaced
+(unless the SHA256 matches).
 
 ### Plugin development
 

@@ -134,11 +134,13 @@
         <dependency>
             <groupId>me.egg82</groupId>
             <artifactId>fetcharr-api</artifactId>
+            <version>${api.version}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>me.egg82</groupId>
             <artifactId>arr-lib</artifactId>
+            <version>${lib.version}</version>
             <scope>provided</scope>
         </dependency>
 
