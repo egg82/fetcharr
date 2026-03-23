@@ -26,7 +26,7 @@ public class PluginManagerImpl implements PluginManager {
 
     private final List<@NotNull EnabledPluginImpl> plugins = new ArrayList<>();
 
-    private final PluginClassLoaderPolicy loaderPolicy = new PluginClassLoaderPolicy(List.of(
+    private static final PluginClassLoaderPolicy LOADER_POLICY = new PluginClassLoaderPolicy(List.of(
             "java.",
             "javax.",
             "jdk.",
@@ -58,7 +58,7 @@ public class PluginManagerImpl implements PluginManager {
         for (File f : files) {
             EnabledPluginImpl plugin;
             try {
-                plugin = new EnabledPluginImpl(f, loaderPolicy, this::resolveClass);
+                plugin = new EnabledPluginImpl(f, LOADER_POLICY, this::resolveClass);
             } catch (Exception ex) {
                 logger.warn("Could not load plugin at {}", f.getAbsolutePath(), ex);
                 continue;
@@ -108,7 +108,7 @@ public class PluginManagerImpl implements PluginManager {
             plugins.removeAll(disable);
         }
 
-        // We only remove plugins who failed their init, not their start
+        // We only remove plugins who failed their init, not ones that failed their start
 
         for (EnabledPluginImpl p : plugins) {
             try {
@@ -213,17 +213,26 @@ public class PluginManagerImpl implements PluginManager {
 
             if (e.sha256() != null) {
                 try {
+                    // This hash-to-string bit written by ChatGPT. I am not clever enough to write this
                     byte[] digest = MessageDigest.getInstance("SHA-256").digest(file);
+                    StringBuilder builder = new StringBuilder(digest.length * 2);
+                    for (byte b : digest) {
+                        builder.append(String.format("%02x", b));
+                    }
+                    if (!builder.toString().equalsIgnoreCase(e.sha256())) {
+                        logger.warn("SHA256 of downloaded file ({}) does not match given SHA256 ({}) for {}", builder.toString(), e.sha256(), resp.getRequestSummary().getUrl());
+                        continue;
+                    }
                 } catch (NoSuchAlgorithmException ex) {
                     logger.warn("SHA256 for {} could not be calculated", e.url(), ex);
+                    continue;
                 }
             }
 
-            try (FileWriter writer = new FileWriter(new File(pluginDir, e.filename() + ".tmp"))) {
-
+            try (FileOutputStream writer = new FileOutputStream(new File(pluginDir, e.filename()))) {
+                writer.write(file);
             } catch (IOException ex) {
-                logger.warn("Could not write temp plugin file at {}", e.filename() + ".tmp", ex);
-                continue;
+                logger.warn("Could not write plugin file at {}", e.filename(), ex);
             }
         }
         for (PluginManifest m : manifest.manifests()) {
