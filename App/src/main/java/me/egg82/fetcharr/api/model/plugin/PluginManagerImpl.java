@@ -42,9 +42,12 @@ public class PluginManagerImpl implements PluginManager {
 
         File pluginDir = PluginConfigVars.getFile(PluginConfigVars.PLUGIN_DIR);
         File dataDir = new File(pluginDir, "data");
-        File configDir = new File(CommonConfigVars.getFile(CommonConfigVars.CONFIG_DIR), "plugin");
+        File pluginConfigDir = new File(CommonConfigVars.getFile(CommonConfigVars.CONFIG_DIR), "plugin");
 
-        downloadPlugins(new File(configDir, "plugins.yaml"), pluginDir);
+        downloadPlugins(new File(CommonConfigVars.getFile(CommonConfigVars.CONFIG_DIR), "plugins.yaml"), pluginDir);
+        downloadPlugins(new File(CommonConfigVars.getFile(CommonConfigVars.CONFIG_DIR), "plugins.yml"), pluginDir);
+        downloadPlugins(new File(CommonConfigVars.getFile(CommonConfigVars.CONFIG_DIR), "plugin.yaml"), pluginDir);
+        downloadPlugins(new File(CommonConfigVars.getFile(CommonConfigVars.CONFIG_DIR), "plugin.yml"), pluginDir);
 
         File[] files = pluginDir.listFiles((dir, name) -> name.toLowerCase(Locale.ROOT).endsWith(".jar"));
         if (files == null || files.length == 0) {
@@ -77,7 +80,7 @@ public class PluginManagerImpl implements PluginManager {
         List<@NotNull EnabledPluginImpl> disable = new ArrayList<>();
         for (EnabledPluginImpl p : plugins) {
             File d = new File(dataDir, p.descriptor().id());
-            File c = new File(configDir, p.descriptor().id());
+            File c = new File(pluginConfigDir, p.descriptor().id());
 
             if (d.exists() && !d.isDirectory()) {
                 if (!d.delete()) {
@@ -181,7 +184,7 @@ public class PluginManagerImpl implements PluginManager {
             YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
                     .source(() -> reader)
                     .build();
-            readManifest(loader.load(), urls);
+            readManifest(r, manifest.getAbsolutePath(), loader.load(), urls);
         } catch (IOException ex) {
             logger.error("Could not process manifest at {}", manifest.getAbsolutePath(), ex);
             return;
@@ -190,8 +193,69 @@ public class PluginManagerImpl implements PluginManager {
         downloadPlugins(r, pluginDir);
     }
 
-    private void readManifest(@NotNull CommentedConfigurationNode node, @NotNull Set<@NotNull String> urls) {
+    private void readManifest(@NotNull PluginManifest manifest, @NotNull String url, @NotNull CommentedConfigurationNode node, @NotNull Set<@NotNull String> urls) {
+        if (!node.hasChild("plugins")) {
+            logger.debug("Manifest at {} does not have plugins list. Skipping.", url);
+            return;
+        }
+        List<CommentedConfigurationNode> inner = node.node("plugins").childrenList();
+        for (CommentedConfigurationNode i : inner) {
+            String m = i.node("manifest").getString();
+            if (m != null && !m.isBlank()) {
+                if (!urls.add(m)) {
+                    logger.debug("Manifest at {} attempted to add duplicate manifest URL {}", url, m);
+                    continue;
+                }
 
+                HttpResponse<String> resp = Unirest.get(m)
+                        .accept("application/yaml")
+                        .asString();
+
+                if (!resp.isSuccess()) {
+                    logger.warn("Could not get manifest (code {}) at URL {}", resp.getStatus(), resp.getRequestSummary().getUrl());
+                    continue;
+                }
+
+                String body = resp.getBody();
+                if (body == null || body.isBlank()) {
+                    logger.warn("Could not get manifest (no content) at URL {}", resp.getRequestSummary().getUrl());
+                    continue;
+                }
+
+                try (StringReader str = new StringReader(body); BufferedReader reader = new BufferedReader(str)) {
+                    YamlConfigurationLoader loader = YamlConfigurationLoader.builder()
+                            .source(() -> reader)
+                            .build();
+                    PluginManifest mm = new PluginManifest();
+                    readManifest(mm, m, loader.load(), urls);
+                    manifest.manifests().add(mm);
+                } catch (IOException ex) {
+                    logger.warn("Could not process manifest at URL {}", resp.getRequestSummary().getUrl(), ex);
+                    continue;
+                }
+            }
+
+            String u = i.node("url").getString();
+            String f = i.node("filename").getString();
+            String s = i.node("sha256").getString();
+
+            if (u == null || u.isBlank()) {
+                logger.warn("Manifest {} has a missing plugin URL", url);
+                continue;
+            }
+
+            if (f == null || f.isBlank()) {
+                logger.warn("Manifest {} has a missing filename", url);
+                continue;
+            }
+
+            if (!urls.add(u)) {
+                logger.debug("Manifest at {} attempted to add duplicate plugin URL {}", url, u);
+                continue;
+            }
+
+            manifest.direct().add(new PluginManifestEntry(u, f, s));
+        }
     }
 
     private void downloadPlugins(@NotNull PluginManifest manifest, @NotNull File pluginDir) {
