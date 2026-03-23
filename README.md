@@ -417,7 +417,91 @@ direct plugin or manifest uses the filename of an existing file, that file will 
 
 ### Plugin development
 
-TBD, WIP
+The Webhook module is an example (usable) plugin utilizing all the available features.
+
+Plugins must have a class implements the `me.egg82.fetcharr.api.plugin.Plugin` interface and
+contain a `plugin.yaml` in their resources. The `plugin.yaml` file has a structure similar to the following:
+```yaml
+id: unique-id
+name: Some name
+version: Any version number
+description: Whatever description
+authors: [some, authors]
+class: your.package.path.MainClass
+exports:
+  - another.package.path.to.api
+  - maybe.some.path.to.Class
+```
+
+Details on each of these:
+- `id`: REQUIRED. A unique plugin ID
+- `name`: REQUIRED. A friendly name to give to the plugin
+- `version`: REQUIRED. Any version string for the plugin
+- `description`: Optional. A plugin description, if you'd like to add one
+- `authors`: Optional. A list of plugin authors
+- `class`: REQUIRED. The main class to load (the one that implements `me.egg82.fetcharr.api.plugin.Plugin`)
+- `exports`: Optional. A list of classes or packages to expose to other plugins
+
+<details open>
+<summary>Maven</summary>
+
+```xml
+<repositories>
+  <repository>
+    <id>egg82-repo-releases</id>
+    <url>https://repo.egg82.me/releases/</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>me.egg82</groupId>
+    <artifactId>fetcharr-api</artifactId>
+    <version>API-VERSION</version>
+    <scope>provided</scope>
+  </dependency>
+  <dependency>
+    <groupId>me.egg82</groupId>
+    <artifactId>arr-lib</artifactId>
+    <version>LIB-VERSION</version>
+    <scope>provided</scope>
+  </dependency>
+</dependencies>
+```
+</details>
+
+<details>
+<summary>Gradle</summary>
+
+```kotlin
+repositories {
+    maven {
+        name = "egg82Releases"
+        url = uri("https://repo.egg82.me/releases/")
+    }
+}
+
+dependencies {
+    compileOnly("me.egg82:fetcharr-api:API-VERSION")
+    compileOnly("me.egg82:arr-lib:LIB-VERSION")
+}
+```
+</details>
+
+When providing custom API for other plugins to use, the `exports` list in your `plugin.yaml` and the
+`me.egg82.fetcharr.api.model.registry.Registry` class will be helpful to you.
+
+Adding classes or packages to the `exports` list in your `plugin.yaml` will expose those classes to
+be usable to other plugins (they will be able to find those classes in their given `ClassLoader`s).
+
+You can then call `FetcharrAPIProvider.instance().registry().register()` to register any API you would
+like those plugins to have easy access to. They will be able to call `FetcharrAPIProvider.instance().registry().getFirst()`
+or `FetcharrAPIProvider.instance().registry().getAll()` to consume your provided API.
+
+To avoid namespace pollution, export only necessary API interfaces intended for use by other
+plugins, not actual implementations or other unnecessary classes or packages.
+
+An example of this is available in the Webhook module.
 
 ## Wall of oddities
 
