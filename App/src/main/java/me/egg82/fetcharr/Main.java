@@ -110,9 +110,9 @@ public class Main {
             LOGGER.info("Shutting down..");
 
             FetcharrAPI api = FetcharrAPIProvider.instance();
-            api.updateManager().shutdown(10_000L);
             api.pluginManager().shutdown();
             APIRegistrationUtil.deregister();
+            api.updateManager().shutdown(10_000L);
 
             Unirest.shutDown();
         }));
