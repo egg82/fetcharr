@@ -9,7 +9,7 @@ LABEL org.opencontainers.image.title="Fetcharr" \
       org.opencontainers.image.authors="egg82" \
       org.opencontainers.image.licenses="MIT"
 
-ARG JAR_FILE=App/target/fetcharr-2.1.0.jar
+ARG JAR_FILE=App/target/fetcharr-2.1.1.jar
 
 ENV APP_USER=app \
     PUID=1000 \
