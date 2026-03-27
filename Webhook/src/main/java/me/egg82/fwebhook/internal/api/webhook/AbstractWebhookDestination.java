@@ -46,16 +46,19 @@ public abstract class AbstractWebhookDestination implements WebhookDestination {
     protected final @Nullable String handleInternal(@NotNull FetcharrEvent event, @NotNull String baseUrl) throws Exception {
         WebhookPayload payload = transform.transform(event);
         if (payload == null) {
-            logger.debug("Could not transform event {}", event.eventType().getName());
+            logger.warn("Could not transform event {}", event.eventType().getName());
             return null;
         }
 
+        String contentType = payload.contentType();
+        contentType = contentType != null ? contentType : "application/json";
+
         return switch (payload.method()) {
             case GET -> get(baseUrl + payload.path(), payload.accept(), payload.headers());
-            case PUT -> put(baseUrl + payload.path(), payload.accept(), payload.headers(), payload.body());
-            case POST -> post(baseUrl + payload.path(), payload.accept(), payload.headers(), payload.body());
-            case PATCH -> patch(baseUrl + payload.path(), payload.accept(), payload.headers(), payload.body());
-            case DELETE -> delete(baseUrl + payload.path(), payload.accept(), payload.headers(), payload.body());
+            case PUT -> put(baseUrl + payload.path(), contentType, payload.accept(), payload.headers(), payload.body());
+            case POST -> post(baseUrl + payload.path(), contentType, payload.accept(), payload.headers(), payload.body());
+            case PATCH -> patch(baseUrl + payload.path(), contentType, payload.accept(), payload.headers(), payload.body());
+            case DELETE -> delete(baseUrl + payload.path(), contentType, payload.accept(), payload.headers(), payload.body());
         };
     }
 
@@ -70,80 +73,84 @@ public abstract class AbstractWebhookDestination implements WebhookDestination {
                 .asString());
     }
 
-    protected final @Nullable String put(@NotNull String url, @NotNull String accept) {
-        return put(url, accept, null, null);
+    protected final @Nullable String put(@NotNull String url, @NotNull String contentType, @NotNull String accept) {
+        return put(url, contentType, accept, null, null);
     }
 
-    protected final @Nullable String put(@NotNull String url, @NotNull String accept, @NotNull Map<String, @NotNull String> headers) {
-        return put(url, accept, headers, null);
+    protected final @Nullable String put(@NotNull String url, @NotNull String contentType, @NotNull String accept, @NotNull Map<String, @NotNull String> headers) {
+        return put(url, contentType, accept, headers, null);
     }
 
-    protected final @Nullable String put(@NotNull String url, @NotNull String accept, byte @NotNull [] body) {
-        return put(url, accept, null, body);
+    protected final @Nullable String put(@NotNull String url, @NotNull String contentType, @NotNull String accept, byte @NotNull [] body) {
+        return put(url, contentType, accept, null, body);
     }
 
-    protected final @Nullable String put(@NotNull String url, @NotNull String accept, @Nullable Map<String, @NotNull String> headers, byte @Nullable [] body) {
+    protected final @Nullable String put(@NotNull String url, @NotNull String contentType, @NotNull String accept, @Nullable Map<String, @NotNull String> headers, byte @Nullable [] body) {
         return parseResponse(Unirest.put(url)
+                .contentType(contentType)
                 .accept(accept)
                 .headers(headers)
                 .body(body)
                 .asString());
     }
 
-    protected final @Nullable String post(@NotNull String url, @NotNull String accept) {
-        return post(url, accept, null, null);
+    protected final @Nullable String post(@NotNull String url, @NotNull String contentType, @NotNull String accept) {
+        return post(url, contentType, accept, null, null);
     }
 
-    protected final @Nullable String post(@NotNull String url, @NotNull String accept, @NotNull Map<String, @NotNull String> headers) {
-        return post(url, accept, headers, null);
+    protected final @Nullable String post(@NotNull String url, @NotNull String contentType, @NotNull String accept, @NotNull Map<String, @NotNull String> headers) {
+        return post(url, contentType, accept, headers, null);
     }
 
-    protected final @Nullable String post(@NotNull String url, @NotNull String accept, byte @NotNull [] body) {
-        return post(url, accept, null, body);
+    protected final @Nullable String post(@NotNull String url, @NotNull String contentType, @NotNull String accept, byte @NotNull [] body) {
+        return post(url, contentType, accept, null, body);
     }
 
-    protected final @Nullable String post(@NotNull String url, @NotNull String accept, @Nullable Map<String, @NotNull String> headers, byte @Nullable [] body) {
+    protected final @Nullable String post(@NotNull String url, @NotNull String contentType, @NotNull String accept, @Nullable Map<String, @NotNull String> headers, byte @Nullable [] body) {
         return parseResponse(Unirest.post(url)
+                .contentType(contentType)
                 .accept(accept)
                 .headers(headers)
                 .body(body)
                 .asString());
     }
 
-    protected final @Nullable String patch(@NotNull String url, @NotNull String accept) {
-        return patch(url, accept, null, null);
+    protected final @Nullable String patch(@NotNull String url, @NotNull String contentType, @NotNull String accept) {
+        return patch(url, contentType, accept, null, null);
     }
 
-    protected final @Nullable String patch(@NotNull String url, @NotNull String accept, @NotNull Map<String, @NotNull String> headers) {
-        return patch(url, accept, headers, null);
+    protected final @Nullable String patch(@NotNull String url, @NotNull String contentType, @NotNull String accept, @NotNull Map<String, @NotNull String> headers) {
+        return patch(url, contentType, accept, headers, null);
     }
 
-    protected final @Nullable String patch(@NotNull String url, @NotNull String accept, byte @NotNull [] body) {
-        return patch(url, accept, null, body);
+    protected final @Nullable String patch(@NotNull String url, @NotNull String contentType, @NotNull String accept, byte @NotNull [] body) {
+        return patch(url, contentType, accept, null, body);
     }
 
-    protected final @Nullable String patch(@NotNull String url, @NotNull String accept, @Nullable Map<String, @NotNull String> headers, byte @Nullable [] body) {
+    protected final @Nullable String patch(@NotNull String url, @NotNull String contentType, @NotNull String accept, @Nullable Map<String, @NotNull String> headers, byte @Nullable [] body) {
         return parseResponse(Unirest.patch(url)
+                .contentType(contentType)
                 .accept(accept)
                 .headers(headers)
                 .body(body)
                 .asString());
     }
 
-    protected final @Nullable String delete(@NotNull String url, @NotNull String accept) {
-        return delete(url, accept, null, null);
+    protected final @Nullable String delete(@NotNull String url, @NotNull String contentType, @NotNull String accept) {
+        return delete(url, contentType, accept, null, null);
     }
 
-    protected final @Nullable String delete(@NotNull String url, @NotNull String accept, @NotNull Map<String, @NotNull String> headers) {
-        return delete(url, accept, headers, null);
+    protected final @Nullable String delete(@NotNull String url, @NotNull String contentType, @NotNull String accept, @NotNull Map<String, @NotNull String> headers) {
+        return delete(url, contentType, accept, headers, null);
     }
 
-    protected final @Nullable String delete(@NotNull String url, @NotNull String accept, byte @NotNull [] body) {
-        return delete(url, accept, null, body);
+    protected final @Nullable String delete(@NotNull String url, @NotNull String contentType, @NotNull String accept, byte @NotNull [] body) {
+        return delete(url, contentType, accept, null, body);
     }
 
-    protected final @Nullable String delete(@NotNull String url, @NotNull String accept, @Nullable Map<String, @NotNull String> headers, byte @Nullable [] body) {
+    protected final @Nullable String delete(@NotNull String url, @NotNull String contentType, @NotNull String accept, @Nullable Map<String, @NotNull String> headers, byte @Nullable [] body) {
         return parseResponse(Unirest.delete(url)
+                .contentType(contentType)
                 .accept(accept)
                 .headers(headers)
                 .body(body)
@@ -152,7 +159,7 @@ public abstract class AbstractWebhookDestination implements WebhookDestination {
 
     private @Nullable String parseResponse(@NotNull HttpResponse<String> response) {
         if (!response.isSuccess()) {
-            logger.warn("Got non-success response (code {}) for URL {}", response.getStatus(), response.getRequestSummary().getUrl());
+            logger.warn("Got non-success response (code {}) for URL {}: {}", response.getStatus(), response.getRequestSummary().getUrl(), response.getBody());
             response.getParsingError().ifPresent(v -> logger.warn("Parsing error for URL {}", response.getRequestSummary().getUrl(), v));
             return null;
         }

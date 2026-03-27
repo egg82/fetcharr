@@ -30,15 +30,15 @@ public class NotifiarrWebhookTransform extends AbstractWebhookTransform {
 
     @Override
     public boolean accepts(@NotNull FetcharrEvent event) {
-        return event instanceof APISearchEvent
-                || event instanceof RadarrUpdateMovieEvent
-                || event instanceof SonarrUpdateSeriesEvent
-                || event instanceof LidarrUpdateArtistEvent
-                || event instanceof WhisparrUpdateMovieEvent
-                || event instanceof RadarrSkipMovieSelectionEvent
-                || event instanceof SonarrSkipSeriesSelectionEvent
-                || event instanceof LidarrSkipArtistSelectionEvent
-                || event instanceof WhisparrSkipMovieSelectionEvent;
+        return (event instanceof APISearchEvent && config.node("events", "search").getBoolean(false))
+                || (event instanceof RadarrUpdateMovieEvent && config.node("events", "update").getBoolean(true))
+                || (event instanceof SonarrUpdateSeriesEvent && config.node("events", "update").getBoolean(true))
+                || (event instanceof LidarrUpdateArtistEvent && config.node("events", "update").getBoolean(true))
+                || (event instanceof WhisparrUpdateMovieEvent && config.node("events", "update").getBoolean(true))
+                || (event instanceof RadarrSkipMovieSelectionEvent && config.node("events", "skip").getBoolean(false))
+                || (event instanceof SonarrSkipSeriesSelectionEvent && config.node("events", "skip").getBoolean(false))
+                || (event instanceof LidarrSkipArtistSelectionEvent && config.node("events", "skip").getBoolean(false))
+                || (event instanceof WhisparrSkipMovieSelectionEvent && config.node("events", "skip").getBoolean(false));
     }
 
     @Override
@@ -124,7 +124,7 @@ public class NotifiarrWebhookTransform extends AbstractWebhookTransform {
         JSONObject obj = new JSONObject();
         obj.put("notification", notification);
         obj.put("discord", discord);
-        return new WebhookPayloadImpl(apiKey, "application/json", null, obj.toString().getBytes(StandardCharsets.UTF_8), WebhookPayloadMethod.POST);
+        return new WebhookPayloadImpl(apiKey, "application/json", "application/json", null, obj.toString().getBytes(StandardCharsets.UTF_8), WebhookPayloadMethod.POST);
     }
 
     private @Nullable WebhookPayload transformInternal(@NotNull RadarrUpdateMovieEvent event) {
@@ -207,7 +207,7 @@ public class NotifiarrWebhookTransform extends AbstractWebhookTransform {
         JSONObject obj = new JSONObject();
         obj.put("notification", notification);
         obj.put("discord", discord);
-        return new WebhookPayloadImpl(apiKey, "application/json", null, obj.toString().getBytes(StandardCharsets.UTF_8), WebhookPayloadMethod.POST);
+        return new WebhookPayloadImpl(apiKey, "application/json", "application/json", null, obj.toString().getBytes(StandardCharsets.UTF_8), WebhookPayloadMethod.POST);
     }
 
     private @Nullable WebhookPayload transformSkip(@NotNull AbstractCancellableUpdaterEvent event, @Nullable String itemName, @NotNull SelectionCancellationReason cancellationReason) {
@@ -264,7 +264,7 @@ public class NotifiarrWebhookTransform extends AbstractWebhookTransform {
         JSONObject obj = new JSONObject();
         obj.put("notification", notification);
         obj.put("discord", discord);
-        return new WebhookPayloadImpl(apiKey, "application/json", null, obj.toString().getBytes(StandardCharsets.UTF_8), WebhookPayloadMethod.POST);
+        return new WebhookPayloadImpl(apiKey, "application/json", "application/json", null, obj.toString().getBytes(StandardCharsets.UTF_8), WebhookPayloadMethod.POST);
     }
 
     private @NotNull String mapReason(@NotNull SelectionCancellationReason reason) {

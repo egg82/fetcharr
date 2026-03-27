@@ -19,6 +19,15 @@ public interface WebhookPayload {
     @NotNull String path();
 
     /**
+     * Gets the HTTP content type.
+     *
+     * <p>eg. "application/json"</p>
+     *
+     * @return the HTTP content type
+     */
+    @Nullable String contentType();
+
+    /**
      * Gets the HTTP accept type.
      *
      * <p>eg. "application/json"</p>

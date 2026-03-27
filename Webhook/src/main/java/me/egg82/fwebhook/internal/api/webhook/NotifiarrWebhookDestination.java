@@ -36,7 +36,9 @@ public class NotifiarrWebhookDestination extends AbstractWebhookDestination {
         if (response == null) {
             return false;
         }
-        logger.debug("{} {} returned response for event {}: {}", getClass().getSimpleName(), this.id, event.eventType().getName(), response);
+        if (!response.isBlank()) {
+            logger.debug("{} {} returned response for event {}: {}", getClass().getSimpleName(), this.id, event.eventType().getName(), response);
+        }
         return true;
     }
 
