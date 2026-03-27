@@ -12,6 +12,20 @@ public class NotifiarrWebhookDestination extends AbstractWebhookDestination {
     }
 
     @Override
+    public @NotNull String type() {
+        return "notifiarr";
+    }
+
+    @Override
+    public boolean accepts(@NotNull FetcharrEvent event) {
+        if (!config.node("enabled").getBoolean(false)) {
+            return false;
+        }
+
+        return super.accepts(event);
+    }
+
+    @Override
     public boolean handle(@NotNull FetcharrEvent event) throws Exception {
         if (!config.node("enabled").getBoolean(false)) {
             logger.debug("{} disabled - not handling event {}", getClass().getSimpleName(), event.eventType().getName());

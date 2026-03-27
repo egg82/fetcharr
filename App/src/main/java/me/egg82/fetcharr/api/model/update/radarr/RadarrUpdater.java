@@ -75,6 +75,7 @@ public class RadarrUpdater extends AbstractUpdater {
             api.bus().post(selectMovieEvent);
             if (selectMovieEvent.cancelled()) {
                 RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.PLUGIN, this, api);
+                api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
                     logger.info("{} cancelled, but {} also cancelled - continuing with movie {} (\"{}\")", selectMovieEvent.getClass().getSimpleName(), skipMovieSelectionEvent.getClass().getSimpleName(), m.resource().id(), m.resource().title());
                 } else {
@@ -85,6 +86,7 @@ public class RadarrUpdater extends AbstractUpdater {
 
             if (monitoredOnly && !m.resource().monitored()) {
                 RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.UNMONITORED, this, api);
+                api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
                     logger.info("Unmonitored movie {} (\"{}\"), but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -94,6 +96,7 @@ public class RadarrUpdater extends AbstractUpdater {
             }
             if (missingOnly && m.resource().hasFile()) {
                 RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.NOT_MISSING, this, api);
+                api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
                     logger.info("Movie {} (\"{}\") not missing a movie file, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -104,6 +107,7 @@ public class RadarrUpdater extends AbstractUpdater {
             MovieFileResource movieFile = m.resource().movieFile();
             if (useCutoff && movieFile != null && !movieFile.qualityCutoffNotMet()) {
                 RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
+                api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
                     logger.info("Movie {} (\"{}\") quality cutoff met, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -113,6 +117,7 @@ public class RadarrUpdater extends AbstractUpdater {
             }
             if (!skipTags.isEmpty() && hasAnyTag(skipTags, m.resource().tags())) {
                 RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.SKIP_TAG_FOUND, this, api);
+                api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
                     logger.info("Movie {} (\"{}\") has skip-tag set, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -122,6 +127,7 @@ public class RadarrUpdater extends AbstractUpdater {
             }
 
             RadarrUpdateMovieEvent updateMovieEvent = new RadarrUpdateMovieEvent(m.resource(), this, api);
+            api.bus().post(updateMovieEvent);
             if (updateMovieEvent.cancelled()) {
                 logger.info("Skipping movie {} (\"{}\") due to {} cancellation", m.resource().id(), m.resource().title(), updateMovieEvent.getClass().getSimpleName());
                 continue;
@@ -138,6 +144,7 @@ public class RadarrUpdater extends AbstractUpdater {
 
         if (!dryRun && !ids.isEmpty()) {
             APISearchEvent searchEvent = new APISearchEvent(ids, this, api);
+            api.bus().post(searchEvent);
             if (!searchEvent.cancelled()) {
                 arrApi.search(searchEvent.ids());
             } else {

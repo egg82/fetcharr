@@ -78,6 +78,7 @@ public class WhisparrUpdater extends AbstractUpdater {
             api.bus().post(selectMovieEvent);
             if (selectMovieEvent.cancelled()) {
                 WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.PLUGIN, this, api);
+                api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
                     logger.info("{} cancelled, but {} also cancelled - continuing with scene/movie {} (\"{}\")", selectMovieEvent.getClass().getSimpleName(), skipMovieSelectionEvent.getClass().getSimpleName(), m.resource().id(), m.resource().title());
                 } else {
@@ -88,6 +89,7 @@ public class WhisparrUpdater extends AbstractUpdater {
 
             if (monitoredOnly && !m.resource().monitored()) {
                 WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.UNMONITORED, this, api);
+                api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
                     logger.info("Unmonitored scene/movie {} (\"{}\"), but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -97,6 +99,7 @@ public class WhisparrUpdater extends AbstractUpdater {
             }
             if (missingOnly && m.resource().hasFile()) {
                 WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.NOT_MISSING, this, api);
+                api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
                     logger.info("Scene/movie {} (\"{}\") not missing a movie file, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -107,6 +110,7 @@ public class WhisparrUpdater extends AbstractUpdater {
             MovieFileResource movieFile = m.resource().movieFile();
             if (useCutoff && movieFile != null && !movieFile.qualityCutoffNotMet()) {
                 WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
+                api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
                     logger.info("Scene/movie {} (\"{}\") quality cutoff met, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -116,6 +120,7 @@ public class WhisparrUpdater extends AbstractUpdater {
             }
             if (!skipTags.isEmpty() && hasAnyTag(skipTags, m.resource().tags())) {
                 WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.SKIP_TAG_FOUND, this, api);
+                api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
                     logger.info("Scene/ovie {} (\"{}\") has skip-tag set, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -125,6 +130,7 @@ public class WhisparrUpdater extends AbstractUpdater {
             }
 
             WhisparrUpdateMovieEvent updateMovieEvent = new WhisparrUpdateMovieEvent(m.resource(), this, api);
+            api.bus().post(updateMovieEvent);
             if (updateMovieEvent.cancelled()) {
                 logger.info("Skipping scene/movie {} (\"{}\") due to {} cancellation", m.resource().id(), m.resource().title(), updateMovieEvent.getClass().getSimpleName());
                 continue;
@@ -141,6 +147,7 @@ public class WhisparrUpdater extends AbstractUpdater {
 
         if (!dryRun && !ids.isEmpty()) {
             APISearchEvent searchEvent = new APISearchEvent(ids, this, api);
+            api.bus().post(searchEvent);
             if (!searchEvent.cancelled()) {
                 arrApi.search(searchEvent.ids());
             } else {

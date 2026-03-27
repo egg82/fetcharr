@@ -86,6 +86,7 @@ public class LidarrUpdater extends AbstractUpdater {
             api.bus().post(selectArtistEvent);
             if (selectArtistEvent.cancelled()) {
                 LidarrSkipArtistSelectionEvent skipArtistSelectionEvent = new LidarrSkipArtistSelectionEvent(a.artist(), SelectionCancellationReason.PLUGIN, this, api);
+                api.bus().post(skipArtistSelectionEvent);
                 if (skipArtistSelectionEvent.cancelled()) {
                     logger.info("{} cancelled, but {} also cancelled - continuing with artist {} (\"{}\")", skipArtistSelectionEvent.getClass().getSimpleName(), skipArtistSelectionEvent.getClass().getSimpleName(), a.artist().id(), a.artist().artistName());
                 } else {
@@ -96,6 +97,7 @@ public class LidarrUpdater extends AbstractUpdater {
 
             if (monitoredOnly && !a.artist().monitored()) {
                 LidarrSkipArtistSelectionEvent skipArtistSelectionEvent = new LidarrSkipArtistSelectionEvent(a.artist(), SelectionCancellationReason.UNMONITORED, this, api);
+                api.bus().post(skipArtistSelectionEvent);
                 if (skipArtistSelectionEvent.cancelled()) {
                     logger.info("Unmonitored artist {} (\"{}\"), but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -105,6 +107,7 @@ public class LidarrUpdater extends AbstractUpdater {
             }
             if (!skipTags.isEmpty() && hasAnyTag(skipTags, a.artist().tags())) {
                 LidarrSkipArtistSelectionEvent skipArtistSelectionEvent = new LidarrSkipArtistSelectionEvent(a.artist(), SelectionCancellationReason.SKIP_TAG_FOUND, this, api);
+                api.bus().post(skipArtistSelectionEvent);
                 if (skipArtistSelectionEvent.cancelled()) {
                     logger.info("Artist {} (\"{}\") has skip-tag set, but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -130,6 +133,7 @@ public class LidarrUpdater extends AbstractUpdater {
                 }
                 if (hasFiles) {
                     LidarrSkipArtistSelectionEvent skipArtistSelectionEvent = new LidarrSkipArtistSelectionEvent(a.artist(), SelectionCancellationReason.NOT_MISSING, this, api);
+                    api.bus().post(skipArtistSelectionEvent);
                     if (skipArtistSelectionEvent.cancelled()) {
                         logger.info("Artist {} (\"{}\") not missing any track files, but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
                     } else {
@@ -157,6 +161,7 @@ public class LidarrUpdater extends AbstractUpdater {
                 }
                 if (cutoffMet) {
                     LidarrSkipArtistSelectionEvent skipArtistSelectionEvent = new LidarrSkipArtistSelectionEvent(a.artist(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
+                    api.bus().post(skipArtistSelectionEvent);
                     if (skipArtistSelectionEvent.cancelled()) {
                         logger.info("Artist {} (\"{}\") quality cutoff met, but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
                     } else {
@@ -167,6 +172,7 @@ public class LidarrUpdater extends AbstractUpdater {
             }
 
             LidarrUpdateArtistEvent updateArtistEvent = new LidarrUpdateArtistEvent(a.artist(), this, api);
+            api.bus().post(updateArtistEvent);
             if (updateArtistEvent.cancelled()) {
                 logger.info("Skipping artist {} (\"{}\") due to {} cancellation", a.artist().id(), a.artist().artistName(), updateArtistEvent.getClass().getSimpleName());
                 continue;
@@ -184,6 +190,7 @@ public class LidarrUpdater extends AbstractUpdater {
 
         if (!dryRun && !ids.isEmpty()) {
             APISearchEvent searchEvent = new APISearchEvent(ids, this, api);
+            api.bus().post(searchEvent);
             if (!searchEvent.cancelled()) {
                 arrApi.search(searchEvent.ids());
             } else {

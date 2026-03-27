@@ -85,6 +85,7 @@ public class SonarrUpdater extends AbstractUpdater {
             api.bus().post(selectSeriesEvent);
             if (selectSeriesEvent.cancelled()) {
                 SonarrSkipSeriesSelectionEvent skipSeriesSelectionEvent = new SonarrSkipSeriesSelectionEvent(s.series(), SelectionCancellationReason.PLUGIN, this, api);
+                api.bus().post(skipSeriesSelectionEvent);
                 if (skipSeriesSelectionEvent.cancelled()) {
                     logger.info("{} cancelled, but {} also cancelled - continuing with series {} (\"{}\")", skipSeriesSelectionEvent.getClass().getSimpleName(), skipSeriesSelectionEvent.getClass().getSimpleName(), s.series().id(), s.series().title());
                 } else {
@@ -95,6 +96,7 @@ public class SonarrUpdater extends AbstractUpdater {
 
             if (monitoredOnly && !s.series().monitored()) {
                 SonarrSkipSeriesSelectionEvent skipSeriesSelectionEvent = new SonarrSkipSeriesSelectionEvent(s.series(), SelectionCancellationReason.UNMONITORED, this, api);
+                api.bus().post(skipSeriesSelectionEvent);
                 if (skipSeriesSelectionEvent.cancelled()) {
                     logger.info("Unmonitored series {} (\"{}\"), but {} cancelled - continuing", s.series().id(), s.series().title(), skipSeriesSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -104,6 +106,7 @@ public class SonarrUpdater extends AbstractUpdater {
             }
             if (!skipTags.isEmpty() && hasAnyTag(skipTags, s.series().tags())) {
                 SonarrSkipSeriesSelectionEvent skipSeriesSelectionEvent = new SonarrSkipSeriesSelectionEvent(s.series(), SelectionCancellationReason.SKIP_TAG_FOUND, this, api);
+                api.bus().post(skipSeriesSelectionEvent);
                 if (skipSeriesSelectionEvent.cancelled()) {
                     logger.info("Series {} (\"{}\") has skip-tag set, but {} cancelled - continuing", s.series().id(), s.series().title(), skipSeriesSelectionEvent.getClass().getSimpleName());
                 } else {
@@ -121,6 +124,7 @@ public class SonarrUpdater extends AbstractUpdater {
                 }
                 if (hasFiles) {
                     SonarrSkipSeriesSelectionEvent skipSeriesSelectionEvent = new SonarrSkipSeriesSelectionEvent(s.series(), SelectionCancellationReason.NOT_MISSING, this, api);
+                    api.bus().post(skipSeriesSelectionEvent);
                     if (skipSeriesSelectionEvent.cancelled()) {
                         logger.info("Series {} (\"{}\") not missing any episode files, but {} cancelled - continuing", s.series().id(), s.series().title(), skipSeriesSelectionEvent.getClass().getSimpleName());
                     } else {
@@ -140,6 +144,7 @@ public class SonarrUpdater extends AbstractUpdater {
                 }
                 if (cutoffMet) {
                     SonarrSkipSeriesSelectionEvent skipSeriesSelectionEvent = new SonarrSkipSeriesSelectionEvent(s.series(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
+                    api.bus().post(skipSeriesSelectionEvent);
                     if (skipSeriesSelectionEvent.cancelled()) {
                         logger.info("Series {} (\"{}\") quality cutoff met, but {} cancelled - continuing", s.series().id(), s.series().title(), skipSeriesSelectionEvent.getClass().getSimpleName());
                     } else {
@@ -150,6 +155,7 @@ public class SonarrUpdater extends AbstractUpdater {
             }
 
             SonarrUpdateSeriesEvent updateSeriesEvent = new SonarrUpdateSeriesEvent(s.series(), this, api);
+            api.bus().post(updateSeriesEvent);
             if (updateSeriesEvent.cancelled()) {
                 logger.info("Skipping series {} (\"{}\") due to {} cancellation", s.series().id(), s.series().title(), updateSeriesEvent.getClass().getSimpleName());
                 continue;
@@ -167,6 +173,7 @@ public class SonarrUpdater extends AbstractUpdater {
 
         if (!dryRun && !ids.isEmpty()) {
             APISearchEvent searchEvent = new APISearchEvent(ids, this, api);
+            api.bus().post(searchEvent);
             if (!searchEvent.cancelled()) {
                 arrApi.search(searchEvent.ids());
             } else {

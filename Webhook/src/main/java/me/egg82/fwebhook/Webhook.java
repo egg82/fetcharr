@@ -74,10 +74,10 @@ public class Webhook implements Plugin {
 
             WebhookDestination destination = null;
             if (type.equalsIgnoreCase("discord")) {
-                destination = new DiscordWebhookDestination(api, id, config, transform);
+                destination = new DiscordWebhookDestination(api, id, child.getValue(), transform);
             }
             if (type.equalsIgnoreCase("notifiarr")) {
-                destination = new NotifiarrWebhookDestination(api, id, config, transform);
+                destination = new NotifiarrWebhookDestination(api, id, child.getValue(), transform);
             }
             if (destination == null) {
                 logger.warn("Could not find destination for type {}", type);

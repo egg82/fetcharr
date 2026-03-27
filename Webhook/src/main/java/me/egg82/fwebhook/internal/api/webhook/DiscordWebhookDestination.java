@@ -12,6 +12,20 @@ public class DiscordWebhookDestination extends AbstractWebhookDestination {
     }
 
     @Override
+    public @NotNull String type() {
+        return "discord";
+    }
+
+    @Override
+    public boolean accepts(@NotNull FetcharrEvent event) {
+        if (!config.node("enabled").getBoolean(false)) {
+            return false;
+        }
+
+        return super.accepts(event);
+    }
+
+    @Override
     public boolean handle(@NotNull FetcharrEvent event) throws Exception {
         if (!config.node("enabled").getBoolean(false)) {
             logger.debug("{} disabled - not handling event {}", getClass().getSimpleName(), event.eventType().getName());

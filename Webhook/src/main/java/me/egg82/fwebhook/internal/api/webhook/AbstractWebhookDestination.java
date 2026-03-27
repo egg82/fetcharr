@@ -39,11 +39,6 @@ public abstract class AbstractWebhookDestination implements WebhookDestination {
     }
 
     @Override
-    public @NotNull String type() {
-        return config.node("type").getString("<unknown>");
-    }
-
-    @Override
     public boolean accepts(@NotNull FetcharrEvent event) {
         return transform.accepts(event);
     }
