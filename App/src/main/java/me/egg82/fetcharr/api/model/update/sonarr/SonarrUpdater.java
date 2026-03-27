@@ -71,9 +71,9 @@ public class SonarrUpdater extends AbstractUpdater {
 
         boolean dryRun = api.updateManager().dryRun();
 
-        IntList ids = new IntArrayList();
+        List<SeriesResource> resources = new ArrayList<>();
         int attempts = 100;
-        while (attempts > 0 && ids.size() < searchAmount) {
+        while (attempts > 0 && resources.size() < searchAmount) {
             attempts--;
 
             WeightedSeries s = random.selectOne();
@@ -166,16 +166,20 @@ public class SonarrUpdater extends AbstractUpdater {
             } else {
                 logger.info("Updating series {} (\"{}\")", s.series().id(), s.series().title());
             }
-            ids.add(s.series().id());
+            resources.add(s.series());
             arrApi.invalidate(Series.class, s.series().id()); // Force refresh on next
             arrApi.invalidate(Episode.class, Map.of("seriesId", s.series().id())); // Force refresh on next
         }
 
-        if (!dryRun && !ids.isEmpty()) {
-            APISearchEvent searchEvent = new APISearchEvent(ids, this, api);
+        if (!dryRun && !resources.isEmpty()) {
+            SonarrSearchEvent searchEvent = new SonarrSearchEvent(resources, this, api);
             api.bus().post(searchEvent);
             if (!searchEvent.cancelled()) {
-                arrApi.search(searchEvent.ids());
+                IntList ids = new IntArrayList();
+                for (SeriesResource r : searchEvent.resources()) {
+                    ids.add(r.id());
+                }
+                arrApi.search(ids);
             } else {
                 logger.info("{} cancelled - not performing search for {}_{}", searchEvent.getClass().getSimpleName(), config.type().name(), config.id());
             }

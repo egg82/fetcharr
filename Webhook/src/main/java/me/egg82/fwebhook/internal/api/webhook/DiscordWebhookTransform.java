@@ -2,16 +2,22 @@ package me.egg82.fwebhook.internal.api.webhook;
 
 import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
+import me.egg82.arr.lidarr.v1.schema.ArtistResource;
+import me.egg82.arr.radarr.v3.schema.MovieResource;
+import me.egg82.arr.sonarr.v3.schema.SeriesResource;
 import me.egg82.fetcharr.api.event.FetcharrEvent;
-import me.egg82.fetcharr.api.event.update.APISearchEvent;
 import me.egg82.fetcharr.api.event.update.AbstractCancellableUpdaterEvent;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
+import me.egg82.fetcharr.api.event.update.lidarr.LidarrSearchEvent;
 import me.egg82.fetcharr.api.event.update.lidarr.LidarrSkipArtistSelectionEvent;
 import me.egg82.fetcharr.api.event.update.lidarr.LidarrUpdateArtistEvent;
+import me.egg82.fetcharr.api.event.update.radarr.RadarrSearchEvent;
 import me.egg82.fetcharr.api.event.update.radarr.RadarrSkipMovieSelectionEvent;
 import me.egg82.fetcharr.api.event.update.radarr.RadarrUpdateMovieEvent;
+import me.egg82.fetcharr.api.event.update.sonarr.SonarrSearchEvent;
 import me.egg82.fetcharr.api.event.update.sonarr.SonarrSkipSeriesSelectionEvent;
 import me.egg82.fetcharr.api.event.update.sonarr.SonarrUpdateSeriesEvent;
+import me.egg82.fetcharr.api.event.update.whisparr.WhisparrSearchEvent;
 import me.egg82.fetcharr.api.event.update.whisparr.WhisparrSkipMovieSelectionEvent;
 import me.egg82.fetcharr.api.event.update.whisparr.WhisparrUpdateMovieEvent;
 import me.egg82.fwebhook.api.webhook.WebhookPayload;
@@ -30,11 +36,14 @@ public class DiscordWebhookTransform extends AbstractWebhookTransform {
 
     @Override
     public boolean accepts(@NotNull FetcharrEvent event) {
-        return (event instanceof APISearchEvent && config.node("events", "search").getBoolean(false))
-                || (event instanceof RadarrUpdateMovieEvent && config.node("events", "update").getBoolean(true))
-                || (event instanceof SonarrUpdateSeriesEvent && config.node("events", "update").getBoolean(true))
-                || (event instanceof LidarrUpdateArtistEvent && config.node("events", "update").getBoolean(true))
-                || (event instanceof WhisparrUpdateMovieEvent && config.node("events", "update").getBoolean(true))
+        return (event instanceof RadarrSearchEvent && config.node("events", "search").getBoolean(true))
+                || (event instanceof SonarrSearchEvent && config.node("events", "search").getBoolean(true))
+                || (event instanceof LidarrSearchEvent && config.node("events", "search").getBoolean(true))
+                || (event instanceof WhisparrSearchEvent && config.node("events", "search").getBoolean(true))
+                || (event instanceof RadarrUpdateMovieEvent && config.node("events", "update").getBoolean(false))
+                || (event instanceof SonarrUpdateSeriesEvent && config.node("events", "update").getBoolean(false))
+                || (event instanceof LidarrUpdateArtistEvent && config.node("events", "update").getBoolean(false))
+                || (event instanceof WhisparrUpdateMovieEvent && config.node("events", "update").getBoolean(false))
                 || (event instanceof RadarrSkipMovieSelectionEvent && config.node("events", "skip").getBoolean(false))
                 || (event instanceof SonarrSkipSeriesSelectionEvent && config.node("events", "skip").getBoolean(false))
                 || (event instanceof LidarrSkipArtistSelectionEvent && config.node("events", "skip").getBoolean(false))
@@ -43,7 +52,13 @@ public class DiscordWebhookTransform extends AbstractWebhookTransform {
 
     @Override
     public @Nullable WebhookPayload transform(@NotNull FetcharrEvent event) throws Exception {
-        if (event instanceof APISearchEvent e) {
+        if (event instanceof RadarrSearchEvent e) {
+            return transformInternal(e);
+        } else if (event instanceof SonarrSearchEvent e) {
+            return transformInternal(e);
+        } else if (event instanceof LidarrSearchEvent e) {
+            return transformInternal(e);
+        } else if (event instanceof WhisparrSearchEvent e) {
             return transformInternal(e);
         } else if (event instanceof RadarrUpdateMovieEvent e) {
             return transformInternal(e);
@@ -67,8 +82,24 @@ public class DiscordWebhookTransform extends AbstractWebhookTransform {
 
     // ChatGPT largely came up with the structure and language of these embeds
 
-    private @Nullable WebhookPayload transformInternal(@NotNull APISearchEvent event) {
-        if (!config.node("events", "search").getBoolean(false)) {
+    private @Nullable WebhookPayload transformInternal(@NotNull RadarrSearchEvent event) {
+        return transformSearch(event, event.resources().size(), event.resources().stream().map(MovieResource::title).collect(Collectors.joining("\n")));
+    }
+
+    private @Nullable WebhookPayload transformInternal(@NotNull SonarrSearchEvent event) {
+        return transformSearch(event, event.resources().size(), event.resources().stream().map(SeriesResource::title).collect(Collectors.joining("\n")));
+    }
+
+    private @Nullable WebhookPayload transformInternal(@NotNull LidarrSearchEvent event) {
+        return transformSearch(event, event.resources().size(), event.resources().stream().map(ArtistResource::artistName).collect(Collectors.joining("\n")));
+    }
+
+    private @Nullable WebhookPayload transformInternal(@NotNull WhisparrSearchEvent event) {
+        return transformSearch(event, event.resources().size(), event.resources().stream().map(me.egg82.arr.whisparr.v3.schema.MovieResource::title).collect(Collectors.joining("\n")));
+    }
+
+    private @Nullable WebhookPayload transformSearch(@NotNull AbstractCancellableUpdaterEvent event, int size, @Nullable String itemList) {
+        if (!config.node("events", "search").getBoolean(true)) {
             return null;
         }
 
@@ -85,21 +116,18 @@ public class DiscordWebhookTransform extends AbstractWebhookTransform {
 
         JSONObject count = new JSONObject();
         count.put("name", "Count");
-        count.put("value", event.ids().size());
+        count.put("value", size);
         count.put("inline", true);
 
-        JSONObject ids = new JSONObject();
-        ids.put("name", "IDs");
-        // Source - https://stackoverflow.com/a/57784525
-        // Posted by Hemmels
-        // Retrieved 2026-03-27, License - CC BY-SA 4.0
-        ids.put("value", event.ids().intStream().mapToObj(String::valueOf).collect(Collectors.joining(", ")));
-        ids.put("inline", false);
+        JSONObject items = new JSONObject();
+        items.put("name", "Items");
+        items.put("value", itemList);
+        items.put("inline", false);
 
         JSONArray fields = new JSONArray();
         fields.put(app);
         fields.put(count);
-        fields.put(ids);
+        fields.put(items);
 
         JSONObject embed = new JSONObject();
         embed.put("title", "Search requested");
@@ -148,7 +176,7 @@ public class DiscordWebhookTransform extends AbstractWebhookTransform {
     }
 
     private @Nullable WebhookPayload transformUpdate(@NotNull AbstractCancellableUpdaterEvent event, @Nullable String itemName) {
-        if (!config.node("events", "update").getBoolean(true)) {
+        if (!config.node("events", "update").getBoolean(false)) {
             return null;
         }
 
@@ -187,7 +215,7 @@ public class DiscordWebhookTransform extends AbstractWebhookTransform {
     }
 
     private @Nullable WebhookPayload transformSkip(@NotNull AbstractCancellableUpdaterEvent event, @Nullable String itemName, @NotNull SelectionCancellationReason cancellationReason) {
-        if (!config.node("events", "skip").getBoolean(true)) {
+        if (!config.node("events", "skip").getBoolean(false)) {
             return null;
         }
 

@@ -10,12 +10,8 @@ import me.egg82.arr.whisparr.v3.schema.MovieFileResource;
 import me.egg82.arr.whisparr.v3.schema.MovieResource;
 import me.egg82.arr.whisparr.v3.schema.TagResource;
 import me.egg82.fetcharr.api.FetcharrAPI;
-import me.egg82.fetcharr.api.event.update.APISearchEvent;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
-import me.egg82.fetcharr.api.event.update.whisparr.WhisparrFetchMovieEvent;
-import me.egg82.fetcharr.api.event.update.whisparr.WhisparrSelectMovieEvent;
-import me.egg82.fetcharr.api.event.update.whisparr.WhisparrSkipMovieSelectionEvent;
-import me.egg82.fetcharr.api.event.update.whisparr.WhisparrUpdateMovieEvent;
+import me.egg82.fetcharr.api.event.update.whisparr.*;
 import me.egg82.fetcharr.api.model.update.AbstractUpdater;
 import me.egg82.fetcharr.api.model.update.UpdaterConfigImpl;
 import me.egg82.fetcharr.util.WeightedRandom;
@@ -64,9 +60,9 @@ public class WhisparrUpdater extends AbstractUpdater {
 
         boolean dryRun = api.updateManager().dryRun();
 
-        IntList ids = new IntArrayList();
+        List<MovieResource> resources = new ArrayList<>();
         int attempts = 100;
-        while (attempts > 0 && ids.size() < searchAmount) {
+        while (attempts > 0 && resources.size() < searchAmount) {
             attempts--;
 
             WeightedMovie m = random.selectOne();
@@ -141,15 +137,19 @@ public class WhisparrUpdater extends AbstractUpdater {
             } else {
                 logger.info("Updating scene/movie {} (\"{}\")", m.resource().id(), m.resource().title());
             }
-            ids.add(m.resource().id());
+            resources.add(m.resource());
             arrApi.invalidate(Movie.class, m.resource().id()); // Force refresh on next
         }
 
-        if (!dryRun && !ids.isEmpty()) {
-            APISearchEvent searchEvent = new APISearchEvent(ids, this, api);
+        if (!dryRun && !resources.isEmpty()) {
+            WhisparrSearchEvent searchEvent = new WhisparrSearchEvent(resources, this, api);
             api.bus().post(searchEvent);
             if (!searchEvent.cancelled()) {
-                arrApi.search(searchEvent.ids());
+                IntList ids = new IntArrayList();
+                for (MovieResource r : searchEvent.resources()) {
+                    ids.add(r.id());
+                }
+                arrApi.search(ids);
             } else {
                 logger.info("{} cancelled - not performing search for {}_{}", searchEvent.getClass().getSimpleName(), config.type().name(), config.id());
             }

@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
 
+@Deprecated(since = "2.1.0")
 public class APISearchEvent extends AbstractCancellableUpdaterEvent {
     private IntList ids;
 

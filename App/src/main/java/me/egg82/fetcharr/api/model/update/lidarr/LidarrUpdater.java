@@ -13,7 +13,6 @@ import me.egg82.arr.lidarr.v1.schema.TagResource;
 import me.egg82.arr.lidarr.v1.schema.TrackFileResource;
 import me.egg82.arr.lidarr.v1.schema.TrackResource;
 import me.egg82.fetcharr.api.FetcharrAPI;
-import me.egg82.fetcharr.api.event.update.APISearchEvent;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
 import me.egg82.fetcharr.api.event.update.lidarr.*;
 import me.egg82.fetcharr.api.model.update.AbstractUpdater;
@@ -72,9 +71,9 @@ public class LidarrUpdater extends AbstractUpdater {
 
         boolean dryRun = api.updateManager().dryRun();
 
-        IntList ids = new IntArrayList();
+        List<ArtistResource> resources = new ArrayList<>();
         int attempts = 100;
-        while (attempts > 0 && ids.size() < searchAmount) {
+        while (attempts > 0 && resources.size() < searchAmount) {
             attempts--;
 
             WeightedArtist a = random.selectOne();
@@ -183,16 +182,20 @@ public class LidarrUpdater extends AbstractUpdater {
             } else {
                 logger.info("Updating artist {} (\"{}\")", a.artist().id(), a.artist().artistName());
             }
-            ids.add(a.artist().id());
+            resources.add(a.artist());
             arrApi.invalidate(Artist.class, a.artist().id()); // Force refresh on next
             arrApi.invalidate(Track.class, Map.of("artistId", a.artist().id())); // Force refresh on next
         }
 
-        if (!dryRun && !ids.isEmpty()) {
-            APISearchEvent searchEvent = new APISearchEvent(ids, this, api);
+        if (!dryRun && !resources.isEmpty()) {
+            LidarrSearchEvent searchEvent = new LidarrSearchEvent(resources, this, api);
             api.bus().post(searchEvent);
             if (!searchEvent.cancelled()) {
-                arrApi.search(searchEvent.ids());
+                IntList ids = new IntArrayList();
+                for (ArtistResource r : searchEvent.resources()) {
+                    ids.add(r.id());
+                }
+                arrApi.search(ids);
             } else {
                 logger.info("{} cancelled - not performing search for {}_{}", searchEvent.getClass().getSimpleName(), config.type().name(), config.id());
             }
