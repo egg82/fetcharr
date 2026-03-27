@@ -76,6 +76,7 @@ docker run \
   -v ./config:/app/config \
   -v ./cache:/app/cache \
   -v ./logs:/app/logs \
+  -v ./plugins:/app/plugins \
   egg82/fetcharr:latest
 ```
 </details>
@@ -104,6 +105,7 @@ services:
       - ./config:/app/config
       - ./cache:/app/cache
       - ./logs:/app/logs
+      - ./plugins:/app/plugins
     restart: unless-stopped
 ```
 </details>
@@ -152,6 +154,18 @@ spec:
   resources:
     requests:
       storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: plugins
+  namespace: fetcharr
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -220,6 +234,8 @@ spec:
               name: cache
             - mountPath: /app/logs
               name: logs
+            - mountPath: /app/plugins
+              name: plugins
       volumes:
         - name: config
           persistentVolumeClaim:
@@ -230,6 +246,9 @@ spec:
         - name: logs
           persistentVolumeClaim:
             claimName: logs
+        - name: plugins
+          persistentVolumeClaim:
+            claimName: plugins
 ```
 </details>
 
@@ -343,13 +362,146 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | WHISPARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
 | WHISPARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 
-### Plugin/API settings
+## Plugins
 
-Plugin support coming in another release. More explanation on what it is/does when it comes.
+Fetcharr offers plugin support, which allows for customization and extensibility beyond the base application.
+This keeps Fetcharr reasonably clean and minimal while still providing an avenue for niche use-cases.
+
+### Plugin/API environment variables
 
 | variable | type    | values | default  | description |
 | -------- |---------| ------ |----------| ----------- |
+| PLUGIN_DIR | directory | /any/directory/path | /app/plugins | Plugin directory |
 | PROVIDE_RAW_API_OBJ | boolean | true, false | false | Provide raw API objects to plugins. Uses more memory |
+
+### Plugin usage
+
+Plugins are `.jar` files that are picked up in the `plugins` directory automatically (controlled via the
+`PLUGIN_DIR` environment variable). Plugins are loaded in the natural sort/list order for the directory. This
+means that a plugin named `10-my-plugin.jar` will be loaded before `20-alpha-plugin.jar` and
+after `00-zzz-plugin.jar`.
+
+Simply dropping the jar files in that directory and starting (or re-starting) Fetcharr will enable
+the plugins during Fetcharr's next startup.
+
+To make this easier, Fetcharr can use a `plugins.yaml` in the configuration directory which will download
+plugins from specified URLs automatically at startup.
+
+Simply create a `<config-dir>/plugins.yaml` with data similar to the following:
+```yaml
+plugins:
+  - url: https://some.web.domain/some/path/some-plugin-1.0.0.jar
+    filename: 01-some-plugin.jar
+
+  - url: https://another.web.domain/another/path/v1.2.3/another-plugin.jar
+    filename: 02-another-plugin.jar
+    sha256: 396d448073cf44195508216fca8668cfd6ab395bb447a077227b17d521dec80b
+
+  - manifest: https://some.web.domain/whatever/path/manifest.yaml
+```
+
+Each item under `plugins` must be one of the following:
+- A direct plugin download
+  - `url`: the URL of the plugin to download
+  - `filename`: the name of the file that will be placed in the plugin directory
+  - `sha256`: an optional (but recommended) SHA256 of the jar file
+- A manifest reference
+  - `manifest`: the URL of another YAML-formatted plugin list
+
+Manifest references are the same format as the above plugin YAML, and may reference other
+manifests within them. Recursion! Manifest loops are detected and ignored.
+
+If plugin filenames are duplicated, later entries overwrite earlier ones. In other words, if a later
+direct plugin or manifest uses the filename of an existing file, that file will be replaced
+(unless the SHA256 matches).
+
+### Plugin development
+
+The Webhook module is an example (usable) plugin utilizing all the available features.
+
+Plugins must have a class implements the `me.egg82.fetcharr.api.plugin.Plugin` interface and
+contain a `plugin.yaml` in their resources. The `plugin.yaml` file has a structure similar to the following:
+```yaml
+id: unique-id
+name: Some name
+version: Any version number
+description: Whatever description
+authors: [some, authors]
+class: your.package.path.MainClass
+exports:
+  - another.package.path.to.api
+  - maybe.some.path.to.Class
+```
+
+Details on each of these:
+- `id`: REQUIRED. A unique plugin ID
+- `name`: REQUIRED. A friendly name to give to the plugin
+- `version`: REQUIRED. Any version string for the plugin
+- `description`: Optional. A plugin description, if you'd like to add one
+- `authors`: Optional. A list of plugin authors
+- `class`: REQUIRED. The main class to load (the one that implements `me.egg82.fetcharr.api.plugin.Plugin`)
+- `exports`: Optional. A list of classes or packages to expose to other plugins
+
+<details open>
+<summary>Maven</summary>
+
+```xml
+<repositories>
+  <repository>
+    <id>egg82-repo-releases</id>
+    <url>https://repo.egg82.me/releases/</url>
+  </repository>
+</repositories>
+
+<dependencies>
+  <dependency>
+    <groupId>me.egg82</groupId>
+    <artifactId>fetcharr-api</artifactId>
+    <version>API-VERSION</version>
+    <scope>provided</scope>
+  </dependency>
+  <dependency>
+    <groupId>me.egg82</groupId>
+    <artifactId>arr-lib</artifactId>
+    <version>LIB-VERSION</version>
+    <scope>provided</scope>
+  </dependency>
+</dependencies>
+```
+</details>
+
+<details>
+<summary>Gradle</summary>
+
+```kotlin
+repositories {
+    maven {
+        name = "egg82Releases"
+        url = uri("https://repo.egg82.me/releases/")
+    }
+}
+
+dependencies {
+    compileOnly("me.egg82:fetcharr-api:API-VERSION")
+    compileOnly("me.egg82:arr-lib:LIB-VERSION")
+}
+```
+</details>
+
+When providing custom API for other plugins to use, the `exports` list in your `plugin.yaml` and the
+`me.egg82.fetcharr.api.model.registry.Registry` class will be helpful to you.
+
+Adding classes or packages to the `exports` list in your `plugin.yaml` will expose those classes to
+be usable to other plugins (they will be able to find those classes in their given `ClassLoader`s).
+
+You can then call `FetcharrAPIProvider.instance().registry().register()` to register any API you would
+like those plugins to have easy access to. They will be able to call `FetcharrAPIProvider.instance().registry().getFirst()`
+or `FetcharrAPIProvider.instance().registry().getAll()` to consume your provided API.
+
+To avoid namespace pollution, export only necessary API interfaces intended for use by other
+plugins, not actual implementations or other unnecessary classes or packages.
+
+An example of this is available in the Webhook module.
 
 ## Wall of oddities
 

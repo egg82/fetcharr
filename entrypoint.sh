@@ -5,7 +5,7 @@ set -Eeuo pipefail
 
 fix_permissions() {
   local path
-  for path in /app/config /app/cache /app/logs /data /tmp; do
+  for path in /app/config /app/cache /app/logs /app/plugins /tmp; do
     mkdir -p "$path"
     chown -R "${PUID}:${PGID}" "$path"
   done

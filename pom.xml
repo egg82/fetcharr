@@ -16,9 +16,10 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
 
-        <app.version>2.0.2</app.version>
-        <api.version>1.0.1</api.version>
+        <app.version>2.1.0</app.version>
+        <api.version>2.0.0</api.version>
         <lib.version>1.0.1</lib.version>
+        <webhook.version>1.0.0</webhook.version>
 
         <jetbrains.version>26.1.0</jetbrains.version>
 
@@ -29,6 +30,7 @@
         <expiringmap.version>0.5.11</expiringmap.version>
         <fastutil.version>8.5.18</fastutil.version>
         <event.version>1.0.0</event.version>
+        <configurate.version>4.2.0</configurate.version>
     </properties>
 
     <profiles>
@@ -138,6 +140,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-deploy-plugin</artifactId>
                 <version>3.1.4</version>
+                <inherited>false</inherited>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -172,5 +178,6 @@
         <module>Lib</module>
         <module>API</module>
         <module>App</module>
+        <module>Webhook</module>
     </modules>
 </project>

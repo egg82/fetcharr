@@ -12,11 +12,15 @@ import me.egg82.arr.parse.BooleanParser;
 import me.egg82.arr.radarr.RadarrV3API;
 import me.egg82.arr.sonarr.SonarrV3API;
 import me.egg82.arr.whisparr.WhisparrV3API;
+import me.egg82.fetcharr.api.APIRegistrationUtil;
+import me.egg82.fetcharr.api.FetcharrAPI;
+import me.egg82.fetcharr.api.FetcharrAPIImpl;
+import me.egg82.fetcharr.api.FetcharrAPIProvider;
+import me.egg82.fetcharr.api.model.update.lidarr.LidarrUpdater;
+import me.egg82.fetcharr.api.model.update.radarr.RadarrUpdater;
+import me.egg82.fetcharr.api.model.update.sonarr.SonarrUpdater;
+import me.egg82.fetcharr.api.model.update.whisparr.WhisparrUpdater;
 import me.egg82.fetcharr.config.*;
-import me.egg82.fetcharr.work.lidarr.LidarrUpdater;
-import me.egg82.fetcharr.work.radarr.RadarrUpdater;
-import me.egg82.fetcharr.work.sonarr.SonarrUpdater;
-import me.egg82.fetcharr.work.whisparr.WhisparrUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.tinylog.configuration.Configuration;
@@ -30,9 +34,7 @@ import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -65,16 +67,10 @@ public class Main {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
-    private static final ScheduledExecutorService workPool = Executors.newScheduledThreadPool(Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
-    private static final List<Runnable> radarr = new ArrayList<>();
-    private static final List<Runnable> sonarr = new ArrayList<>();
-    private static final List<Runnable> lidarr = new ArrayList<>();
-    private static final List<Runnable> whisparr = new ArrayList<>();
-
     public static void main(String[] args) {
         LOGGER.info("Starting..");
         LOGGER.info("Logging mode set to {}", LogConfigVars.getLogMode(LogConfigVars.LOG_MODE).name());
-        LOGGER.info("Thread pool size set to {}", Math.max(4, Runtime.getRuntime().availableProcessors() / 2));
+        LOGGER.info("Thread pool size set to {}", Math.max(4, Runtime.getRuntime().availableProcessors() / 2)); // This math is actually done in FetcharrAPIImpl
 
         Tristate memoryCache = CacheConfigVars.getTristate(CacheConfigVars.USE_MEMORY_CACHE);
         Tristate fileCache = CacheConfigVars.getTristate(CacheConfigVars.USE_FILE_CACHE);
@@ -101,6 +97,12 @@ public class Main {
             Thread.currentThread().interrupt();
         }
 
+        APIRegistrationUtil.register(new FetcharrAPIImpl());
+
+        // Init after loading all plugins so they can see each other
+        FetcharrAPIProvider.instance().pluginManager().init();
+        FetcharrAPIProvider.instance().pluginManager().start();
+
         for (int i = 0; i < 100; i++) {
             setupRadarr(i);
             setupSonarr(i);
@@ -110,38 +112,14 @@ public class Main {
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             LOGGER.info("Shutting down..");
-            workPool.shutdown();
-            try {
-                if (!workPool.awaitTermination(10L, TimeUnit.SECONDS)) {
-                    workPool.shutdownNow();
-                }
-            } catch (InterruptedException ignored) {
-                Thread.currentThread().interrupt();
-            }
+
+            FetcharrAPI api = FetcharrAPIProvider.instance();
+            api.pluginManager().shutdown();
+            APIRegistrationUtil.deregister();
+            api.updateManager().shutdown(10_000L);
+
             Unirest.shutDown();
         }));
-
-        while (true) {
-            try {
-                Thread.sleep(5_000);
-
-                for (Runnable r : radarr) {
-                    workPool.submit(r);
-                }
-                for (Runnable r : sonarr) {
-                    workPool.submit(r);
-                }
-                for (Runnable r : lidarr) {
-                    workPool.submit(r);
-                }
-                for (Runnable r : whisparr) {
-                    workPool.submit(r);
-                }
-            } catch (InterruptedException ignored) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
     }
 
     private static void setupUnirest() {
@@ -224,14 +202,18 @@ public class Main {
         url = url.strip().replaceAll("/+$", "");
         key = key.strip();
 
-        RadarrV3API api = new RadarrV3API(url, key, num);
-        if (!api.valid()) {
+        RadarrV3API arrApi = new RadarrV3API(url, key, num);
+        if (!arrApi.valid()) {
             LOGGER.warn("Could not authenticate to Radarr instance configured at {} ({})", RadarrConfigVars.URL.envName(num), url);
             return;
         }
 
-        radarr.add(new RadarrUpdater(api));
-        LOGGER.info("Added RADARR_{} instance at {}", num, url);
+        FetcharrAPI api = FetcharrAPIProvider.instance();
+        if (api.updateManager().register(new RadarrUpdater(api, arrApi, num))) {
+            LOGGER.info("Added RADARR_{} instance at {}", num, url);
+        } else {
+            LOGGER.info("Did not add RADARR_{} instance at {} - registration cancelled", num, url);
+        }
     }
 
     private static void setupSonarr(int num) {
@@ -253,14 +235,18 @@ public class Main {
         url = url.strip().replaceAll("/+$", "");
         key = key.strip();
 
-        SonarrV3API api = new SonarrV3API(url, key, num);
-        if (!api.valid()) {
+        SonarrV3API arrApi = new SonarrV3API(url, key, num);
+        if (!arrApi.valid()) {
             LOGGER.warn("Could not authenticate to Sonarr instance configured at {} ({})", SonarrConfigVars.URL.envName(num), url);
             return;
         }
 
-        sonarr.add(new SonarrUpdater(api));
-        LOGGER.info("Added SONARR_{} instance at {}", num, url);
+        FetcharrAPI api = FetcharrAPIProvider.instance();
+        if (api.updateManager().register(new SonarrUpdater(api, arrApi, num))) {
+            LOGGER.info("Added SONARR_{} instance at {}", num, url);
+        } else {
+            LOGGER.info("Did not add SONARR_{} instance at {} - registration cancelled", num, url);
+        }
     }
 
     private static void setupLidarr(int num) {
@@ -282,14 +268,18 @@ public class Main {
         url = url.strip().replaceAll("/+$", "");
         key = key.strip();
 
-        LidarrV1API api = new LidarrV1API(url, key, num);
-        if (!api.valid()) {
+        LidarrV1API arrApi = new LidarrV1API(url, key, num);
+        if (!arrApi.valid()) {
             LOGGER.warn("Could not authenticate to Lidarr instance configured at {} ({})", LidarrConfigVars.URL.envName(num), url);
             return;
         }
 
-        lidarr.add(new LidarrUpdater(api));
-        LOGGER.info("Added LIDARR_{} instance at {}", num, url);
+        FetcharrAPI api = FetcharrAPIProvider.instance();
+        if (api.updateManager().register(new LidarrUpdater(api, arrApi, num))) {
+            LOGGER.info("Added LIDARR_{} instance at {}", num, url);
+        } else {
+            LOGGER.info("Did not add LIDARR_{} instance at {} - registration cancelled", num, url);
+        }
     }
 
     private static void setupWhisparr(int num) {
@@ -311,14 +301,18 @@ public class Main {
         url = url.strip().replaceAll("/+$", "");
         key = key.strip();
 
-        WhisparrV3API api = new WhisparrV3API(url, key, num);
-        if (!api.valid()) {
+        WhisparrV3API arrApi = new WhisparrV3API(url, key, num);
+        if (!arrApi.valid()) {
             LOGGER.warn("Could not authenticate to Whisparr instance configured at {} ({})", WhisparrConfigVars.URL.envName(num), url);
             return;
         }
 
-        whisparr.add(new WhisparrUpdater(api));
-        LOGGER.info("Added WHISPARR_{} instance at {}", num, url);
+        FetcharrAPI api = FetcharrAPIProvider.instance();
+        if (api.updateManager().register(new WhisparrUpdater(api, arrApi, num))) {
+            LOGGER.info("Added WHISPARR_{} instance at {}", num, url);
+        } else {
+            LOGGER.info("Did not add WHISPARR_{} instance at {} - registration cancelled", num, url);
+        }
     }
 
     private static boolean isCacheWritable() {

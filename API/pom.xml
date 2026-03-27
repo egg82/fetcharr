@@ -84,6 +84,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>me.egg82</groupId>
+            <artifactId>arr-lib</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
             <version>${jetbrains.version}</version>
@@ -101,6 +106,19 @@
             <groupId>com.sasorio</groupId>
             <artifactId>event-api</artifactId>
             <version>${event.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.pcollections</groupId>
+            <artifactId>pcollections</artifactId>
+            <version>${pcollections.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>it.unimi.dsi</groupId>
+            <artifactId>fastutil-core</artifactId>
+            <version>${fastutil.version}</version>
             <scope>provided</scope>
         </dependency>
     </dependencies>

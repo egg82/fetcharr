@@ -60,8 +60,12 @@ public class ObjectParser {
             return null;
         });
 
+        if (c == null) {
+            return null;
+        }
+
         try {
-            return (T) c.newInstance(api, val);
+            return type.cast(c.newInstance(api, val));
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
             if (!silent) {
                 LOGGER.error("Could not create new instance of class {}", type.getName(), ex);
