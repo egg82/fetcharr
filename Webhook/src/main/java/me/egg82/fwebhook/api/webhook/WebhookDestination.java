@@ -22,6 +22,17 @@ public interface WebhookDestination {
     @NotNull String type();
 
     /**
+     * Returns true if this destination is capable
+     * of accepting this event type. Returns false
+     * if this destination is not capable of accepting
+     * this event type.
+     *
+     * @param event the event to check against
+     * @return true if this destination can accept the event type, false if not
+     */
+    boolean accepts(@NotNull FetcharrEvent event);
+
+    /**
      * Attempts to handle the event.
      *
      * <p>Returns true if this destination was capable

@@ -111,10 +111,10 @@ public class Webhook implements Plugin {
     }
 
     private @Nullable CommentedConfigurationNode loadConfig(@NotNull File configFile) {
-        if (!configFile.exists() || !configFile.isFile()) {
-            try (InputStream resource = Thread.currentThread().getContextClassLoader().getResourceAsStream("config.yaml"); FileWriter out = new FileWriter(configFile); BufferedWriter writer = new BufferedWriter(out)) {
+        if (!configFile.exists() || !configFile.isFile() || configFile.length() == 0L) {
+            try (InputStream resource = getClass().getResourceAsStream("/config.yaml"); FileWriter out = new FileWriter(configFile); BufferedWriter writer = new BufferedWriter(out)) {
                 if (resource == null) {
-                    logger.error("Could not get resource {}", "config.yaml");
+                    logger.error("Could not get resource {}", "/config.yaml");
                     return null;
                 }
 
@@ -140,7 +140,7 @@ public class Webhook implements Plugin {
                     writer.write(chars);
                 }
             } catch (IOException ex) {
-                logger.error("Could not open resource {} or write file {}", "config.yaml", configFile.getAbsolutePath(), ex);
+                logger.error("Could not open resource {} or write file {}", "/config.yaml", configFile.getAbsolutePath(), ex);
                 return null;
             }
         }
@@ -163,8 +163,6 @@ public class Webhook implements Plugin {
             return;
         }
 
-        logger.debug("Webhook plugin caught event {}", event.eventType().getName());
-
         WebhookAPI api = FetcharrAPIProvider.instance().registry().getFirst(WebhookAPI.class); // Be nice and let other plugins take over the API if they want to try
         if (api == null) {
             // Something went very wrong, and we still need an API, so fall back to one we know we control
@@ -174,6 +172,10 @@ public class Webhook implements Plugin {
 
         for (WebhookDestination d : api.destinations()) {
             try {
+                if (!d.accepts(event)) {
+                    continue;
+                }
+
                 if (d.handle(event)) {
                     logger.debug("Destination {} ({}) handled event type {}", d.id(), d.type(), event.eventType().getName());
                 } else {

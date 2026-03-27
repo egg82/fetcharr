@@ -43,6 +43,11 @@ public abstract class AbstractWebhookDestination implements WebhookDestination {
         return config.node("type").getString("<unknown>");
     }
 
+    @Override
+    public boolean accepts(@NotNull FetcharrEvent event) {
+        return transform.accepts(event);
+    }
+
     protected final @Nullable String handleInternal(@NotNull FetcharrEvent event, @NotNull String baseUrl) throws Exception {
         WebhookPayload payload = transform.transform(event);
         if (payload == null) {
