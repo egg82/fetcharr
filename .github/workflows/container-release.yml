@@ -59,6 +59,9 @@ jobs:
           REPOSILITE_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
 
       - name: Build everything and deploy allowed Maven artifacts
+        env:
+          REPOSILITE_USERNAME: ${{ vars.REPOSILITE_USERNAME }}
+          REPOSILITE_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
         run: >
           mvn -B -ntp clean deploy -DdeployAtEnd=true
           -DaltReleaseDeploymentRepository=egg82-repo-releases::https://repo.egg82.me/releases/
