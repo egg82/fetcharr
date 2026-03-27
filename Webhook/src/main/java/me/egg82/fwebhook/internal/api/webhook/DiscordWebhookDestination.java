@@ -1,0 +1,38 @@
+package me.egg82.fwebhook.internal.api.webhook;
+
+import me.egg82.fetcharr.api.event.FetcharrEvent;
+import me.egg82.fwebhook.api.WebhookAPI;
+import me.egg82.fwebhook.api.webhook.WebhookTransform;
+import org.jetbrains.annotations.NotNull;
+import org.spongepowered.configurate.CommentedConfigurationNode;
+
+public class DiscordWebhookDestination extends AbstractWebhookDestination {
+    public DiscordWebhookDestination(@NotNull WebhookAPI api, @NotNull String id, @NotNull CommentedConfigurationNode config, @NotNull WebhookTransform transform) {
+        super(api, id, config, transform);
+    }
+
+    @Override
+    public boolean handle(@NotNull FetcharrEvent event) throws Exception {
+        if (!config.node("enabled").getBoolean(false)) {
+            logger.debug("{} disabled - not handling event {}", getClass().getSimpleName(), event.eventType().getName());
+            return false;
+        }
+
+        String response = handleInternal(event, "");
+        if (response == null) {
+            return false;
+        }
+        logger.debug("{} {} returned response for event {}: {}", getClass().getSimpleName(), this.id, event.eventType().getName(), response);
+        return true;
+    }
+
+    @Override
+    public String toString() {
+        return "DiscordWebhookDestination{" +
+                "api=" + api +
+                ", config=" + config +
+                ", id='" + id + '\'' +
+                ", transform=" + transform +
+                '}';
+    }
+}

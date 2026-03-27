@@ -9,6 +9,16 @@ import org.pcollections.PVector;
  */
 public interface PluginManager {
     /**
+     * Initialize all plugins
+     */
+    void init();
+
+    /**
+     * Start all plugins
+     */
+    void start();
+
+    /**
      * Gets the current list of {@link EnabledPlugin}s
      *
      * @return the current list of enabled plugins

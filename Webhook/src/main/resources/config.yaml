@@ -1,0 +1,22 @@
+webhooks:
+  my-webhook-1:
+    enabled: false
+    type: discord
+    url: https://discord.com/api/webhooks/...
+    events:
+      search: false
+      update: true
+      skip: false
+  my-webhook-2:
+    enabled: false
+    type: notifiarr
+    url: https://notifiarr.com/api/v1/notification/passthrough/
+    api-key: notifiarr-passthrough-key
+    channel-id: 123456789012345678
+    events:
+      search: false
+      update: true
+      skip: false
+    ping:
+      user-id: 0
+      role-id: 0

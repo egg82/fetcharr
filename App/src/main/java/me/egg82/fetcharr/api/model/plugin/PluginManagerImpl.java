@@ -18,6 +18,7 @@ import java.io.*;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class PluginManagerImpl implements PluginManager {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -37,12 +38,13 @@ public class PluginManagerImpl implements PluginManager {
             "me.egg82.fetcharr.api."
     ));
 
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
+    private final AtomicBoolean started = new AtomicBoolean(false);
+
     public PluginManagerImpl(@NotNull FetcharrAPI api) {
         this.api = api;
 
         File pluginDir = PluginConfigVars.getFile(PluginConfigVars.PLUGIN_DIR);
-        File dataDir = new File(pluginDir, "data");
-        File pluginConfigDir = new File(CommonConfigVars.getFile(CommonConfigVars.CONFIG_DIR), "plugin");
 
         downloadPlugins(new File(CommonConfigVars.getFile(CommonConfigVars.CONFIG_DIR), "plugins.yaml"), pluginDir);
         downloadPlugins(new File(CommonConfigVars.getFile(CommonConfigVars.CONFIG_DIR), "plugins.yml"), pluginDir);
@@ -74,8 +76,18 @@ public class PluginManagerImpl implements PluginManager {
             plugins.add(plugin);
             logger.info("Loaded plugin {} (\"{}\") version {} at path {}", plugin.descriptor().id(), plugin.descriptor().name(), plugin.descriptor().version(), f.getAbsolutePath());
         }
+    }
 
-        // Init after loading all plugins so they can see each other
+    @Override
+    public void init() {
+        if (!initialized.compareAndSet(false, true)) {
+            logger.warn("Attempted to re-initialize plugins.");
+            return;
+        }
+
+        File pluginDir = PluginConfigVars.getFile(PluginConfigVars.PLUGIN_DIR);
+        File dataDir = new File(pluginDir, "data");
+        File pluginConfigDir = new File(CommonConfigVars.getFile(CommonConfigVars.CONFIG_DIR), "plugin");
 
         List<@NotNull EnabledPluginImpl> disable = new ArrayList<>();
         for (EnabledPluginImpl p : plugins) {
@@ -109,6 +121,14 @@ public class PluginManagerImpl implements PluginManager {
         }
         if (!disable.isEmpty()) {
             plugins.removeAll(disable);
+        }
+    }
+
+    @Override
+    public void start() {
+        if (!started.compareAndSet(false, true)) {
+            logger.warn("Attempted to re-start plugins.");
+            return;
         }
 
         // We only remove plugins who failed their init, not ones that failed their start

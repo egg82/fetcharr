@@ -99,6 +99,10 @@ public class Main {
 
         APIRegistrationUtil.register(new FetcharrAPIImpl());
 
+        // Init after loading all plugins so they can see each other
+        FetcharrAPIProvider.instance().pluginManager().init();
+        FetcharrAPIProvider.instance().pluginManager().start();
+
         for (int i = 0; i < 100; i++) {
             setupRadarr(i);
             setupSonarr(i);

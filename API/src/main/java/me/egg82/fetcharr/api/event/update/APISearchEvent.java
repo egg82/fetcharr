@@ -39,7 +39,7 @@ public class APISearchEvent extends AbstractCancellableUpdaterEvent {
 
     @Override
     public String toString() {
-        return "RadarrSearchEvent{" +
+        return "APISearchEvent{" +
                 "ids=" + ids +
                 ", updater=" + updater +
                 ", api=" + api +
