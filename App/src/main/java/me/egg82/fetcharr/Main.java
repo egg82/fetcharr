@@ -68,6 +68,8 @@ public class Main {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Main.class);
 
+    private static volatile boolean running = true;
+
     public static void main(String[] args) {
         LOGGER.info("Starting..");
         LOGGER.info("Logging mode set to {}", LogConfigVars.getLogMode(LogConfigVars.LOG_MODE).name());
@@ -120,7 +122,17 @@ public class Main {
             api.updateManager().shutdown(10_000L);
 
             Unirest.shutDown();
+
+            running = false;
         }));
+
+        while (running) {
+            try {
+                Thread.sleep(5_000L);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     private static void setupUnirest() {

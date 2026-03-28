@@ -1,11 +1,11 @@
 package me.egg82.arr.file;
 
 import kong.unirest.core.JsonNode;
-import kong.unirest.core.json.JSONObject;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 public class JSONFile {
     private static final Logger LOGGER = LoggerFactory.getLogger(JSONFile.class);
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final File file;
 
@@ -30,7 +31,7 @@ public class JSONFile {
     public @NotNull JsonNode read() throws IOException {
         JsonNode obj = readNode();
         if (obj == null) {
-            obj = new JsonNode(new JSONObject().toString());
+            obj = new JsonNode("{}");
         }
         return obj;
     }
@@ -61,14 +62,10 @@ public class JSONFile {
             return null;
         }
 
-        StringBuilder builder = new StringBuilder();
-        try (FileReader reader = new FileReader(file); BufferedReader in = new BufferedReader(reader)) {
-            String line;
-            while ((line = in.readLine()) != null) {
-                builder.append(line).append(System.lineSeparator());
-            }
+        try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
+            tools.jackson.databind.JsonNode node = MAPPER.readTree(in);
+            return new kong.unirest.core.JsonNode(MAPPER.writeValueAsString(node));
         }
-        return new JsonNode(builder.toString().trim());
     }
 
     public void write(@NotNull JsonNode data) throws IOException {
