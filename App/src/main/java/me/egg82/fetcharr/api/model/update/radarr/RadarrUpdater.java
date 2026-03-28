@@ -13,6 +13,7 @@ import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
 import me.egg82.fetcharr.api.event.update.radarr.*;
 import me.egg82.fetcharr.api.model.update.AbstractUpdater;
+import me.egg82.fetcharr.api.model.update.MissingStatus;
 import me.egg82.fetcharr.api.model.update.UpdaterConfigImpl;
 import me.egg82.fetcharr.util.WeightedRandom;
 import org.jetbrains.annotations.NotNull;
@@ -54,7 +55,10 @@ public class RadarrUpdater extends AbstractUpdater {
         random.updateList(wrapped);
 
         boolean monitoredOnly = config.monitoredOnly();
-        boolean missingOnly = config.missingOnly();
+        MissingStatus missingStatus = config.missingStatus();
+        if (missingStatus == MissingStatus.ALL && config.missingOnly()) { // TODO: Temp - remove in a future version
+            missingStatus = MissingStatus.MISSING;
+        }
         boolean useCutoff = config.useCutoff();
         PSet<@NotNull String> skipTags = config.skipTags();
 
@@ -93,13 +97,23 @@ public class RadarrUpdater extends AbstractUpdater {
                     continue;
                 }
             }
-            if (missingOnly && m.resource().hasFile()) {
+            if (missingStatus == MissingStatus.MISSING && m.resource().hasFile()) {
                 RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.NOT_MISSING, this, api);
                 api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
-                    logger.info("Movie {} (\"{}\") not missing a movie file, but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
+                    logger.info("Movie {} (\"{}\") not missing a movie file (missing only), but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
                 } else {
-                    logger.info("Skipping movie {} (\"{}\") because it is not missing a movie file", m.resource().id(), m.resource().title());
+                    logger.info("Skipping movie {} (\"{}\") because it is not missing a movie file (missing only)", m.resource().id(), m.resource().title());
+                    continue;
+                }
+            }
+            if (missingStatus == MissingStatus.UPGRADE && !m.resource().hasFile()) {
+                RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.MISSING, this, api);
+                api.bus().post(skipMovieSelectionEvent);
+                if (skipMovieSelectionEvent.cancelled()) {
+                    logger.info("Movie {} (\"{}\") missing a movie file (upgrade only), but {} cancelled - continuing", m.resource().id(), m.resource().title(), skipMovieSelectionEvent.getClass().getSimpleName());
+                } else {
+                    logger.info("Skipping movie {} (\"{}\") because it is missing a movie file (upgrade only)", m.resource().id(), m.resource().title());
                     continue;
                 }
             }

@@ -5,6 +5,7 @@ import me.egg82.arr.parse.FileParser;
 import me.egg82.arr.parse.NumberParser;
 import me.egg82.arr.parse.TimeValueParser;
 import me.egg82.arr.unit.TimeValue;
+import me.egg82.fetcharr.api.model.update.MissingStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,7 +24,9 @@ public enum CommonConfigVars {
     SEARCH_AMOUNT(Integer.class, 5),
     SEARCH_INTERVAL(TimeValue.class, new TimeValue(1L, TimeUnit.HOURS)),
     MONITORED_ONLY(Boolean.class, true),
+    @Deprecated
     MISSING_ONLY(Boolean.class, false),
+    MISSING_STATUS(me.egg82.fetcharr.api.model.update.MissingStatus.class, MissingStatus.ALL),
     SKIP_TAGS(String[].class, new String[]{}),
     USE_CUTOFF(Boolean.class, false),
     DRY_RUN(Boolean.class, false);
@@ -84,5 +87,9 @@ public enum CommonConfigVars {
 
     public static @NotNull File getFile(@NotNull CommonConfigVars var) {
         return FileParser.parse(var.def(), System.getenv(var.name()));
+    }
+
+    public static @NotNull me.egg82.fetcharr.api.model.update.MissingStatus getMissingStatus(@NotNull CommonConfigVars var) {
+        return me.egg82.fetcharr.api.model.update.MissingStatus.parse(var.def(), System.getenv(var.name()));
     }
 }

@@ -65,6 +65,11 @@ public class UpdaterConfigImpl implements UpdaterConfig {
     }
 
     @Override
+    public @NotNull MissingStatus missingStatus() {
+        return ArrConfigVars.getMissingStatus(ArrConfigVars.MISSING_STATUS, type, id);
+    }
+
+    @Override
     public @NotNull PSet<@NotNull String> skipTags() {
         return TreePSet.of(ArrConfigVars.getArr(ArrConfigVars.SKIP_TAGS, type, id));
     }

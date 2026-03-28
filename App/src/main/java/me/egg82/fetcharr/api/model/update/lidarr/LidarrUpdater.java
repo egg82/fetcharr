@@ -16,6 +16,7 @@ import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
 import me.egg82.fetcharr.api.event.update.lidarr.*;
 import me.egg82.fetcharr.api.model.update.AbstractUpdater;
+import me.egg82.fetcharr.api.model.update.MissingStatus;
 import me.egg82.fetcharr.api.model.update.UpdaterConfigImpl;
 import me.egg82.fetcharr.util.WeightedRandom;
 import org.jetbrains.annotations.NotNull;
@@ -65,7 +66,10 @@ public class LidarrUpdater extends AbstractUpdater {
         random.updateList(wrapped);
 
         boolean monitoredOnly = config.monitoredOnly();
-        boolean missingOnly = config.missingOnly();
+        MissingStatus missingStatus = config.missingStatus();
+        if (missingStatus == MissingStatus.ALL && config.missingOnly()) { // TODO: Temp - remove in a future version
+            missingStatus = MissingStatus.MISSING;
+        }
         boolean useCutoff = config.useCutoff();
         PSet<@NotNull String> skipTags = config.skipTags();
 
@@ -114,7 +118,7 @@ public class LidarrUpdater extends AbstractUpdater {
                     continue;
                 }
             }
-            if (missingOnly) {
+            if (missingStatus == MissingStatus.MISSING || missingStatus == MissingStatus.UPGRADE) {
                 Track allTracks = arrApi.fetch(Track.class, Map.of("artistId", a.artist().id()));
                 if (allTracks == null) {
                     logger.warn("{}_{} returned bad result for {}", config.type().name(), config.id(), Track.UNKNOWN.apiPath());
@@ -130,13 +134,23 @@ public class LidarrUpdater extends AbstractUpdater {
                         break;
                     }
                 }
-                if (hasFiles) {
+                if (missingStatus == MissingStatus.MISSING && hasFiles) {
                     LidarrSkipArtistSelectionEvent skipArtistSelectionEvent = new LidarrSkipArtistSelectionEvent(a.artist(), SelectionCancellationReason.NOT_MISSING, this, api);
                     api.bus().post(skipArtistSelectionEvent);
                     if (skipArtistSelectionEvent.cancelled()) {
-                        logger.info("Artist {} (\"{}\") not missing any track files, but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
+                        logger.info("Artist {} (\"{}\") not missing any track files (missing only), but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
                     } else {
-                        logger.info("Skipping artist {} (\"{}\") because it is not missing any track files", a.artist().id(), a.artist().artistName());
+                        logger.info("Skipping artist {} (\"{}\") because it is not missing any track files (missing only)", a.artist().id(), a.artist().artistName());
+                        continue;
+                    }
+                }
+                if (missingStatus == MissingStatus.UPGRADE && !hasFiles) {
+                    LidarrSkipArtistSelectionEvent skipArtistSelectionEvent = new LidarrSkipArtistSelectionEvent(a.artist(), SelectionCancellationReason.MISSING, this, api);
+                    api.bus().post(skipArtistSelectionEvent);
+                    if (skipArtistSelectionEvent.cancelled()) {
+                        logger.info("Artist {} (\"{}\") not missing any track files (upgrade only), but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
+                    } else {
+                        logger.info("Skipping artist {} (\"{}\") because it is not missing any track files (upgrade only)", a.artist().id(), a.artist().artistName());
                         continue;
                     }
                 }

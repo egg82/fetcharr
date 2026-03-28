@@ -14,7 +14,9 @@ public enum ArrConfigVars {
     SEARCH_AMOUNT(Integer.class, "{ARR}_{ID}_SEARCH_AMOUNT", CommonConfigVars.getInt(CommonConfigVars.SEARCH_AMOUNT)),
     SEARCH_INTERVAL(TimeValue.class, "{ARR}_{ID}_SEARCH_INTERVAL", CommonConfigVars.getTimeValue(CommonConfigVars.SEARCH_INTERVAL)),
     MONITORED_ONLY(Boolean.class, "{ARR}_{ID}_MONITORED_ONLY", CommonConfigVars.getBool(CommonConfigVars.MONITORED_ONLY)),
+    @Deprecated
     MISSING_ONLY(Boolean.class, "{ARR}_{ID}_MISSING_ONLY", CommonConfigVars.getBool(CommonConfigVars.MISSING_ONLY)),
+    MISSING_STATUS(me.egg82.fetcharr.api.model.update.MissingStatus.class, "{ARR}_{ID}_MISSING_STATUS", CommonConfigVars.getMissingStatus(CommonConfigVars.MISSING_STATUS)),
     SKIP_TAGS(String[].class, "{ARR}_{ID}_SKIP_TAGS", CommonConfigVars.getArr(CommonConfigVars.SKIP_TAGS)),
     USE_CUTOFF(Boolean.class, "{ARR}_{ID}_USE_CUTOFF", CommonConfigVars.getBool(CommonConfigVars.USE_CUTOFF));
 
@@ -64,5 +66,9 @@ public enum ArrConfigVars {
 
     public static @NotNull TimeValue getTimeValue(@NotNull ArrConfigVars var, @NotNull ArrType type, int id) {
         return TimeValueParser.parse(var.def(), System.getenv(var.envName(type, id)));
+    }
+
+    public static @NotNull me.egg82.fetcharr.api.model.update.MissingStatus getMissingStatus(@NotNull ArrConfigVars var, @NotNull ArrType type, int id) {
+        return me.egg82.fetcharr.api.model.update.MissingStatus.parse(var.def(), System.getenv(var.envName(type, id)));
     }
 }

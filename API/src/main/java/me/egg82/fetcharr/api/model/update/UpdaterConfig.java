@@ -72,7 +72,16 @@ public interface UpdaterConfig {
      *
      * @return the missing value for this updater
      */
+    @Deprecated
     boolean missingOnly();
+
+    /**
+     * Gets the missing status value configured for
+     * this updater.
+     *
+     * @return the missing status value for this updater
+     */
+    @NotNull MissingStatus missingStatus();
 
     /**
      * Gets the skip-tags list configured for

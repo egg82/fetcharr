@@ -279,7 +279,8 @@ spec:
 | SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
 | SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
 | MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
-| MISSING_ONLY | boolean | true, false | false | Select for missing items |
+| ~~MISSING_ONLY~~ | ~~boolean~~ | ~~true, false~~ | ~~false~~ | ~~Select for missing items~~ |
+| MISSING_STATUS | string | any, missing, upgrade | any | "any" for any missing item status, "missing" for missing-only, "upgrade" for non-missing only |
 | USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
 | SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 
@@ -313,7 +314,8 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | RADARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
 | RADARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
 | RADARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
-| RADARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
+| ~~RADARR_X_MISSING_ONLY~~ | ~~boolean~~ | ~~true, false~~ | ~~false~~ | ~~Select for missing items~~ |
+| RADARR_X_MISSING_STATUS | string | any, missing, upgrade | any | "any" for any missing item status, "missing" for missing-only, "upgrade" for non-missing only |
 | RADARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
 | RADARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 
@@ -328,7 +330,8 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | SONARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
 | SONARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
 | SONARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
-| SONARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
+| ~~SONARR_X_MISSING_ONLY~~ | ~~boolean~~ | ~~true, false~~ | ~~false~~ | ~~Select for missing items~~ |
+| SONARR_X_MISSING_STATUS | string | any, missing, upgrade | any | "any" for any missing item status, "missing" for missing-only, "upgrade" for non-missing only |
 | SONARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
 | SONARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 
@@ -343,7 +346,8 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | LIDARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
 | LIDARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
 | LIDARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
-| LIDARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
+| ~~LIDARR_X_MISSING_ONLY~~ | ~~boolean~~ | ~~true, false~~ | ~~false~~ | ~~Select for missing items~~ |
+| LIDARR_X_MISSING_STATUS | string | any, missing, upgrade | any | "any" for any missing item status, "missing" for missing-only, "upgrade" for non-missing only |
 | LIDARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
 | LIDARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 
@@ -358,7 +362,8 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | WHISPARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
 | WHISPARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
 | WHISPARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
-| WHISPARR_X_MISSING_ONLY | boolean | true, false | false | Select for missing items |
+| ~~WHISPARR_X_MISSING_ONLY~~ | ~~boolean~~ | ~~true, false~~ | ~~false~~ | ~~Select for missing items~~ |
+| WHISPARR_X_MISSING_STATUS | string | any, missing, upgrade | any | "any" for any missing item status, "missing" for missing-only, "upgrade" for non-missing only |
 | WHISPARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
 | WHISPARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 

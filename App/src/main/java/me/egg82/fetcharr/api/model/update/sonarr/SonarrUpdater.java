@@ -12,10 +12,10 @@ import me.egg82.arr.sonarr.v3.schema.EpisodeResource;
 import me.egg82.arr.sonarr.v3.schema.SeriesResource;
 import me.egg82.arr.sonarr.v3.schema.TagResource;
 import me.egg82.fetcharr.api.FetcharrAPI;
-import me.egg82.fetcharr.api.event.update.APISearchEvent;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
 import me.egg82.fetcharr.api.event.update.sonarr.*;
 import me.egg82.fetcharr.api.model.update.AbstractUpdater;
+import me.egg82.fetcharr.api.model.update.MissingStatus;
 import me.egg82.fetcharr.api.model.update.UpdaterConfigImpl;
 import me.egg82.fetcharr.util.WeightedRandom;
 import org.jetbrains.annotations.NotNull;
@@ -65,7 +65,10 @@ public class SonarrUpdater extends AbstractUpdater {
         random.updateList(wrapped);
 
         boolean monitoredOnly = config.monitoredOnly();
-        boolean missingOnly = config.missingOnly();
+        MissingStatus missingStatus = config.missingStatus();
+        if (missingStatus == MissingStatus.ALL && config.missingOnly()) { // TODO: Temp - remove in a future version
+            missingStatus = MissingStatus.MISSING;
+        }
         boolean useCutoff = config.useCutoff();
         PSet<@NotNull String> skipTags = config.skipTags();
 
@@ -114,7 +117,7 @@ public class SonarrUpdater extends AbstractUpdater {
                     continue;
                 }
             }
-            if (missingOnly) {
+            if (missingStatus == MissingStatus.MISSING || missingStatus == MissingStatus.UPGRADE) {
                 boolean hasFiles = true;
                 for (EpisodeResource e : s.episodes()) {
                     if (!e.hasFile()) {
@@ -122,13 +125,23 @@ public class SonarrUpdater extends AbstractUpdater {
                         break;
                     }
                 }
-                if (hasFiles) {
+                if (missingStatus == MissingStatus.MISSING && hasFiles) {
                     SonarrSkipSeriesSelectionEvent skipSeriesSelectionEvent = new SonarrSkipSeriesSelectionEvent(s.series(), SelectionCancellationReason.NOT_MISSING, this, api);
                     api.bus().post(skipSeriesSelectionEvent);
                     if (skipSeriesSelectionEvent.cancelled()) {
-                        logger.info("Series {} (\"{}\") not missing any episode files, but {} cancelled - continuing", s.series().id(), s.series().title(), skipSeriesSelectionEvent.getClass().getSimpleName());
+                        logger.info("Series {} (\"{}\") not missing any episode files (missing only), but {} cancelled - continuing", s.series().id(), s.series().title(), skipSeriesSelectionEvent.getClass().getSimpleName());
                     } else {
-                        logger.info("Skipping series {} (\"{}\") because it is not missing any episode files", s.series().id(), s.series().title());
+                        logger.info("Skipping series {} (\"{}\") because it is not missing any episode files (missing only)", s.series().id(), s.series().title());
+                        continue;
+                    }
+                }
+                if (missingStatus == MissingStatus.UPGRADE && !hasFiles) {
+                    SonarrSkipSeriesSelectionEvent skipSeriesSelectionEvent = new SonarrSkipSeriesSelectionEvent(s.series(), SelectionCancellationReason.MISSING, this, api);
+                    api.bus().post(skipSeriesSelectionEvent);
+                    if (skipSeriesSelectionEvent.cancelled()) {
+                        logger.info("Series {} (\"{}\") missing episode files (upgrade only), but {} cancelled - continuing", s.series().id(), s.series().title(), skipSeriesSelectionEvent.getClass().getSimpleName());
+                    } else {
+                        logger.info("Skipping series {} (\"{}\") because it is missing episode files (upgrade only)", s.series().id(), s.series().title());
                         continue;
                     }
                 }

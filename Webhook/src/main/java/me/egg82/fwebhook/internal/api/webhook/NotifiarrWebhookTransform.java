@@ -303,6 +303,7 @@ public class NotifiarrWebhookTransform extends AbstractWebhookTransform {
             case UNKNOWN -> "Unknown";
             case PLUGIN -> "Skipped by plugin";
             case UNMONITORED -> "Unmonitored";
+            case MISSING -> "Missing";
             case NOT_MISSING -> "Not missing";
             case QUALITY_CUTOFF_MET -> "Quality cutoff met";
             case SKIP_TAG_FOUND -> "Skip tag found";
