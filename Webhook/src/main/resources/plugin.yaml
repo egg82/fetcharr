@@ -1,6 +1,6 @@
 id: webhook
 name: Webhook
-version: 1.1.0
+version: ${webhook.version}
 description: Webhook plugin for Fetcharr
 authors: [egg82]
 class: me.egg82.fwebhook.Webhook
