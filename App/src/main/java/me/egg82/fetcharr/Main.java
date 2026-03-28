@@ -4,6 +4,7 @@ import kong.unirest.core.JsonNode;
 import kong.unirest.core.Proxy;
 import kong.unirest.core.Unirest;
 import kong.unirest.core.json.JSONObject;
+import me.egg82.arr.common.ArrType;
 import me.egg82.arr.config.CacheConfigVars;
 import me.egg82.arr.config.Tristate;
 import me.egg82.arr.file.JSONFile;
@@ -184,18 +185,18 @@ public class Main {
     }
 
     private static void setupRadarr(int num) {
-        String url = RadarrConfigVars.get(RadarrConfigVars.URL, num);
-        String key = RadarrConfigVars.get(RadarrConfigVars.API_KEY, num);
+        String url = ArrConfigVars.get(ArrConfigVars.URL, ArrType.RADARR, num);
+        String key = ArrConfigVars.get(ArrConfigVars.API_KEY, ArrType.RADARR, num);
 
         if (url == null && key == null) {
             return;
         }
         if (url == null) {
-            LOGGER.warn("Radarr URL at {} missing", RadarrConfigVars.URL.envName(num));
+            LOGGER.warn("Radarr URL at {} missing", ArrConfigVars.URL.envName(ArrType.RADARR, num));
             return;
         }
         if (key == null) {
-            LOGGER.warn("Radarr API key at {} missing", RadarrConfigVars.API_KEY.envName(num));
+            LOGGER.warn("Radarr API key at {} missing", ArrConfigVars.API_KEY.envName(ArrType.RADARR, num));
             return;
         }
 
@@ -204,7 +205,7 @@ public class Main {
 
         RadarrV3API arrApi = new RadarrV3API(url, key, num);
         if (!arrApi.valid()) {
-            LOGGER.warn("Could not authenticate to Radarr instance configured at {} ({})", RadarrConfigVars.URL.envName(num), url);
+            LOGGER.warn("Could not authenticate to Radarr instance configured at {} ({})", ArrConfigVars.URL.envName(ArrType.RADARR, num), url);
             return;
         }
 
@@ -217,18 +218,18 @@ public class Main {
     }
 
     private static void setupSonarr(int num) {
-        String url = SonarrConfigVars.get(SonarrConfigVars.URL, num);
-        String key = SonarrConfigVars.get(SonarrConfigVars.API_KEY, num);
+        String url = ArrConfigVars.get(ArrConfigVars.URL, ArrType.SONARR, num);
+        String key = ArrConfigVars.get(ArrConfigVars.API_KEY, ArrType.SONARR, num);
 
         if (url == null && key == null) {
             return;
         }
         if (url == null) {
-            LOGGER.warn("Sonarr URL at {} missing", SonarrConfigVars.URL.envName(num));
+            LOGGER.warn("Sonarr URL at {} missing", ArrConfigVars.URL.envName(ArrType.SONARR, num));
             return;
         }
         if (key == null) {
-            LOGGER.warn("Sonarr API key at {} missing", SonarrConfigVars.API_KEY.envName(num));
+            LOGGER.warn("Sonarr API key at {} missing", ArrConfigVars.API_KEY.envName(ArrType.SONARR, num));
             return;
         }
 
@@ -237,7 +238,7 @@ public class Main {
 
         SonarrV3API arrApi = new SonarrV3API(url, key, num);
         if (!arrApi.valid()) {
-            LOGGER.warn("Could not authenticate to Sonarr instance configured at {} ({})", SonarrConfigVars.URL.envName(num), url);
+            LOGGER.warn("Could not authenticate to Sonarr instance configured at {} ({})", ArrConfigVars.URL.envName(ArrType.SONARR, num), url);
             return;
         }
 
@@ -250,18 +251,18 @@ public class Main {
     }
 
     private static void setupLidarr(int num) {
-        String url = LidarrConfigVars.get(LidarrConfigVars.URL, num);
-        String key = LidarrConfigVars.get(LidarrConfigVars.API_KEY, num);
+        String url = ArrConfigVars.get(ArrConfigVars.URL, ArrType.LIDARR, num);
+        String key = ArrConfigVars.get(ArrConfigVars.API_KEY, ArrType.LIDARR, num);
 
         if (url == null && key == null) {
             return;
         }
         if (url == null) {
-            LOGGER.warn("Lidarr URL at {} missing", LidarrConfigVars.URL.envName(num));
+            LOGGER.warn("Lidarr URL at {} missing", ArrConfigVars.URL.envName(ArrType.LIDARR, num));
             return;
         }
         if (key == null) {
-            LOGGER.warn("Lidarr API key at {} missing", LidarrConfigVars.API_KEY.envName(num));
+            LOGGER.warn("Lidarr API key at {} missing", ArrConfigVars.API_KEY.envName(ArrType.LIDARR, num));
             return;
         }
 
@@ -270,7 +271,7 @@ public class Main {
 
         LidarrV1API arrApi = new LidarrV1API(url, key, num);
         if (!arrApi.valid()) {
-            LOGGER.warn("Could not authenticate to Lidarr instance configured at {} ({})", LidarrConfigVars.URL.envName(num), url);
+            LOGGER.warn("Could not authenticate to Lidarr instance configured at {} ({})", ArrConfigVars.URL.envName(ArrType.LIDARR, num), url);
             return;
         }
 
@@ -283,18 +284,18 @@ public class Main {
     }
 
     private static void setupWhisparr(int num) {
-        String url = WhisparrConfigVars.get(WhisparrConfigVars.URL, num);
-        String key = WhisparrConfigVars.get(WhisparrConfigVars.API_KEY, num);
+        String url = ArrConfigVars.get(ArrConfigVars.URL, ArrType.WHISPARR, num);
+        String key = ArrConfigVars.get(ArrConfigVars.API_KEY, ArrType.WHISPARR, num);
 
         if (url == null && key == null) {
             return;
         }
         if (url == null) {
-            LOGGER.warn("Whisparr URL at {} missing", WhisparrConfigVars.URL.envName(num));
+            LOGGER.warn("Whisparr URL at {} missing", ArrConfigVars.URL.envName(ArrType.WHISPARR, num));
             return;
         }
         if (key == null) {
-            LOGGER.warn("Whisparr API key at {} missing", WhisparrConfigVars.API_KEY.envName(num));
+            LOGGER.warn("Whisparr API key at {} missing", ArrConfigVars.API_KEY.envName(ArrType.WHISPARR, num));
             return;
         }
 
@@ -303,7 +304,7 @@ public class Main {
 
         WhisparrV3API arrApi = new WhisparrV3API(url, key, num);
         if (!arrApi.valid()) {
-            LOGGER.warn("Could not authenticate to Whisparr instance configured at {} ({})", WhisparrConfigVars.URL.envName(num), url);
+            LOGGER.warn("Could not authenticate to Whisparr instance configured at {} ({})", ArrConfigVars.URL.envName(ArrType.WHISPARR, num), url);
             return;
         }
 
