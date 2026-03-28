@@ -1,6 +1,7 @@
 package me.egg82.fetcharr.api.model.plugin;
 
 import kong.unirest.core.HttpResponse;
+import kong.unirest.core.RawResponse;
 import kong.unirest.core.Unirest;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.config.CommonConfigVars;
@@ -37,6 +38,8 @@ public class PluginManagerImpl implements PluginManager {
             "org.spongepowered.configurate.",
             "me.egg82.fetcharr.api."
     ));
+
+    private static final char[] HEX = "0123456789abcdef".toCharArray();
 
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final AtomicBoolean started = new AtomicBoolean(false);
@@ -278,49 +281,65 @@ public class PluginManagerImpl implements PluginManager {
         }
     }
 
+    // ChatGPT wrote the memory-optimized version of this downloading/unpacking. The original was a little too memory-heavy
+    // Small edits were done to this method
     private void downloadPlugins(@NotNull PluginManifest manifest, @NotNull File pluginDir) {
         for (PluginManifestEntry e : manifest.direct()) {
-            HttpResponse<byte[]> resp = Unirest.get(e.url())
-                    .accept("application/java-archive")
-                    .asBytes();
+            File target = new File(pluginDir, e.filename());
+            File temp = new File(pluginDir, e.filename() + ".tmp");
 
-            if (!resp.isSuccess()) {
-                logger.warn("Could not download plugin (code {}) at URL {}", resp.getStatus(), resp.getRequestSummary().getUrl());
-                continue;
-            }
+            try {
+                MessageDigest digest = (e.sha256() != null) ? MessageDigest.getInstance("SHA-256") : null;
 
-            byte[] file = resp.getBody();
-            if (file == null || file.length == 0) {
-                logger.warn("Could not download plugin (no content) at URL {}", resp.getRequestSummary().getUrl());
-                continue;
-            }
-
-            if (e.sha256() != null) {
-                try {
-                    // This hash-to-string bit written by ChatGPT. I am not clever enough to write this
-                    byte[] digest = MessageDigest.getInstance("SHA-256").digest(file);
-                    StringBuilder builder = new StringBuilder(digest.length * 2);
-                    for (byte b : digest) {
-                        builder.append(String.format("%02x", b));
+                try (InputStream raw = Unirest.get(e.url()).accept("application/java-archive").asObject(RawResponse::getContent).getBody(); InputStream in = new BufferedInputStream(raw); OutputStream out = new BufferedOutputStream(new FileOutputStream(temp))) {
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    while ((read = in.read(buffer)) != -1) {
+                        out.write(buffer, 0, read);
+                        if (digest != null) {
+                            digest.update(buffer, 0, read);
+                        }
                     }
-                    if (!builder.toString().equalsIgnoreCase(e.sha256())) {
-                        logger.warn("SHA256 of downloaded file ({}) does not match given SHA256 ({}) for {}", builder.toString(), e.sha256(), resp.getRequestSummary().getUrl());
+                }
+
+                if (digest != null) {
+                    String actual = toHex(digest.digest());
+                    if (!actual.equalsIgnoreCase(e.sha256())) {
+                        logger.warn("SHA256 of downloaded file ({}) does not match given SHA256 ({}) for {}",
+                                actual, e.sha256(), e.url());
+                        if (!temp.delete()) {
+                            logger.warn("Could not delete temp file {}", temp.getAbsolutePath());
+                        }
                         continue;
                     }
-                } catch (NoSuchAlgorithmException ex) {
-                    logger.warn("SHA256 for {} could not be calculated", e.url(), ex);
-                    continue;
+                }
+
+                java.nio.file.Files.move(
+                        temp.toPath(),
+                        target.toPath(),
+                        java.nio.file.StandardCopyOption.REPLACE_EXISTING,
+                        java.nio.file.StandardCopyOption.ATOMIC_MOVE
+                );
+            } catch (Exception ex) {
+                logger.warn("Could not download plugin at URL {}", e.url(), ex);
+                if (temp.exists() && !temp.delete()) {
+                    logger.warn("Could not delete temp file {}", temp.getAbsolutePath());
                 }
             }
-
-            try (FileOutputStream writer = new FileOutputStream(new File(pluginDir, e.filename()))) {
-                writer.write(file);
-            } catch (IOException ex) {
-                logger.warn("Could not write plugin file at {}", e.filename(), ex);
-            }
         }
+
         for (PluginManifest m : manifest.manifests()) {
             downloadPlugins(m, pluginDir);
         }
+    }
+
+    private static @NotNull String toHex(byte[] bytes) {
+        char[] out = new char[bytes.length * 2];
+        for (int i = 0; i < bytes.length; i++) {
+            int v = bytes[i] & 0xFF;
+            out[i * 2] = HEX[v >>> 4];
+            out[i * 2 + 1] = HEX[v & 0x0F];
+        }
+        return new String(out);
     }
 }

@@ -16,9 +16,9 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
 
-        <app.version>2.1.1</app.version>
+        <app.version>2.1.2</app.version>
         <api.version>2.1.0</api.version>
-        <lib.version>1.0.1</lib.version>
+        <lib.version>1.0.2</lib.version>
         <webhook.version>1.1.0</webhook.version>
 
         <jetbrains.version>26.1.0</jetbrains.version>
