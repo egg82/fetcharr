@@ -5,9 +5,11 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import me.egg82.arr.common.ArrType;
 import me.egg82.arr.readarr.ReadarrV1API;
 import me.egg82.arr.readarr.v1.Author;
+import me.egg82.arr.readarr.v1.AuthorSearchCommand;
 import me.egg82.arr.readarr.v1.Book;
 import me.egg82.arr.readarr.v1.Tag;
 import me.egg82.arr.readarr.v1.model.AuthorResource;
+import me.egg82.arr.readarr.v1.model.CommandResource;
 import me.egg82.arr.readarr.v1.model.TagResource;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
@@ -198,16 +200,17 @@ public class ReadarrUpdater extends AbstractUpdater {
         }
 
         if (!dryRun && !resources.isEmpty()) {
-            LidarrSearchEvent searchEvent = new LidarrSearchEvent(resources, this, api);
-            api.bus().post(searchEvent);
-            if (!searchEvent.cancelled()) {
+            LidarrPreSearchEvent preSearchEvent = new LidarrPreSearchEvent(resources, this, api);
+            api.bus().post(preSearchEvent);
+            if (!preSearchEvent.cancelled()) {
                 IntList ids = new IntArrayList();
-                for (ArtistResource r : searchEvent.resources()) {
+                for (ArtistResource r : preSearchEvent.resources()) {
                     ids.add(r.id());
                 }
-                arrApi.search(ids);
+                CommandResource result = arrApi.send(new AuthorSearchCommand(ids.toIntArray()), CommandResource.class);
+                ReadarrPostSearchEvent postSearchEvent = new ReadarrPostSearchEvent(result, this, api);
             } else {
-                logger.info("{} cancelled - not performing search for {}_{}", searchEvent.getClass().getSimpleName(), config.type().name(), config.id());
+                logger.info("{} cancelled - not performing search for {}_{}", preSearchEvent.getClass().getSimpleName(), config.type().name(), config.id());
             }
         }
 

@@ -1,17 +1,9 @@
 package me.egg82.fetcharr.api.model.update.lidarr;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import me.egg82.arr.common.ArrType;
 import me.egg82.arr.lidarr.LidarrV1API;
-import me.egg82.arr.lidarr.v1.Album;
-import me.egg82.arr.lidarr.v1.Artist;
-import me.egg82.arr.lidarr.v1.Tag;
-import me.egg82.arr.lidarr.v1.Track;
-import me.egg82.arr.lidarr.v1.schema.ArtistResource;
-import me.egg82.arr.lidarr.v1.schema.TagResource;
-import me.egg82.arr.lidarr.v1.schema.TrackFileResource;
-import me.egg82.arr.lidarr.v1.schema.TrackResource;
+import me.egg82.arr.lidarr.v1.*;
+import me.egg82.arr.lidarr.v1.schema.*;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
 import me.egg82.fetcharr.api.event.update.lidarr.*;
@@ -202,16 +194,17 @@ public class LidarrUpdater extends AbstractUpdater {
         }
 
         if (!dryRun && !resources.isEmpty()) {
-            LidarrSearchEvent searchEvent = new LidarrSearchEvent(resources, this, api);
-            api.bus().post(searchEvent);
-            if (!searchEvent.cancelled()) {
-                IntList ids = new IntArrayList();
-                for (ArtistResource r : searchEvent.resources()) {
-                    ids.add(r.id());
+            LidarrPreSearchEvent preSearchEvent = new LidarrPreSearchEvent(resources, this, api);
+            api.bus().post(preSearchEvent);
+            if (!preSearchEvent.cancelled()) {
+                for (ArtistResource r : preSearchEvent.resources()) {
+                    CommandResource result = arrApi.send(new ArtistSearchCommand(r.id()), CommandResource.class);
+                    if (result != null && result.id() >= 0) {
+                        api.bus().post(new LidarrPostSearchEvent(result, this, api));
+                    }
                 }
-                arrApi.search(ids);
             } else {
-                logger.info("{} cancelled - not performing search for {}_{}", searchEvent.getClass().getSimpleName(), config.type().name(), config.id());
+                logger.info("{} cancelled - not performing search for {}_{}", preSearchEvent.getClass().getSimpleName(), config.type().name(), config.id());
             }
         }
 

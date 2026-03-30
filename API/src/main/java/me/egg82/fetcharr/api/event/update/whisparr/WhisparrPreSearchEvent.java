@@ -1,6 +1,6 @@
-package me.egg82.fetcharr.api.event.update.radarr;
+package me.egg82.fetcharr.api.event.update.whisparr;
 
-import me.egg82.arr.radarr.v3.schema.MovieResource;
+import me.egg82.arr.whisparr.v3.schema.MovieResource;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.AbstractCancellableUpdaterEvent;
 import me.egg82.fetcharr.api.model.update.Updater;
@@ -13,11 +13,10 @@ import java.util.Objects;
 /**
  * Fired before submitting a list of {@link MovieResource}s to the *arr app for searching
  */
-@Deprecated(since = "2.2.0")
-public class RadarrSearchEvent extends AbstractCancellableUpdaterEvent {
+public class WhisparrPreSearchEvent extends AbstractCancellableUpdaterEvent {
     private List<MovieResource> resources;
 
-    public RadarrSearchEvent(@NotNull List<@NotNull MovieResource> resources, @NotNull Updater updater, @NotNull FetcharrAPI api) {
+    public WhisparrPreSearchEvent(@NotNull List<@NotNull MovieResource> resources, @NotNull Updater updater, @NotNull FetcharrAPI api) {
         super(updater, api);
 
         this.resources = new ArrayList<>(resources);
@@ -33,7 +32,7 @@ public class RadarrSearchEvent extends AbstractCancellableUpdaterEvent {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof RadarrSearchEvent that)) return false;
+        if (!(o instanceof WhisparrPreSearchEvent that)) return false;
         if (!super.equals(o)) return false;
         return Objects.equals(resources, that.resources);
     }
@@ -45,7 +44,7 @@ public class RadarrSearchEvent extends AbstractCancellableUpdaterEvent {
 
     @Override
     public String toString() {
-        return "RadarrSearchEvent{" +
+        return "WhisparrPreSearchEvent{" +
                 "resources=" + resources +
                 ", updater=" + updater +
                 ", api=" + api +

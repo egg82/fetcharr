@@ -13,11 +13,10 @@ import java.util.Objects;
 /**
  * Fired before submitting a list of {@link MovieResource}s to the *arr app for searching
  */
-@Deprecated(since = "2.2.0")
-public class RadarrSearchEvent extends AbstractCancellableUpdaterEvent {
+public class RadarrPreSearchEvent extends AbstractCancellableUpdaterEvent {
     private List<MovieResource> resources;
 
-    public RadarrSearchEvent(@NotNull List<@NotNull MovieResource> resources, @NotNull Updater updater, @NotNull FetcharrAPI api) {
+    public RadarrPreSearchEvent(@NotNull List<@NotNull MovieResource> resources, @NotNull Updater updater, @NotNull FetcharrAPI api) {
         super(updater, api);
 
         this.resources = new ArrayList<>(resources);
@@ -33,7 +32,7 @@ public class RadarrSearchEvent extends AbstractCancellableUpdaterEvent {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof RadarrSearchEvent that)) return false;
+        if (!(o instanceof RadarrPreSearchEvent that)) return false;
         if (!super.equals(o)) return false;
         return Objects.equals(resources, that.resources);
     }
@@ -45,7 +44,7 @@ public class RadarrSearchEvent extends AbstractCancellableUpdaterEvent {
 
     @Override
     public String toString() {
-        return "RadarrSearchEvent{" +
+        return "RadarrPreSearchEvent{" +
                 "resources=" + resources +
                 ", updater=" + updater +
                 ", api=" + api +

@@ -13,6 +13,7 @@ import java.util.Objects;
 /**
  * Fired before submitting a list of {@link MovieResource}s to the *arr app for searching
  */
+@Deprecated(since = "2.2.0")
 public class WhisparrSearchEvent extends AbstractCancellableUpdaterEvent {
     private List<MovieResource> resources;
 

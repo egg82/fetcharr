@@ -4,7 +4,10 @@ import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractArrAPI;
 import me.egg82.arr.common.ArrType;
+import me.egg82.arr.lidarr.v1.ArtistSearchCommand;
 import me.egg82.arr.parse.NumberParser;
+import me.egg82.arr.readarr.v1.AuthorSearchCommand;
+import me.egg82.arr.readarr.v1.model.CommandResource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -40,17 +43,14 @@ public class ReadarrV1API extends AbstractArrAPI {
 
     @Override
     public void search(int... itemIds) {
-        JSONObject data = new JSONObject(Map.of(
-                "authorIds", itemIds,
-                "name", "AuthorSearch"
-        ));
-        JsonNode response = post("/api/" + version() + "/command", new JsonNode(data.toString()));
-        if (response == null) {
-            return;
-        }
-        int id = NumberParser.getInt(-1, response.getObject(), "id");
-        if (id < 0) {
-            logger.warn("READARR_{} returned unexpected response for URL {}: {}", this.id, this.baseUrl + "/api/" + version() + "/command", response.getObject().toString());
+        for (int itemId : itemIds) {
+            CommandResource response = send(new ArtistSearchCommand(itemId), CommandResource.class);
+            if (response == null) {
+                continue;
+            }
+            if (response.id() < 0) {
+                logger.warn("READARR_{} returned unexpected response for URL {}: {}", this.id, this.baseUrl + "/api/" + version() + "/command", response);
+            }
         }
     }
 

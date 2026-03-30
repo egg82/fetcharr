@@ -72,7 +72,7 @@ public interface UpdaterConfig {
      *
      * @return the missing value for this updater
      */
-    @Deprecated
+    @Deprecated(since = "2.1.1")
     boolean missingOnly();
 
     /**

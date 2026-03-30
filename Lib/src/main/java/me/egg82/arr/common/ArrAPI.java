@@ -34,11 +34,20 @@ public interface ArrAPI {
     }
     void invalidate(@NotNull Class<? extends FetchableAPIObject> type, int id, @Nullable Map<String, @NotNull Object> params);
 
+    @Deprecated(since = "1.1.0")
     default void search(int itemId) {
         search(new int[] { itemId });
     }
+    @Deprecated(since = "1.1.0")
     default void search(@NotNull IntCollection ids) {
         search(ids.toIntArray());
     }
+    @Deprecated(since = "1.1.0")
     void search(int... itemIds);
+
+    default void send(@NotNull SendableAPIObject obj) {
+        send(obj, null);
+    }
+
+    <T extends APIObject> @Nullable T send(@NotNull SendableAPIObject obj, @Nullable Class<T> responseType);
 }
