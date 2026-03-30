@@ -11,6 +11,7 @@ import me.egg82.arr.file.JSONFile;
 import me.egg82.arr.lidarr.LidarrV1API;
 import me.egg82.arr.parse.BooleanParser;
 import me.egg82.arr.radarr.RadarrV3API;
+import me.egg82.arr.readarr.ReadarrV1API;
 import me.egg82.arr.sonarr.SonarrV3API;
 import me.egg82.arr.whisparr.WhisparrV3API;
 import me.egg82.fetcharr.api.APIRegistrationUtil;
@@ -19,6 +20,7 @@ import me.egg82.fetcharr.api.FetcharrAPIImpl;
 import me.egg82.fetcharr.api.FetcharrAPIProvider;
 import me.egg82.fetcharr.api.model.update.lidarr.LidarrUpdater;
 import me.egg82.fetcharr.api.model.update.radarr.RadarrUpdater;
+import me.egg82.fetcharr.api.model.update.readarr.ReadarrUpdater;
 import me.egg82.fetcharr.api.model.update.sonarr.SonarrUpdater;
 import me.egg82.fetcharr.api.model.update.whisparr.WhisparrUpdater;
 import me.egg82.fetcharr.config.*;
@@ -110,6 +112,7 @@ public class Main {
             setupRadarr(i);
             setupSonarr(i);
             setupLidarr(i);
+            setupReadarr(i);
             setupWhisparr(i);
         }
 
@@ -292,6 +295,39 @@ public class Main {
             LOGGER.info("Added LIDARR_{} instance at {}", num, url);
         } else {
             LOGGER.info("Did not add LIDARR_{} instance at {} - registration cancelled", num, url);
+        }
+    }
+
+    private static void setupReadarr(int num) {
+        String url = ArrConfigVars.get(ArrConfigVars.URL, ArrType.READARR, num);
+        String key = ArrConfigVars.get(ArrConfigVars.API_KEY, ArrType.READARR, num);
+
+        if (url == null && key == null) {
+            return;
+        }
+        if (url == null) {
+            LOGGER.warn("Readarr URL at {} missing", ArrConfigVars.URL.envName(ArrType.READARR, num));
+            return;
+        }
+        if (key == null) {
+            LOGGER.warn("Readarr API key at {} missing", ArrConfigVars.API_KEY.envName(ArrType.READARR, num));
+            return;
+        }
+
+        url = url.strip().replaceAll("/+$", "");
+        key = key.strip();
+
+        ReadarrV1API arrApi = new ReadarrV1API(url, key, num);
+        if (!arrApi.valid()) {
+            LOGGER.warn("Could not authenticate to Readarr instance configured at {} ({})", ArrConfigVars.URL.envName(ArrType.READARR, num), url);
+            return;
+        }
+
+        FetcharrAPI api = FetcharrAPIProvider.instance();
+        if (api.updateManager().register(new ReadarrUpdater(api, arrApi, num))) {
+            LOGGER.info("Added READARR_{} instance at {}", num, url);
+        } else {
+            LOGGER.info("Did not add READARR_{} instance at {} - registration cancelled", num, url);
         }
     }
 

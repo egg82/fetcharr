@@ -4,7 +4,6 @@ import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.unit.TimeValue;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import org.jetbrains.annotations.NotNull;
-import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,7 +30,7 @@ public abstract class AbstractUpdater implements Updater {
     }
 
     @Override
-    public @NonNull UpdaterConfig config() {
+    public @NotNull UpdaterConfig config() {
         return config;
     }
 
