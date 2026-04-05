@@ -1,0 +1,6 @@
+id: ui
+name: UI
+version: ${ui.version}
+description: Web UI plugin for Fetcharr
+authors: [egg82]
+class: me.egg82.fuiplugin.UIPlugin
