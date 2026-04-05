@@ -1,0 +1,5 @@
+# Port the web UI will listen on
+port: 8080
+
+# Maximum number of events to keep in the activity log
+max-events: 500
