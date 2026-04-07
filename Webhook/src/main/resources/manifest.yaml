@@ -1,0 +1,3 @@
+plugins:
+  - url: https://repo.egg82.me/releases/me/egg82/fetcharr-webhook/${webhook.version}/fetcharr-webhook-${webhook.version}.jar
+    filename: fetcharr-webhook.jar

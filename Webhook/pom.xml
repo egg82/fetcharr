@@ -109,9 +109,34 @@
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
                                         <exclude>LICENSE-2.0.txt</exclude>
+                                        <exclude>manifest.yaml</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>attach-manifest</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>attach-artifact</goal>
+                        </goals>
+                        <configuration>
+                            <artifacts>
+                                <artifact>
+                                    <file>${project.basedir}/src/main/resources/manifest.yaml</file>
+                                    <type>yaml</type>
+                                    <classifier>manifest</classifier>
+                                </artifact>
+                            </artifacts>
                         </configuration>
                     </execution>
                 </executions>
