@@ -24,7 +24,7 @@ public enum CommonConfigVars {
     SEARCH_AMOUNT(Integer.class, 5),
     SEARCH_INTERVAL(TimeValue.class, new TimeValue(1L, TimeUnit.HOURS)),
     MONITORED_ONLY(Boolean.class, true),
-    @Deprecated
+    @Deprecated(since = "2.1.1")
     MISSING_ONLY(Boolean.class, false),
     MISSING_STATUS(me.egg82.fetcharr.api.model.update.MissingStatus.class, MissingStatus.ALL),
     SKIP_TAGS(String[].class, new String[]{}),

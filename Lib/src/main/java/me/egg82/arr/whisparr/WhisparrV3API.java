@@ -5,6 +5,8 @@ import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractArrAPI;
 import me.egg82.arr.common.ArrType;
 import me.egg82.arr.parse.NumberParser;
+import me.egg82.arr.whisparr.v3.MoviesSearchCommand;
+import me.egg82.arr.whisparr.v3.schema.CommandResource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -40,17 +42,12 @@ public class WhisparrV3API extends AbstractArrAPI {
 
     @Override
     public void search(int... itemIds) {
-        JSONObject data = new JSONObject(Map.of(
-                "movieIds", itemIds,
-                "name", "MoviesSearch"
-        ));
-        JsonNode response = post("/api/" + version() + "/command", new JsonNode(data.toString()));
+        CommandResource response = send(new MoviesSearchCommand(itemIds), CommandResource.class);
         if (response == null) {
             return;
         }
-        int id = NumberParser.getInt(-1, response.getObject(), "id");
-        if (id < 0) {
-            logger.warn("WHISPARR_{} returned unexpected response for URL {}: {}", this.id, this.baseUrl + "/api/" + version() + "/command", response.getObject().toString());
+        if (response.id() < 0) {
+            logger.warn("WHISPARR_{} returned unexpected response for URL {}: {}", this.id, this.baseUrl + "/api/" + version() + "/command", response);
         }
     }
 

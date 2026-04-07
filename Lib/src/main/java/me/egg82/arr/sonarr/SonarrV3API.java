@@ -5,6 +5,8 @@ import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractArrAPI;
 import me.egg82.arr.common.ArrType;
 import me.egg82.arr.parse.NumberParser;
+import me.egg82.arr.sonarr.v3.SeriesSearchCommand;
+import me.egg82.arr.sonarr.v3.schema.CommandResource;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
@@ -41,17 +43,12 @@ public class SonarrV3API extends AbstractArrAPI {
     @Override
     public void search(int... itemIds) {
         for (int itemId : itemIds) {
-            JSONObject data = new JSONObject(Map.of(
-                    "seriesId", itemId,
-                    "name", "SeriesSearch"
-            ));
-            JsonNode response = post("/api/" + version() + "/command", new JsonNode(data.toString()));
+            CommandResource response = send(new SeriesSearchCommand(itemId), CommandResource.class);
             if (response == null) {
-                return;
+                continue;
             }
-            int id = NumberParser.getInt(-1, response.getObject(), "id");
-            if (id < 0) {
-                logger.warn("SONARR_{} returned unexpected response for URL {}: {}", this.id, this.baseUrl + "/api/" + version() + "/command", response.getObject().toString());
+            if (response.id() < 0) {
+                logger.warn("SONARR_{} returned unexpected response for URL {}: {}", this.id, this.baseUrl + "/api/" + version() + "/command", response);
             }
         }
     }

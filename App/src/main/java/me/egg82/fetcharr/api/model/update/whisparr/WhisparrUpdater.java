@@ -5,7 +5,9 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import me.egg82.arr.common.ArrType;
 import me.egg82.arr.whisparr.WhisparrV3API;
 import me.egg82.arr.whisparr.v3.Movie;
+import me.egg82.arr.whisparr.v3.MoviesSearchCommand;
 import me.egg82.arr.whisparr.v3.Tag;
+import me.egg82.arr.whisparr.v3.schema.CommandResource;
 import me.egg82.arr.whisparr.v3.schema.MovieFileResource;
 import me.egg82.arr.whisparr.v3.schema.MovieResource;
 import me.egg82.arr.whisparr.v3.schema.TagResource;
@@ -118,7 +120,7 @@ public class WhisparrUpdater extends AbstractUpdater {
                 }
             }
             MovieFileResource movieFile = m.resource().movieFile();
-            if (useCutoff && movieFile != null && !movieFile.qualityCutoffNotMet()) {
+            if (useCutoff && (movieFile == null || movieFile.qualityCutoffNotMet())) {
                 WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
                 api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
@@ -156,16 +158,19 @@ public class WhisparrUpdater extends AbstractUpdater {
         }
 
         if (!dryRun && !resources.isEmpty()) {
-            WhisparrSearchEvent searchEvent = new WhisparrSearchEvent(resources, this, api);
-            api.bus().post(searchEvent);
-            if (!searchEvent.cancelled()) {
+            WhisparrPreSearchEvent preSearchEvent = new WhisparrPreSearchEvent(resources, this, api);
+            api.bus().post(preSearchEvent);
+            if (!preSearchEvent.cancelled()) {
                 IntList ids = new IntArrayList();
-                for (MovieResource r : searchEvent.resources()) {
+                for (MovieResource r : preSearchEvent.resources()) {
                     ids.add(r.id());
                 }
-                arrApi.search(ids);
+                CommandResource result = arrApi.send(new MoviesSearchCommand(ids.toIntArray()), CommandResource.class);
+                if (result != null && result.id() >= 0) {
+                    api.bus().post(new WhisparrPostSearchEvent(preSearchEvent.resources(), result, this, api));
+                }
             } else {
-                logger.info("{} cancelled - not performing search for {}_{}", searchEvent.getClass().getSimpleName(), config.type().name(), config.id());
+                logger.info("{} cancelled - not performing search for {}_{}", preSearchEvent.getClass().getSimpleName(), config.type().name(), config.id());
             }
         }
 

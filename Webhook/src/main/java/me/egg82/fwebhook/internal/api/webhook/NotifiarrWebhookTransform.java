@@ -4,20 +4,25 @@ import kong.unirest.core.json.JSONArray;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.lidarr.v1.schema.ArtistResource;
 import me.egg82.arr.radarr.v3.schema.MovieResource;
+import me.egg82.arr.readarr.v1.schema.AuthorResource;
 import me.egg82.arr.sonarr.v3.schema.SeriesResource;
 import me.egg82.fetcharr.api.event.FetcharrEvent;
 import me.egg82.fetcharr.api.event.update.AbstractCancellableUpdaterEvent;
+import me.egg82.fetcharr.api.event.update.AbstractUpdaterEvent;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
-import me.egg82.fetcharr.api.event.update.lidarr.LidarrSearchEvent;
+import me.egg82.fetcharr.api.event.update.lidarr.LidarrPostSearchEvent;
 import me.egg82.fetcharr.api.event.update.lidarr.LidarrSkipArtistSelectionEvent;
 import me.egg82.fetcharr.api.event.update.lidarr.LidarrUpdateArtistEvent;
-import me.egg82.fetcharr.api.event.update.radarr.RadarrSearchEvent;
+import me.egg82.fetcharr.api.event.update.radarr.RadarrPostSearchEvent;
 import me.egg82.fetcharr.api.event.update.radarr.RadarrSkipMovieSelectionEvent;
 import me.egg82.fetcharr.api.event.update.radarr.RadarrUpdateMovieEvent;
-import me.egg82.fetcharr.api.event.update.sonarr.SonarrSearchEvent;
+import me.egg82.fetcharr.api.event.update.readarr.ReadarrPostSearchEvent;
+import me.egg82.fetcharr.api.event.update.readarr.ReadarrSkipAuthorSelectionEvent;
+import me.egg82.fetcharr.api.event.update.readarr.ReadarrUpdateAuthorEvent;
+import me.egg82.fetcharr.api.event.update.sonarr.SonarrPostSearchEvent;
 import me.egg82.fetcharr.api.event.update.sonarr.SonarrSkipSeriesSelectionEvent;
 import me.egg82.fetcharr.api.event.update.sonarr.SonarrUpdateSeriesEvent;
-import me.egg82.fetcharr.api.event.update.whisparr.WhisparrSearchEvent;
+import me.egg82.fetcharr.api.event.update.whisparr.WhisparrPostSearchEvent;
 import me.egg82.fetcharr.api.event.update.whisparr.WhisparrSkipMovieSelectionEvent;
 import me.egg82.fetcharr.api.event.update.whisparr.WhisparrUpdateMovieEvent;
 import me.egg82.fwebhook.api.webhook.WebhookPayload;
@@ -36,35 +41,42 @@ public class NotifiarrWebhookTransform extends AbstractWebhookTransform {
 
     @Override
     public boolean accepts(@NotNull FetcharrEvent event) {
-        return (event instanceof RadarrSearchEvent && config.node("events", "search").getBoolean(true))
-                || (event instanceof SonarrSearchEvent && config.node("events", "search").getBoolean(true))
-                || (event instanceof LidarrSearchEvent && config.node("events", "search").getBoolean(true))
-                || (event instanceof WhisparrSearchEvent && config.node("events", "search").getBoolean(true))
+        return (event instanceof RadarrPostSearchEvent && config.node("events", "search").getBoolean(true))
+                || (event instanceof SonarrPostSearchEvent && config.node("events", "search").getBoolean(true))
+                || (event instanceof LidarrPostSearchEvent && config.node("events", "search").getBoolean(true))
+                || (event instanceof ReadarrPostSearchEvent && config.node("events", "search").getBoolean(true))
+                || (event instanceof WhisparrPostSearchEvent && config.node("events", "search").getBoolean(true))
                 || (event instanceof RadarrUpdateMovieEvent && config.node("events", "update").getBoolean(false))
                 || (event instanceof SonarrUpdateSeriesEvent && config.node("events", "update").getBoolean(false))
                 || (event instanceof LidarrUpdateArtistEvent && config.node("events", "update").getBoolean(false))
+                || (event instanceof ReadarrUpdateAuthorEvent && config.node("events", "update").getBoolean(false))
                 || (event instanceof WhisparrUpdateMovieEvent && config.node("events", "update").getBoolean(false))
                 || (event instanceof RadarrSkipMovieSelectionEvent && config.node("events", "skip").getBoolean(false))
                 || (event instanceof SonarrSkipSeriesSelectionEvent && config.node("events", "skip").getBoolean(false))
                 || (event instanceof LidarrSkipArtistSelectionEvent && config.node("events", "skip").getBoolean(false))
+                || (event instanceof ReadarrSkipAuthorSelectionEvent && config.node("events", "skip").getBoolean(false))
                 || (event instanceof WhisparrSkipMovieSelectionEvent && config.node("events", "skip").getBoolean(false));
     }
 
     @Override
     public @Nullable WebhookPayload transform(@NotNull FetcharrEvent event) throws Exception {
-        if (event instanceof RadarrSearchEvent e) {
+        if (event instanceof RadarrPostSearchEvent e) {
             return transformInternal(e);
-        } else if (event instanceof SonarrSearchEvent e) {
+        } else if (event instanceof SonarrPostSearchEvent e) {
             return transformInternal(e);
-        } else if (event instanceof LidarrSearchEvent e) {
+        } else if (event instanceof LidarrPostSearchEvent e) {
             return transformInternal(e);
-        } else if (event instanceof WhisparrSearchEvent e) {
+        } else if (event instanceof ReadarrPostSearchEvent e) {
+            return transformInternal(e);
+        } else if (event instanceof WhisparrPostSearchEvent e) {
             return transformInternal(e);
         } else if (event instanceof RadarrUpdateMovieEvent e) {
             return transformInternal(e);
         } else if (event instanceof SonarrUpdateSeriesEvent e) {
             return transformInternal(e);
         } else if (event instanceof LidarrUpdateArtistEvent e) {
+            return transformInternal(e);
+        }else if (event instanceof ReadarrUpdateAuthorEvent e) {
             return transformInternal(e);
         } else if (event instanceof WhisparrUpdateMovieEvent e) {
             return transformInternal(e);
@@ -74,6 +86,8 @@ public class NotifiarrWebhookTransform extends AbstractWebhookTransform {
             return transformInternal(e);
         } else if (event instanceof LidarrSkipArtistSelectionEvent e) {
             return transformInternal(e);
+        } else if (event instanceof ReadarrSkipAuthorSelectionEvent e) {
+            return transformInternal(e);
         } else if (event instanceof WhisparrSkipMovieSelectionEvent e) {
             return transformInternal(e);
         }
@@ -82,23 +96,27 @@ public class NotifiarrWebhookTransform extends AbstractWebhookTransform {
 
     // ChatGPT largely came up with the structure and language of these embeds
 
-    private @Nullable WebhookPayload transformInternal(@NotNull RadarrSearchEvent event) {
+    private @Nullable WebhookPayload transformInternal(@NotNull RadarrPostSearchEvent event) {
         return transformSearch(event, event.resources().size(), event.resources().stream().map(MovieResource::title).collect(Collectors.joining("\n")));
     }
 
-    private @Nullable WebhookPayload transformInternal(@NotNull SonarrSearchEvent event) {
+    private @Nullable WebhookPayload transformInternal(@NotNull SonarrPostSearchEvent event) {
         return transformSearch(event, event.resources().size(), event.resources().stream().map(SeriesResource::title).collect(Collectors.joining("\n")));
     }
 
-    private @Nullable WebhookPayload transformInternal(@NotNull LidarrSearchEvent event) {
+    private @Nullable WebhookPayload transformInternal(@NotNull LidarrPostSearchEvent event) {
         return transformSearch(event, event.resources().size(), event.resources().stream().map(ArtistResource::artistName).collect(Collectors.joining("\n")));
     }
 
-    private @Nullable WebhookPayload transformInternal(@NotNull WhisparrSearchEvent event) {
+    private @Nullable WebhookPayload transformInternal(@NotNull ReadarrPostSearchEvent event) {
+        return transformSearch(event, event.resources().size(), event.resources().stream().map(AuthorResource::authorName).collect(Collectors.joining("\n")));
+    }
+
+    private @Nullable WebhookPayload transformInternal(@NotNull WhisparrPostSearchEvent event) {
         return transformSearch(event, event.resources().size(), event.resources().stream().map(me.egg82.arr.whisparr.v3.schema.MovieResource::title).collect(Collectors.joining("\n")));
     }
 
-    private @Nullable WebhookPayload transformSearch(@NotNull AbstractCancellableUpdaterEvent event, int size, @Nullable String itemList) {
+    private @Nullable WebhookPayload transformSearch(@NotNull AbstractUpdaterEvent event, int size, @Nullable String itemList) {
         if (!config.node("events", "search").getBoolean(true)) {
             return null;
         }
@@ -170,6 +188,10 @@ public class NotifiarrWebhookTransform extends AbstractWebhookTransform {
         return transformUpdate(event, event.resource().artistName());
     }
 
+    private @Nullable WebhookPayload transformInternal(@NotNull ReadarrUpdateAuthorEvent event) {
+        return transformUpdate(event, event.resource().authorName());
+    }
+
     private @Nullable WebhookPayload transformInternal(@NotNull WhisparrUpdateMovieEvent event) {
         return transformUpdate(event, event.resource().title());
     }
@@ -184,6 +206,10 @@ public class NotifiarrWebhookTransform extends AbstractWebhookTransform {
 
     private @Nullable WebhookPayload transformInternal(@NotNull LidarrSkipArtistSelectionEvent event) {
         return transformSkip(event, event.resource().artistName(), event.reason());
+    }
+
+    private @Nullable WebhookPayload transformInternal(@NotNull ReadarrSkipAuthorSelectionEvent event) {
+        return transformSkip(event, event.resource().authorName(), event.reason());
     }
 
     private @Nullable WebhookPayload transformInternal(@NotNull WhisparrSkipMovieSelectionEvent event) {

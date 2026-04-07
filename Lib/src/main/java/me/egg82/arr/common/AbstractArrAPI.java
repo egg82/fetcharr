@@ -36,6 +36,7 @@ public abstract class AbstractArrAPI implements ArrAPI {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final ConcurrentMap<Class<? extends FetchableAPIObject>, @Nullable Constructor<?>> constructors = new ConcurrentHashMap<>();
+    private final ConcurrentMap<Class<? extends APIObject>, @Nullable Constructor<?>> genericConstructors = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends FetchableAPIObject>, @Nullable Object> unknowns = new ConcurrentHashMap<>();
 
     private final ExpiringMap<Pair<Class<? extends FetchableAPIObject>, String>, @Nullable Object> cache = ExpiringMap.builder().expirationPolicy(ExpirationPolicy.CREATED).variableExpiration().build();
@@ -178,6 +179,16 @@ public abstract class AbstractArrAPI implements ArrAPI {
         idCache.remove(Pair.of(ObjectIntPair.of(type, id), encode(params)));
     }
 
+    @Override
+    public <T extends APIObject> @Nullable T send(@NotNull SendableAPIObject obj, @Nullable Class<T> responseType) {
+        JsonNode node = post(obj.apiPath(), obj.node());
+        if (node == null) {
+            return null;
+        }
+        logger.debug("Sent {} to API ({}_{})", obj.getClass().getSimpleName(), this.type(), this.id);
+        return responseType != null ? buildGeneric(responseType, node) : null;
+    }
+
     private <T extends FetchableAPIObject> @Nullable T build(@NotNull Class<T> type, @NotNull JsonNode node, @NotNull Instant lastFetched) {
         Constructor<?> c = constructors.computeIfAbsent(type, k -> {
             try {
@@ -194,6 +205,28 @@ public abstract class AbstractArrAPI implements ArrAPI {
 
         try {
             return type.cast(c.newInstance(this, node, lastFetched));
+        } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
+            logger.error("Could not create new instance of class {}", type.getName(), ex);
+        }
+        return null;
+    }
+
+    private <T extends APIObject> @Nullable T buildGeneric(@NotNull Class<T> type, @NotNull JsonNode node) {
+        Constructor<?> c = genericConstructors.computeIfAbsent(type, k -> {
+            try {
+                return type.getConstructor(ArrAPI.class, JsonNode.class);
+            } catch (NoSuchMethodException ex) {
+                logger.error("Could not find API constructor for class {}", type.getName(), ex);
+            }
+            return null;
+        });
+
+        if (c == null) {
+            return null;
+        }
+
+        try {
+            return type.cast(c.newInstance(this, node));
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException | IllegalArgumentException ex) {
             logger.error("Could not create new instance of class {}", type.getName(), ex);
         }

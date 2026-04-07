@@ -1,16 +1,12 @@
 package me.egg82.fetcharr.api.model.update.sonarr;
 
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import me.egg82.arr.common.ArrType;
 import me.egg82.arr.sonarr.SonarrV3API;
 import me.egg82.arr.sonarr.v3.Episode;
 import me.egg82.arr.sonarr.v3.Series;
+import me.egg82.arr.sonarr.v3.SeriesSearchCommand;
 import me.egg82.arr.sonarr.v3.Tag;
-import me.egg82.arr.sonarr.v3.schema.EpisodeFileResource;
-import me.egg82.arr.sonarr.v3.schema.EpisodeResource;
-import me.egg82.arr.sonarr.v3.schema.SeriesResource;
-import me.egg82.arr.sonarr.v3.schema.TagResource;
+import me.egg82.arr.sonarr.v3.schema.*;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
 import me.egg82.fetcharr.api.event.update.sonarr.*;
@@ -150,7 +146,7 @@ public class SonarrUpdater extends AbstractUpdater {
                 boolean cutoffMet = true;
                 for (EpisodeResource e : s.episodes()) {
                     EpisodeFileResource episodeFile = e.episodeFile();
-                    if (episodeFile != null && !episodeFile.qualityCutoffNotMet()) {
+                    if (episodeFile == null || episodeFile.qualityCutoffNotMet()) {
                         cutoffMet = false;
                         break;
                     }
@@ -185,16 +181,21 @@ public class SonarrUpdater extends AbstractUpdater {
         }
 
         if (!dryRun && !resources.isEmpty()) {
-            SonarrSearchEvent searchEvent = new SonarrSearchEvent(resources, this, api);
-            api.bus().post(searchEvent);
-            if (!searchEvent.cancelled()) {
-                IntList ids = new IntArrayList();
-                for (SeriesResource r : searchEvent.resources()) {
-                    ids.add(r.id());
+            SonarrPreSearchEvent preSearchEvent = new SonarrPreSearchEvent(resources, this, api);
+            api.bus().post(preSearchEvent);
+            if (!preSearchEvent.cancelled()) {
+                List<SeriesResource> resourcesR = new ArrayList<>();
+                List<CommandResource> results = new ArrayList<>();
+                for (SeriesResource r : preSearchEvent.resources()) {
+                    CommandResource result = arrApi.send(new SeriesSearchCommand(r.id()), CommandResource.class);
+                    if (result != null && result.id() >= 0) {
+                        resourcesR.add(r);
+                        results.add(result);
+                    }
                 }
-                arrApi.search(ids);
+                api.bus().post(new SonarrPostSearchEvent(resourcesR, results, this, api));
             } else {
-                logger.info("{} cancelled - not performing search for {}_{}", searchEvent.getClass().getSimpleName(), config.type().name(), config.id());
+                logger.info("{} cancelled - not performing search for {}_{}", preSearchEvent.getClass().getSimpleName(), config.type().name(), config.id());
             }
         }
 

@@ -13,6 +13,7 @@ import java.util.Objects;
 /**
  * Fired before submitting a list of {@link ArtistResource}s to the *arr app for searching
  */
+@Deprecated(since = "2.2.0")
 public class LidarrSearchEvent extends AbstractCancellableUpdaterEvent {
     private List<ArtistResource> resources;
 

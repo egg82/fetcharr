@@ -25,6 +25,7 @@ Currently supports the following:
 - Radarr
 - Sonarr
 - Lidarr
+- Readarr/Bookshelf
 - Whisparr
 
 ### Huntarr? What?
@@ -350,6 +351,22 @@ Replace `X` with a number from 0 to 99. This allows for up to 100 instances to b
 | LIDARR_X_MISSING_STATUS | string | any, missing, upgrade | any | "any" for any missing item status, "missing" for missing-only, "upgrade" for non-missing only |
 | LIDARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
 | LIDARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
+
+### Readarr overrides
+
+Replace `X` with a number from 0 to 99. This allows for up to 100 instances to be configured.
+
+| variable | type    | values | default  | description |
+| -------- |---------| ------ |----------| ----------- |
+| READARR_X_URL | string | \<URL\> | \<none\> | Base URL |
+| READARR_X_API_KEY | string | \<key\> | \<none\> | API key |
+| READARR_X_SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
+| READARR_X_SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
+| READARR_X_MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
+| ~~READARR_X_MISSING_ONLY~~ | ~~boolean~~ | ~~true, false~~ | ~~false~~ | ~~Select for missing items~~ |
+| READARR_X_MISSING_STATUS | string | any, missing, upgrade | any | "any" for any missing item status, "missing" for missing-only, "upgrade" for non-missing only |
+| READARR_X_USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
+| READARR_X_SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
 
 ### Whisparr overrides
 

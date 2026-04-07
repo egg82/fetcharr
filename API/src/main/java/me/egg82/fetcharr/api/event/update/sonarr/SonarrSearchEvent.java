@@ -13,6 +13,7 @@ import java.util.Objects;
 /**
  * Fired before submitting a list of {@link SeriesResource}s to the *arr app for searching
  */
+@Deprecated(since = "2.2.0")
 public class SonarrSearchEvent extends AbstractCancellableUpdaterEvent {
     private List<SeriesResource> resources;
 

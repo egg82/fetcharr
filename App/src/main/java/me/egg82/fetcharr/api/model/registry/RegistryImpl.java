@@ -3,7 +3,6 @@ package me.egg82.fetcharr.api.model.registry;
 import me.egg82.fetcharr.api.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jspecify.annotations.NonNull;
 import org.pcollections.PVector;
 import org.pcollections.TreePVector;
 import org.slf4j.Logger;
@@ -24,7 +23,7 @@ public class RegistryImpl implements Registry {
     public RegistryImpl() { }
 
     @Override
-    public <T> void register(@NotNull Plugin owner, @NotNull Class<T> type, @NonNull T value) {
+    public <T> void register(@NotNull Plugin owner, @NotNull Class<T> type, @NotNull T value) {
         if (!type.isInstance(value)) {
             throw new IllegalArgumentException(
                     "value of type " + value.getClass().getName() +
