@@ -6,7 +6,7 @@ import me.egg82.arr.common.AbstractFetchableAPIObject;
 import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.common.NullArrAPI;
 import me.egg82.arr.config.CacheConfigVars;
-import me.egg82.arr.readarr.v1.model.BookResource;
+import me.egg82.arr.readarr.v1.schema.BookResource;
 import me.egg82.arr.unit.TimeValue;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

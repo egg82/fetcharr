@@ -7,12 +7,12 @@ import me.egg82.arr.readarr.ReadarrV1API;
 import me.egg82.arr.readarr.v1.Author;
 import me.egg82.arr.readarr.v1.AuthorSearchCommand;
 import me.egg82.arr.readarr.v1.Book;
+import me.egg82.arr.readarr.v1.BookFile;
 import me.egg82.arr.readarr.v1.Tag;
-import me.egg82.arr.readarr.v1.model.AuthorResource;
-import me.egg82.arr.readarr.v1.model.CommandResource;
-import me.egg82.arr.readarr.v1.model.TagResource;
+import me.egg82.arr.readarr.v1.schema.*;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.SelectionCancellationReason;
+import me.egg82.fetcharr.api.event.update.readarr.*;
 import me.egg82.fetcharr.api.model.update.AbstractUpdater;
 import me.egg82.fetcharr.api.model.update.MissingStatus;
 import me.egg82.fetcharr.api.model.update.UpdaterConfigImpl;
@@ -48,7 +48,7 @@ public class ReadarrUpdater extends AbstractUpdater {
             return false; // Bad config, no need to retry every run
         }
         logger.debug("Fetched {} authors", allAuthors.resources().size());
-        api.bus().post(new LidarrFetchArtistEvent(allAuthors, this, api));
+        api.bus().post(new ReadarrFetchAuthorEvent(allAuthors, this, api));
 
         List<WeightedAuthor> wrapped = new ArrayList<>();
         for (AuthorResource a : allAuthors.resources()) {
@@ -58,7 +58,7 @@ public class ReadarrUpdater extends AbstractUpdater {
                 continue;
             }
             logger.debug("Fetched {} albums for author {} (\"{}\")", allBooks.resources().size(), a.id(), a.authorName());
-            api.bus().post(new LidarrFetchAlbumsEvent(allBooks, a, this, api));
+            api.bus().post(new ReadarrFetchBooksEvent(allBooks, a, this, api));
             wrapped.add(new WeightedAuthor(a, allBooks.resources()));
         }
         random.updateList(wrapped);
@@ -83,10 +83,10 @@ public class ReadarrUpdater extends AbstractUpdater {
                 continue;
             }
 
-            LidarrSelectArtistEvent selectAuthorEvent = new LidarrSelectArtistEvent(a.author(), this, api);
+            ReadarrSelectAuthorEvent selectAuthorEvent = new ReadarrSelectAuthorEvent(a.author(), this, api);
             api.bus().post(selectAuthorEvent);
             if (selectAuthorEvent.cancelled()) {
-                LidarrSkipArtistSelectionEvent skipAuthorSelectionEvent = new LidarrSkipArtistSelectionEvent(a.author(), SelectionCancellationReason.PLUGIN, this, api);
+                ReadarrSkipAuthorSelectionEvent skipAuthorSelectionEvent = new ReadarrSkipAuthorSelectionEvent(a.author(), SelectionCancellationReason.PLUGIN, this, api);
                 api.bus().post(skipAuthorSelectionEvent);
                 if (skipAuthorSelectionEvent.cancelled()) {
                     logger.info("{} cancelled, but {} also cancelled - continuing with author {} (\"{}\")", skipAuthorSelectionEvent.getClass().getSimpleName(), skipAuthorSelectionEvent.getClass().getSimpleName(), a.author().id(), a.author().authorName());
@@ -97,118 +97,115 @@ public class ReadarrUpdater extends AbstractUpdater {
             }
 
             if (monitoredOnly && !a.author().monitored()) {
-                LidarrSkipArtistSelectionEvent skipAuthorSelectionEvent = new LidarrSkipArtistSelectionEvent(a.author(), SelectionCancellationReason.UNMONITORED, this, api);
+                ReadarrSkipAuthorSelectionEvent skipAuthorSelectionEvent = new ReadarrSkipAuthorSelectionEvent(a.author(), SelectionCancellationReason.UNMONITORED, this, api);
                 api.bus().post(skipAuthorSelectionEvent);
                 if (skipAuthorSelectionEvent.cancelled()) {
-                    logger.info("Unmonitored author {} (\"{}\"), but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
+                    logger.info("Unmonitored author {} (\"{}\"), but {} cancelled - continuing", a.author().id(), a.author().authorName(), skipAuthorSelectionEvent.getClass().getSimpleName());
                 } else {
-                    logger.info("Skipping author {} (\"{}\") due to unmonitored status", a.artist().id(), a.artist().artistName());
+                    logger.info("Skipping author {} (\"{}\") due to unmonitored status", a.author().id(), a.author().authorName());
                     continue;
                 }
             }
             if (!skipTags.isEmpty() && hasAnyTag(skipTags, a.author().tags())) {
-                LidarrSkipArtistSelectionEvent skipAuthorSelectionEvent = new LidarrSkipArtistSelectionEvent(a.artist(), SelectionCancellationReason.SKIP_TAG_FOUND, this, api);
+                ReadarrSkipAuthorSelectionEvent skipAuthorSelectionEvent = new ReadarrSkipAuthorSelectionEvent(a.author(), SelectionCancellationReason.SKIP_TAG_FOUND, this, api);
                 api.bus().post(skipAuthorSelectionEvent);
                 if (skipAuthorSelectionEvent.cancelled()) {
-                    logger.info("Author {} (\"{}\") has skip-tag set, but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
+                    logger.info("Author {} (\"{}\") has skip-tag set, but {} cancelled - continuing", a.author().id(), a.author().authorName(), skipAuthorSelectionEvent.getClass().getSimpleName());
                 } else {
-                    logger.info("Skipping author {} (\"{}\") because skip-tag is set", a.artist().id(), a.artist().artistName());
+                    logger.info("Skipping author {} (\"{}\") because skip-tag is set", a.author().id(), a.author().authorName());
                     continue;
                 }
             }
             if (missingStatus == MissingStatus.MISSING || missingStatus == MissingStatus.UPGRADE) {
-                Track allTracks = arrApi.fetch(Track.class, Map.of("artistId", a.artist().id()));
-                if (allTracks == null) {
-                    logger.warn("{}_{} returned bad result for {}", config.type().name(), config.id(), Track.UNKNOWN.apiPath());
-                    continue;
-                }
-                logger.debug("Fetched {} tracks for artist {} (\"{}\")", allTracks.resources().size(), a.artist().id(), a.artist().artistName());
-                api.bus().post(new LidarrFetchTracksEvent(allTracks, a.artist(), this, api));
-
                 boolean hasFiles = true;
-                for (TrackResource t : allTracks.resources()) {
-                    if (!t.hasFile()) {
+                for (BookResource b : a.books()) {
+                    BookStatisticsResource stats = b.statistics();
+                    if (stats == null || stats.bookFileCount() <= 0) {
                         hasFiles = false;
                         break;
                     }
                 }
                 if (missingStatus == MissingStatus.MISSING && hasFiles) {
-                    LidarrSkipArtistSelectionEvent skipArtistSelectionEvent = new LidarrSkipArtistSelectionEvent(a.artist(), SelectionCancellationReason.NOT_MISSING, this, api);
-                    api.bus().post(skipArtistSelectionEvent);
-                    if (skipArtistSelectionEvent.cancelled()) {
-                        logger.info("Artist {} (\"{}\") not missing any track files (missing only), but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
+                    ReadarrSkipAuthorSelectionEvent skipAuthorSelectionEvent = new ReadarrSkipAuthorSelectionEvent(a.author(), SelectionCancellationReason.NOT_MISSING, this, api);
+                    api.bus().post(skipAuthorSelectionEvent);
+                    if (skipAuthorSelectionEvent.cancelled()) {
+                        logger.info("Author {} (\"{}\") not missing any book files (missing only), but {} cancelled - continuing", a.author().id(), a.author().authorName(), skipAuthorSelectionEvent.getClass().getSimpleName());
                     } else {
-                        logger.info("Skipping artist {} (\"{}\") because it is not missing any track files (missing only)", a.artist().id(), a.artist().artistName());
+                        logger.info("Skipping author {} (\"{}\") because it is not missing any book files (missing only)", a.author().id(), a.author().authorName());
                         continue;
                     }
                 }
                 if (missingStatus == MissingStatus.UPGRADE && !hasFiles) {
-                    LidarrSkipArtistSelectionEvent skipArtistSelectionEvent = new LidarrSkipArtistSelectionEvent(a.artist(), SelectionCancellationReason.MISSING, this, api);
-                    api.bus().post(skipArtistSelectionEvent);
-                    if (skipArtistSelectionEvent.cancelled()) {
-                        logger.info("Artist {} (\"{}\") not missing any track files (upgrade only), but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
+                    ReadarrSkipAuthorSelectionEvent skipAuthorSelectionEvent = new ReadarrSkipAuthorSelectionEvent(a.author(), SelectionCancellationReason.MISSING, this, api);
+                    api.bus().post(skipAuthorSelectionEvent);
+                    if (skipAuthorSelectionEvent.cancelled()) {
+                        logger.info("Author {} (\"{}\") not missing any book files (upgrade only), but {} cancelled - continuing", a.author().id(), a.author().authorName(), skipAuthorSelectionEvent.getClass().getSimpleName());
                     } else {
-                        logger.info("Skipping artist {} (\"{}\") because it is not missing any track files (upgrade only)", a.artist().id(), a.artist().artistName());
+                        logger.info("Skipping author {} (\"{}\") because it is not missing any book files (upgrade only)", a.author().id(), a.author().authorName());
                         continue;
                     }
                 }
             }
             if (useCutoff) {
-                Track allTracks = arrApi.fetch(Track.class, Map.of("artistId", a.artist().id()));
-                if (allTracks == null) {
-                    logger.warn("{}_{} returned bad result for {}", config.type().name(), config.id(), Track.UNKNOWN.apiPath());
+                BookFile allBooks = arrApi.fetch(BookFile.class, Map.of("authorId", a.author().id()));
+                if (allBooks == null) {
+                    logger.warn("{}_{} returned bad result for {}", config.type().name(), config.id(), BookFile.UNKNOWN.apiPath());
                     continue;
                 }
-                logger.debug("Fetched {} tracks for artist {} (\"{}\")", allTracks.resources().size(), a.artist().id(), a.artist().artistName());
-                api.bus().post(new LidarrFetchTracksEvent(allTracks, a.artist(), this, api));
+                logger.debug("Fetched {} tracks for author {} (\"{}\")", allBooks.resources().size(), a.author().id(), a.author().authorName());
+                api.bus().post(new ReadarrFetchBookFilesEvent(allBooks, a.author(), this, api));
 
                 boolean cutoffMet = true;
-                for (TrackResource t : allTracks.resources()) {
-                    TrackFileResource trackFile = t.trackFile();
-                    if (trackFile != null && !trackFile.qualityCutoffNotMet()) {
+                for (BookFileResource b : allBooks.resources()) {
+                    if (!b.qualityCutoffNotMet()) {
                         cutoffMet = false;
                         break;
                     }
                 }
                 if (cutoffMet) {
-                    LidarrSkipArtistSelectionEvent skipArtistSelectionEvent = new LidarrSkipArtistSelectionEvent(a.artist(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
-                    api.bus().post(skipArtistSelectionEvent);
-                    if (skipArtistSelectionEvent.cancelled()) {
-                        logger.info("Artist {} (\"{}\") quality cutoff met, but {} cancelled - continuing", a.artist().id(), a.artist().artistName(), skipArtistSelectionEvent.getClass().getSimpleName());
+                    ReadarrSkipAuthorSelectionEvent skipAuthorSelectionEvent = new ReadarrSkipAuthorSelectionEvent(a.author(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
+                    api.bus().post(skipAuthorSelectionEvent);
+                    if (skipAuthorSelectionEvent.cancelled()) {
+                        logger.info("Author {} (\"{}\") quality cutoff met, but {} cancelled - continuing", a.author().id(), a.author().authorName(), skipAuthorSelectionEvent.getClass().getSimpleName());
                     } else {
-                        logger.info("Skipping artist {} (\"{}\") because it meets the quality cutoff", a.artist().id(), a.artist().artistName());
+                        logger.info("Skipping author {} (\"{}\") because it meets the quality cutoff", a.author().id(), a.author().authorName());
                         continue;
                     }
                 }
             }
 
-            LidarrUpdateArtistEvent updateArtistEvent = new LidarrUpdateArtistEvent(a.artist(), this, api);
-            api.bus().post(updateArtistEvent);
-            if (updateArtistEvent.cancelled()) {
-                logger.info("Skipping artist {} (\"{}\") due to {} cancellation", a.artist().id(), a.artist().artistName(), updateArtistEvent.getClass().getSimpleName());
+            ReadarrUpdateAuthorEvent updateAuthorEvent = new ReadarrUpdateAuthorEvent(a.author(), this, api);
+            api.bus().post(updateAuthorEvent);
+            if (updateAuthorEvent.cancelled()) {
+                logger.info("Skipping author {} (\"{}\") due to {} cancellation", a.author().id(), a.author().authorName(), updateAuthorEvent.getClass().getSimpleName());
                 continue;
             }
 
             if (dryRun) {
-                logger.info("Would update artist {} (\"{}\") if not in dry-run mode", a.artist().id(), a.artist().artistName());
+                logger.info("Would update author {} (\"{}\") if not in dry-run mode", a.author().id(), a.author().authorName());
             } else {
-                logger.info("Updating artist {} (\"{}\")", a.artist().id(), a.artist().artistName());
+                logger.info("Updating author {} (\"{}\")", a.author().id(), a.author().authorName());
             }
-            resources.add(a.artist());
-            arrApi.invalidate(Artist.class, a.artist().id()); // Force refresh on next
-            arrApi.invalidate(Track.class, Map.of("artistId", a.artist().id())); // Force refresh on next
+            resources.add(a.author());
+            arrApi.invalidate(Author.class, a.author().id()); // Force refresh on next
+            arrApi.invalidate(Book.class, Map.of("authorId", a.author().id())); // Force refresh on next
+            arrApi.invalidate(BookFile.class, Map.of("authorId", a.author().id())); // Force refresh on next
         }
 
         if (!dryRun && !resources.isEmpty()) {
-            LidarrPreSearchEvent preSearchEvent = new LidarrPreSearchEvent(resources, this, api);
+            ReadarrPreSearchEvent preSearchEvent = new ReadarrPreSearchEvent(resources, this, api);
             api.bus().post(preSearchEvent);
             if (!preSearchEvent.cancelled()) {
-                IntList ids = new IntArrayList();
-                for (ArtistResource r : preSearchEvent.resources()) {
-                    ids.add(r.id());
+                List<AuthorResource> resourcesR = new ArrayList<>();
+                List<CommandResource> results = new ArrayList<>();
+                for (AuthorResource r : preSearchEvent.resources()) {
+                    CommandResource result = arrApi.send(new AuthorSearchCommand(r.id()), CommandResource.class);
+                    if (result != null && result.id() >= 0) {
+                        resourcesR.add(r);
+                        results.add(result);
+                    }
                 }
-                CommandResource result = arrApi.send(new AuthorSearchCommand(ids.toIntArray()), CommandResource.class);
-                ReadarrPostSearchEvent postSearchEvent = new ReadarrPostSearchEvent(result, this, api);
+                api.bus().post(new ReadarrPostSearchEvent(resourcesR, results, this, api));
             } else {
                 logger.info("{} cancelled - not performing search for {}_{}", preSearchEvent.getClass().getSimpleName(), config.type().name(), config.id());
             }

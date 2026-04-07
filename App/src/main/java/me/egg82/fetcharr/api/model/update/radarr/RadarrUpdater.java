@@ -120,7 +120,7 @@ public class RadarrUpdater extends AbstractUpdater {
                 }
             }
             MovieFileResource movieFile = m.resource().movieFile();
-            if (useCutoff && movieFile != null && !movieFile.qualityCutoffNotMet()) {
+            if (useCutoff && (movieFile == null || movieFile.qualityCutoffNotMet())) {
                 RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
                 api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
@@ -167,7 +167,7 @@ public class RadarrUpdater extends AbstractUpdater {
                 }
                 CommandResource result = arrApi.send(new MoviesSearchCommand(ids.toIntArray()), CommandResource.class);
                 if (result != null && result.id() >= 0) {
-                    api.bus().post(new RadarrPostSearchEvent(result, this, api));
+                    api.bus().post(new RadarrPostSearchEvent(preSearchEvent.resources(), result, this, api));
                 }
             } else {
                 logger.info("{} cancelled - not performing search for {}_{}", preSearchEvent.getClass().getSimpleName(), config.type().name(), config.id());

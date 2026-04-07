@@ -1,16 +1,11 @@
 package me.egg82.arr.readarr;
 
 import kong.unirest.core.JsonNode;
-import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractArrAPI;
 import me.egg82.arr.common.ArrType;
 import me.egg82.arr.lidarr.v1.ArtistSearchCommand;
-import me.egg82.arr.parse.NumberParser;
-import me.egg82.arr.readarr.v1.AuthorSearchCommand;
-import me.egg82.arr.readarr.v1.model.CommandResource;
+import me.egg82.arr.readarr.v1.schema.CommandResource;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Map;
 
 public class ReadarrV1API extends AbstractArrAPI {
     public ReadarrV1API(@NotNull String baseUrl, @NotNull String apiKey, int id) {

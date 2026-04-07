@@ -44,7 +44,7 @@ public class TrackFileResource extends AbstractAPIObject {
         this.albumId = NumberParser.getInt(-1, obj, "albumId");
         this.path = FileParser.get(obj, "path");
         this.size = NumberParser.getLong(-1L, obj, "size");
-        this.dateAdded = InstantParser.get(obj, "dateAdded");
+        this.dateAdded = InstantParser.get(Instant.EPOCH, obj, "dateAdded");
         this.sceneName = StringParser.get(obj, "sceneName");
         this.releaseGroup = StringParser.get(obj, "releaseGroup");
         this.quality = ObjectParser.get(QualityModel.class, api, obj, "quality");
@@ -86,7 +86,7 @@ public class TrackFileResource extends AbstractAPIObject {
         return size;
     }
 
-    public @Nullable Instant dateAdded() {
+    public @NotNull Instant dateAdded() {
         return dateAdded;
     }
 

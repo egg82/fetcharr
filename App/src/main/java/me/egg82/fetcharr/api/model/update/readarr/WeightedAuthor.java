@@ -1,7 +1,7 @@
 package me.egg82.fetcharr.api.model.update.readarr;
 
-import me.egg82.arr.readarr.v1.model.AuthorResource;
-import me.egg82.arr.readarr.v1.model.BookResource;
+import me.egg82.arr.readarr.v1.schema.AuthorResource;
+import me.egg82.arr.readarr.v1.schema.BookResource;
 import me.egg82.fetcharr.util.Weighted;
 import org.jetbrains.annotations.NotNull;
 

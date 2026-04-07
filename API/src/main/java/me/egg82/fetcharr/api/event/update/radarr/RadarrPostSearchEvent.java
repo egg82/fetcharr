@@ -6,41 +6,51 @@ import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.AbstractUpdaterEvent;
 import me.egg82.fetcharr.api.model.update.Updater;
 import org.jetbrains.annotations.NotNull;
+import org.pcollections.PVector;
+import org.pcollections.TreePVector;
 
+import java.util.Collection;
 import java.util.Objects;
 
 /**
  * Fired after submitting a list of {@link MovieResource}s to the *arr app for searching
  */
 public class RadarrPostSearchEvent extends AbstractUpdaterEvent {
-    private final CommandResource resource;
+    private final PVector<@NotNull MovieResource> resources;
+    private final CommandResource result;
 
-    public RadarrPostSearchEvent(@NotNull CommandResource resource, @NotNull Updater updater, @NotNull FetcharrAPI api) {
+    public RadarrPostSearchEvent(@NotNull Collection<@NotNull MovieResource> resources, @NotNull CommandResource result, @NotNull Updater updater, @NotNull FetcharrAPI api) {
         super(updater, api);
 
-        this.resource = resource;
+        this.resources = TreePVector.from(resources);
+        this.result = result;
     }
 
-    public @NotNull CommandResource resource() {
-        return resource;
+    public @NotNull PVector<@NotNull MovieResource> resources() {
+        return resources;
+    }
+
+    public @NotNull CommandResource result() {
+        return result;
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof RadarrPostSearchEvent that)) return false;
         if (!super.equals(o)) return false;
-        return Objects.equals(resource, that.resource);
+        return Objects.equals(resources, that.resources) && Objects.equals(result, that.result);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), resource);
+        return Objects.hash(super.hashCode(), resources, result);
     }
 
     @Override
     public String toString() {
         return "RadarrPostSearchEvent{" +
-                "resource=" + resource +
+                "resources=" + resources +
+                ", result=" + result +
                 ", updater=" + updater +
                 ", api=" + api +
                 '}';

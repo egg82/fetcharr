@@ -146,7 +146,7 @@ public class SonarrUpdater extends AbstractUpdater {
                 boolean cutoffMet = true;
                 for (EpisodeResource e : s.episodes()) {
                     EpisodeFileResource episodeFile = e.episodeFile();
-                    if (episodeFile != null && !episodeFile.qualityCutoffNotMet()) {
+                    if (episodeFile == null || episodeFile.qualityCutoffNotMet()) {
                         cutoffMet = false;
                         break;
                     }
@@ -184,12 +184,16 @@ public class SonarrUpdater extends AbstractUpdater {
             SonarrPreSearchEvent preSearchEvent = new SonarrPreSearchEvent(resources, this, api);
             api.bus().post(preSearchEvent);
             if (!preSearchEvent.cancelled()) {
+                List<SeriesResource> resourcesR = new ArrayList<>();
+                List<CommandResource> results = new ArrayList<>();
                 for (SeriesResource r : preSearchEvent.resources()) {
                     CommandResource result = arrApi.send(new SeriesSearchCommand(r.id()), CommandResource.class);
                     if (result != null && result.id() >= 0) {
-                        api.bus().post(new SonarrPostSearchEvent(result, this, api));
+                        resourcesR.add(r);
+                        results.add(result);
                     }
                 }
+                api.bus().post(new SonarrPostSearchEvent(resourcesR, results, this, api));
             } else {
                 logger.info("{} cancelled - not performing search for {}_{}", preSearchEvent.getClass().getSimpleName(), config.type().name(), config.id());
             }

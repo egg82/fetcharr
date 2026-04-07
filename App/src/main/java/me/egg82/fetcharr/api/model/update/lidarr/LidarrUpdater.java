@@ -159,7 +159,7 @@ public class LidarrUpdater extends AbstractUpdater {
                 boolean cutoffMet = true;
                 for (TrackResource t : allTracks.resources()) {
                     TrackFileResource trackFile = t.trackFile();
-                    if (trackFile != null && !trackFile.qualityCutoffNotMet()) {
+                    if (trackFile == null || trackFile.qualityCutoffNotMet()) {
                         cutoffMet = false;
                         break;
                     }
@@ -197,12 +197,16 @@ public class LidarrUpdater extends AbstractUpdater {
             LidarrPreSearchEvent preSearchEvent = new LidarrPreSearchEvent(resources, this, api);
             api.bus().post(preSearchEvent);
             if (!preSearchEvent.cancelled()) {
+                List<ArtistResource> resourcesR = new ArrayList<>();
+                List<CommandResource> results = new ArrayList<>();
                 for (ArtistResource r : preSearchEvent.resources()) {
                     CommandResource result = arrApi.send(new ArtistSearchCommand(r.id()), CommandResource.class);
                     if (result != null && result.id() >= 0) {
-                        api.bus().post(new LidarrPostSearchEvent(result, this, api));
+                        resourcesR.add(r);
+                        results.add(result);
                     }
                 }
+                api.bus().post(new LidarrPostSearchEvent(resourcesR, results, this, api));
             } else {
                 logger.info("{} cancelled - not performing search for {}_{}", preSearchEvent.getClass().getSimpleName(), config.type().name(), config.id());
             }

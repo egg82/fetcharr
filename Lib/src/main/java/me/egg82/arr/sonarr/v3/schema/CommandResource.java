@@ -1,5 +1,6 @@
 package me.egg82.arr.sonarr.v3.schema;
 
+import kong.unirest.core.JsonNode;
 import kong.unirest.core.json.JSONObject;
 import me.egg82.arr.common.AbstractAPIObject;
 import me.egg82.arr.common.ArrAPI;
@@ -54,6 +55,10 @@ public class CommandResource extends AbstractAPIObject {
         this.sendUpdatesToClient = BooleanParser.get(false, obj, "sendUpdatesToClient");
         this.updateScheduledTask = BooleanParser.get(false, obj, "updateScheduledTask");
         this.lastExecutionTime = InstantParser.get(obj, "lastExecutionTime");
+    }
+
+    public CommandResource(@NotNull ArrAPI api, @NotNull JsonNode node) {
+        this(api, node.getObject());
     }
 
     public int id() {
