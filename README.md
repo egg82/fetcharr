@@ -15,6 +15,13 @@ Since vibe-coding is a big deal these days, I decided to brush off my Java rust 
 a containerized project that used configuration similar to Unpackerr and did one thing and did it well.
 The few portions with LLM assistance have been noted (search `ChatGPT`) and generated code was read and verified before use.
 
+Note that LLM assistance is also used to find and report bugs (see: issues) and those are noted appropriately with a "Claude Code" line.
+The code is still hand-written and how each issue is resolved is still decided by me, a human.
+
+tl;dr LLM-generated code is *largely* out of this repo by design. I wanted to write something by hand, but
+there's a balance between "I want to do it myself" and "this is a real thing used by people" so there's still a few instances in here.
+All properly noted/credited.
+
 No use of opencode, claude code, cursor, etc in this project. Any LLM assistance was done via web UI.
 Largely to ask questions about design, errors, or specific details I've forgotten since touching Java.
 Readme also written by hand.
