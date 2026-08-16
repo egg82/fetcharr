@@ -116,7 +116,7 @@ public class SonarrUpdater extends AbstractUpdater {
             if (missingStatus == MissingStatus.MISSING || missingStatus == MissingStatus.UPGRADE) {
                 boolean hasFiles = true;
                 for (EpisodeResource e : s.episodes()) {
-                    if (!e.hasFile()) {
+                    if (e.monitored() && !e.hasFile()) {
                         hasFiles = false;
                         break;
                     }
@@ -146,7 +146,7 @@ public class SonarrUpdater extends AbstractUpdater {
                 boolean cutoffMet = true;
                 for (EpisodeResource e : s.episodes()) {
                     EpisodeFileResource episodeFile = e.episodeFile();
-                    if (episodeFile == null || episodeFile.qualityCutoffNotMet()) {
+                    if (e.monitored() && (episodeFile == null || episodeFile.qualityCutoffNotMet())) {
                         cutoffMet = false;
                         break;
                     }
