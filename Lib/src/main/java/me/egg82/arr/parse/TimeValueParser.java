@@ -88,6 +88,13 @@ public class TimeValueParser {
             return null;
         }
 
+        if (unit.toMillis(time) == Long.MAX_VALUE) {
+            if (!silent) {
+                LOGGER.warn("TimeValue unit capped from large string value \"{}\"", val, new TimeValueFormatException(val));
+            }
+            return null;
+        }
+
         return new TimeValue(time, unit);
     }
 
