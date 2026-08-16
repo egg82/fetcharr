@@ -56,7 +56,8 @@ public class AlbumResource extends AbstractAPIObject {
         this.monitored = BooleanParser.get(false, obj, "monitored");
         this.anyReleaseOk = BooleanParser.get(false, obj, "anyReleaseOk");
         this.profileId = NumberParser.getInt(-1, obj, "profileId");
-        this.duration = DurationParser.get(obj, "duration");
+        long d = NumberParser.getLong(-1L, obj, "duration");
+        this.duration = d < 0 ? null : Duration.ofMillis(d);
         this.albumType = StringParser.get(obj, "albumType");
 
         JSONArray secondaryTypes = obj.has("secondaryTypes") && obj.get("secondaryTypes") != null ? obj.getJSONArray("secondaryTypes") : null;

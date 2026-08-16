@@ -38,7 +38,8 @@ public class TrackResource extends AbstractAPIObject {
         this.absoluteTrackNumber = NumberParser.getInt(-1, obj, "absoluteTrackNumber");
         this.trackNumber = StringParser.get(obj, "trackNumber");
         this.title = StringParser.get(obj, "title");
-        this.duration = DurationParser.get(obj, "duration");
+        long d = NumberParser.getLong(-1L, obj, "duration");
+        this.duration = d < 0 ? null : Duration.ofMillis(d);
         this.trackFile = ObjectParser.get(TrackFileResource.class, api, obj, "trackFile");
         this.mediumNumber = NumberParser.getInt(-1, obj, "mediumNumber");
         this.hasFile = BooleanParser.get(false, obj, "hasFile");

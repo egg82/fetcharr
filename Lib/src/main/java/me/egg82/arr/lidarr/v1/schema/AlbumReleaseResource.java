@@ -6,7 +6,6 @@ import me.egg82.arr.common.AbstractAPIObject;
 import me.egg82.arr.common.ArrAPI;
 import me.egg82.arr.lidarr.v1.Album;
 import me.egg82.arr.parse.BooleanParser;
-import me.egg82.arr.parse.DurationParser;
 import me.egg82.arr.parse.NumberParser;
 import me.egg82.arr.parse.StringParser;
 import org.jetbrains.annotations.NotNull;
@@ -43,7 +42,8 @@ public class AlbumReleaseResource extends AbstractAPIObject {
         this.foreignReleaseId = StringParser.get(obj, "foreignReleaseId");
         this.title = StringParser.get(obj, "title");
         this.status = StringParser.get(obj, "status");
-        this.duration = DurationParser.get(obj, "duration");
+        long d = NumberParser.getLong(-1L, obj, "duration");
+        this.duration = d < 0 ? null : Duration.ofMillis(d);
         this.trackCount = NumberParser.getInt(-1, obj, "trackCount");
 
         JSONArray media = obj.has("media") && obj.get("media") != null ? obj.getJSONArray("media") : null;
