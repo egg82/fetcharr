@@ -18,7 +18,7 @@
 
         <app.version>2.2.1</app.version>
         <api.version>2.2.0</api.version>
-        <lib.version>1.1.1</lib.version>
+        <lib.version>1.1.2</lib.version>
         <webhook.version>1.2.0</webhook.version>
 
         <jetbrains.version>26.1.0</jetbrains.version>

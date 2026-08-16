@@ -59,10 +59,10 @@ public class DurationParser {
         if (m.matches()) {
             Duration time = Duration.ofMinutes(NumberParser.parseLong(-1L, m.group(1)));
             time = time.plus(Duration.ofSeconds(NumberParser.parseLong(-1L, m.group(2))));
-            if (m.groupCount() > 2) {
+            if (m.group(3) != null) {
                 time = time.plus(Duration.ofHours(NumberParser.parseLong(-1L, m.group(3))));
             }
-            if (m.groupCount() > 3) {
+            if (m.group(4) != null) {
                 time = time.plus(Duration.ofDays(NumberParser.parseLong(-1L, m.group(4))));
             }
             return time;
