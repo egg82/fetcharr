@@ -139,7 +139,7 @@ public class DiscordWebhookTransform extends AbstractWebhookTransform {
 
         JSONObject items = new JSONObject();
         items.put("name", "Items");
-        items.put("value", itemList);
+        items.put("value", truncate(itemList, "..\nAnd more", 1024));
         items.put("inline", false);
 
         JSONArray fields = new JSONArray();

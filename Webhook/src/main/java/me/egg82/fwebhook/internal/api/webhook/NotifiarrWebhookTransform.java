@@ -149,7 +149,7 @@ public class NotifiarrWebhookTransform extends AbstractWebhookTransform {
         // Source - https://stackoverflow.com/a/57784525
         // Posted by Hemmels
         // Retrieved 2026-03-27, License - CC BY-SA 4.0
-        ids.put("value", itemList);
+        ids.put("value", truncate(itemList, "..\nAnd more", 1024));
         ids.put("inline", false);
 
         JSONArray fields = new JSONArray();
