@@ -109,7 +109,7 @@ public class WhisparrUpdater extends AbstractUpdater {
                     continue;
                 }
             }
-            if (missingStatus == MissingStatus.UPGRADE && m.resource().hasFile()) {
+            if (missingStatus == MissingStatus.UPGRADE && !m.resource().hasFile()) {
                 WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.MISSING, this, api);
                 api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {
