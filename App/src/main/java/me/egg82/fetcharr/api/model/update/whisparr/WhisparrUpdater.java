@@ -120,7 +120,7 @@ public class WhisparrUpdater extends AbstractUpdater {
                 }
             }
             MovieFileResource movieFile = m.resource().movieFile();
-            if (useCutoff && (movieFile == null || movieFile.qualityCutoffNotMet())) {
+            if (useCutoff && movieFile != null && !movieFile.qualityCutoffNotMet()) {
                 WhisparrSkipMovieSelectionEvent skipMovieSelectionEvent = new WhisparrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
                 api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {

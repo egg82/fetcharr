@@ -120,7 +120,7 @@ public class RadarrUpdater extends AbstractUpdater {
                 }
             }
             MovieFileResource movieFile = m.resource().movieFile();
-            if (useCutoff && (movieFile == null || movieFile.qualityCutoffNotMet())) {
+            if (useCutoff && movieFile != null && !movieFile.qualityCutoffNotMet()) {
                 RadarrSkipMovieSelectionEvent skipMovieSelectionEvent = new RadarrSkipMovieSelectionEvent(m.resource(), SelectionCancellationReason.QUALITY_CUTOFF_MET, this, api);
                 api.bus().post(skipMovieSelectionEvent);
                 if (skipMovieSelectionEvent.cancelled()) {

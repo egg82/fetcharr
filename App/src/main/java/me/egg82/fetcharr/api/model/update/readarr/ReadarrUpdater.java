@@ -157,7 +157,7 @@ public class ReadarrUpdater extends AbstractUpdater {
 
                 boolean cutoffMet = true;
                 for (BookFileResource b : allBooks.resources()) {
-                    if (!b.qualityCutoffNotMet()) {
+                    if (b.qualityCutoffNotMet()) {
                         cutoffMet = false;
                         break;
                     }
