@@ -47,7 +47,7 @@ public class CommandResource extends AbstractAPIObject {
         this.queued = InstantParser.get(obj, "queued");
         this.started = InstantParser.get(obj, "started");
         this.ended = InstantParser.get(obj, "ended");
-        this.duration = DurationParser.get(obj, "duration");
+        this.duration = DurationParser.getTimeSpan(obj, "duration");
         this.exception = StringParser.get(obj, "exception");
         this.trigger = CommandTrigger.get(CommandTrigger.UNSPECIFIED, obj, "trigger");
         this.clientUserAgent = StringParser.get(obj, "clientUserAgent");

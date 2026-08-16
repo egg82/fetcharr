@@ -15,9 +15,14 @@ public class DurationParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(DurationParser.class);
 
     private static final Pattern PATTERN = Pattern.compile("^(\\d+):(\\d+)(?::(\\d+))?(?::(\\d+))?$");
+    private static final Pattern TIME_SPAN_PATTERN = Pattern.compile("^(-)?(?:(\\d+)\\.)?(\\d{2}):(\\d{2}):(\\d{2})(?:\\.(\\d{1,7}))?$");
 
     public static @NotNull Duration get(@NotNull Duration def, @Nullable JSONObject obj, @Nullable String key) {
         return get(def, obj, key, false);
+    }
+
+    public static @NotNull Duration getTimeSpan(@NotNull Duration def, @Nullable JSONObject obj, @Nullable String key) {
+        return getTimeSpan(def, obj, key, false);
     }
 
     public static @NotNull Duration get(@NotNull Duration def, @Nullable JSONObject obj, @Nullable String key, boolean silent) {
@@ -25,8 +30,17 @@ public class DurationParser {
         return r != null ? r : def;
     }
 
+    public static @NotNull Duration getTimeSpan(@NotNull Duration def, @Nullable JSONObject obj, @Nullable String key, boolean silent) {
+        Duration r = getTimeSpan(obj, key, silent);
+        return r != null ? r : def;
+    }
+
     public static @NotNull Duration parse(@NotNull Duration def, @Nullable String val) {
         return parse(def, val, false);
+    }
+
+    public static @NotNull Duration parseTimeSpan(@NotNull Duration def, @Nullable String val) {
+        return parseTimeSpan(def, val, false);
     }
 
     public static @NotNull Duration parse(@NotNull Duration def, @Nullable String val, boolean silent) {
@@ -34,8 +48,17 @@ public class DurationParser {
         return r != null ? r : def;
     }
 
+    public static @NotNull Duration parseTimeSpan(@NotNull Duration def, @Nullable String val, boolean silent) {
+        Duration r = parseTimeSpan(val, silent);
+        return r != null ? r : def;
+    }
+
     public static @Nullable Duration get(@Nullable JSONObject obj, @Nullable String key) {
         return get(obj, key, false);
+    }
+
+    public static @Nullable Duration getTimeSpan(@Nullable JSONObject obj, @Nullable String key) {
+        return getTimeSpan(obj, key, false);
     }
 
     public static @Nullable Duration get(@Nullable JSONObject obj, @Nullable String key, boolean silent) {
@@ -45,8 +68,19 @@ public class DurationParser {
         return parse(StringParser.get(obj, key), silent);
     }
 
+    public static @Nullable Duration getTimeSpan(@Nullable JSONObject obj, @Nullable String key, boolean silent) {
+        if (obj == null || key == null || key.isEmpty()) {
+            return null;
+        }
+        return parseTimeSpan(StringParser.get(obj, key), silent);
+    }
+
     public static @Nullable Duration parse(@Nullable String val) {
         return parse(val, false);
+    }
+
+    public static @Nullable Duration parseTimeSpan(@Nullable String val) {
+        return parseTimeSpan(val, false);
     }
 
     public static @Nullable Duration parse(@Nullable String val, boolean silent) {
@@ -95,6 +129,43 @@ public class DurationParser {
             }
             return null;
         }
+    }
+
+    public static @Nullable Duration parseTimeSpan(@Nullable String val, boolean silent) {
+        if (val == null || val.isBlank()) {
+            return null;
+        }
+
+        val = val.trim();
+        Matcher m = TIME_SPAN_PATTERN.matcher(val);
+        if (!m.matches()) {
+            return null;
+        }
+
+        Duration time = Duration.ofNanos(NumberParser.parseLong(0L, rightPad(m.group(6), "0", 9)));
+        try {
+            time = time.plus(Duration.ofSeconds(NumberParser.parseLong(0L, m.group(5))));
+            time = time.plus(Duration.ofMinutes(NumberParser.parseLong(0L, m.group(4))));
+            time = time.plus(Duration.ofHours(NumberParser.parseLong(0L, m.group(3))));
+            time = time.plus(Duration.ofDays(NumberParser.parseLong(0L, m.group(2))));
+        } catch (ArithmeticException ex) {
+            if (!silent) {
+                LOGGER.warn("Could not parse duration from string value \"{}\"", val, ex);
+            }
+            return null;
+        }
+        return "-".equals(m.group(1)) ? time.negated() : time;
+    }
+
+    private static @Nullable String rightPad(@Nullable String text, @NotNull String chars, int len) {
+        if (text == null || text.length() >= len) {
+            return text;
+        }
+        StringBuilder builder = new StringBuilder(text);
+        while (builder.length() < len) {
+            builder.append(chars);
+        }
+        return builder.toString();
     }
 
     private DurationParser() { }

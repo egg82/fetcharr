@@ -60,7 +60,7 @@ public class ParsedTrackInfo extends AbstractAPIObject {
         this.label = StringParser.get(obj, "label");
         this.catalogNumber = StringParser.get(obj, "catalogNumber");
         this.disambiguation = StringParser.get(obj, "disambiguation");
-        this.duration = DurationParser.get(obj, "duration");
+        this.duration = DurationParser.getTimeSpan(obj, "duration");
         this.quality = ObjectParser.get(QualityModel.class, api, obj, "quality");
         this.mediaInfo = ObjectParser.get(MediaInfoModel.class, api, obj, "mediaInfo");
 
