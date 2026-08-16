@@ -139,6 +139,9 @@ public class DurationParser {
         val = val.trim();
         Matcher m = TIME_SPAN_PATTERN.matcher(val);
         if (!m.matches()) {
+            if (!silent) {
+                LOGGER.warn("Could not parse C# TimeSpan duration from string value \"{}\"", val);
+            }
             return null;
         }
 
@@ -150,7 +153,7 @@ public class DurationParser {
             time = time.plus(Duration.ofDays(NumberParser.parseLong(0L, m.group(2))));
         } catch (ArithmeticException ex) {
             if (!silent) {
-                LOGGER.warn("Could not parse duration from string value \"{}\"", val, ex);
+                LOGGER.warn("Could not parse C# TimeSpan duration from string value \"{}\"", val, ex);
             }
             return null;
         }
