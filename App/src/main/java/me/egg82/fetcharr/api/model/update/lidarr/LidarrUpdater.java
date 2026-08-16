@@ -34,7 +34,7 @@ public class LidarrUpdater extends AbstractUpdater {
             return true;
         }
 
-        logger.info("Updating up to {} items for for {}_{}: {}", searchAmount, config.type().name(), config.id(), arrApi.baseUrl());
+        logger.info("Updating up to {} items for {}_{}: {}", searchAmount, config.type().name(), config.id(), arrApi.baseUrl());
 
         Artist allArtists = arrApi.fetch(Artist.class);
         if (allArtists == null) {

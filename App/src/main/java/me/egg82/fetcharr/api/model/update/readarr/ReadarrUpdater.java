@@ -40,7 +40,7 @@ public class ReadarrUpdater extends AbstractUpdater {
             return true;
         }
 
-        logger.info("Updating up to {} items for for {}_{}: {}", searchAmount, config.type().name(), config.id(), arrApi.baseUrl());
+        logger.info("Updating up to {} items for {}_{}: {}", searchAmount, config.type().name(), config.id(), arrApi.baseUrl());
 
         Author allAuthors = arrApi.fetch(Author.class);
         if (allAuthors == null) {

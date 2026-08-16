@@ -37,7 +37,7 @@ public class SonarrUpdater extends AbstractUpdater {
             return true;
         }
 
-        logger.info("Updating up to {} items for for {}_{}: {}", searchAmount, config.type().name(), config.id(), arrApi.baseUrl());
+        logger.info("Updating up to {} items for {}_{}: {}", searchAmount, config.type().name(), config.id(), arrApi.baseUrl());
 
         Series allSeries = arrApi.fetch(Series.class);
         if (allSeries == null) {

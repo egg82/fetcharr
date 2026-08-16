@@ -40,7 +40,7 @@ public class WhisparrUpdater extends AbstractUpdater {
             return true; // Bad config, no need to retry every run
         }
 
-        logger.info("Updating up to {} items for for {}_{}: {}", searchAmount, config.type().name(), config.id(), arrApi.baseUrl());
+        logger.info("Updating up to {} items for {}_{}: {}", searchAmount, config.type().name(), config.id(), arrApi.baseUrl());
 
         Movie all = arrApi.fetch(Movie.class);
         if (all == null) {
