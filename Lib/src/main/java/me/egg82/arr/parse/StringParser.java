@@ -11,7 +11,7 @@ public class StringParser {
     }
 
     public static @Nullable String get(@Nullable JSONObject obj, @Nullable String key) {
-        if (obj == null || key == null || obj.isEmpty()) {
+        if (obj == null || key == null || key.isEmpty()) {
             return null;
         }
 
