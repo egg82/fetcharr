@@ -63,7 +63,7 @@ public class TimeValueParser {
             return null;
         }
 
-        long time = NumberParser.parseLong(-1L, m.group(1));
+        long time = NumberParser.parseLong(-1L, m.group(1), silent);
         if (time < 0) {
             if (!silent) {
                 LOGGER.warn("Could not parse TimeValue time from string value \"{}\"", val, new TimeValueFormatException(val));

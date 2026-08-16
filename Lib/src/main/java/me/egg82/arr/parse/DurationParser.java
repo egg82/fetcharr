@@ -92,19 +92,19 @@ public class DurationParser {
         Matcher m = PATTERN.matcher(val);
         if (m.matches()) {
             int last = m.group(4) != null ? 4 : m.group(3) != null ? 3 : 2;
-            Duration time = Duration.ofSeconds(NumberParser.parseLong(-1L, m.group(last)));
+            Duration time = Duration.ofSeconds(NumberParser.parseLong(-1L, m.group(last), silent));
             last--;
 
             try {
-                time = time.plus(Duration.ofMinutes(NumberParser.parseLong(-1L, m.group(last))));
+                time = time.plus(Duration.ofMinutes(NumberParser.parseLong(-1L, m.group(last), silent)));
                 last--;
 
                 if (last > 0) {
-                    time = time.plus(Duration.ofHours(NumberParser.parseLong(-1L, m.group(last))));
+                    time = time.plus(Duration.ofHours(NumberParser.parseLong(-1L, m.group(last), silent)));
                     last--;
                 }
                 if (last > 0) {
-                    time = time.plus(Duration.ofDays(NumberParser.parseLong(-1L, m.group(last))));
+                    time = time.plus(Duration.ofDays(NumberParser.parseLong(-1L, m.group(last), silent)));
                 }
             } catch (ArithmeticException ex) {
                 if (!silent) {
@@ -119,7 +119,7 @@ public class DurationParser {
         try {
             return Duration.parse(val);
         } catch (DateTimeParseException ex) {
-            int minutes = NumberParser.parseInt(-1, val);
+            int minutes = NumberParser.parseInt(-1, val, true);
             if (minutes >= 0) {
                 return Duration.ofMinutes(minutes);
             }
@@ -145,12 +145,12 @@ public class DurationParser {
             return null;
         }
 
-        Duration time = Duration.ofNanos(NumberParser.parseLong(0L, rightPad(m.group(6), "0", 9)));
+        Duration time = Duration.ofNanos(NumberParser.parseLong(0L, rightPad(m.group(6), "0", 9), silent));
         try {
-            time = time.plus(Duration.ofSeconds(NumberParser.parseLong(0L, m.group(5))));
-            time = time.plus(Duration.ofMinutes(NumberParser.parseLong(0L, m.group(4))));
-            time = time.plus(Duration.ofHours(NumberParser.parseLong(0L, m.group(3))));
-            time = time.plus(Duration.ofDays(NumberParser.parseLong(0L, m.group(2))));
+            time = time.plus(Duration.ofSeconds(NumberParser.parseLong(0L, m.group(5), silent)));
+            time = time.plus(Duration.ofMinutes(NumberParser.parseLong(0L, m.group(4), silent)));
+            time = time.plus(Duration.ofHours(NumberParser.parseLong(0L, m.group(3), silent)));
+            time = time.plus(Duration.ofDays(NumberParser.parseLong(0L, m.group(2), silent)));
         } catch (ArithmeticException ex) {
             if (!silent) {
                 LOGGER.warn("Could not parse C# TimeSpan duration from string value \"{}\"", val, ex);

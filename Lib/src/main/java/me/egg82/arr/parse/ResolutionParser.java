@@ -62,7 +62,7 @@ public class ResolutionParser {
             return null;
         }
 
-        int horizontal = NumberParser.parseInt(-1, m.group(1));
+        int horizontal = NumberParser.parseInt(-1, m.group(1), silent);
         if (horizontal < 0) {
             if (!silent) {
                 LOGGER.warn("Could not parse ResolutionValue horizontal from string value \"{}\"", val, new ResolutionValueFormatException(val));
@@ -70,7 +70,7 @@ public class ResolutionParser {
             return null;
         }
 
-        int vertical = NumberParser.parseInt(-1, m.group(2));
+        int vertical = NumberParser.parseInt(-1, m.group(2), silent);
         if (vertical < 0) {
             if (!silent) {
                 LOGGER.warn("Could not parse ResolutionValue vertical from string value \"{}\"", val, new ResolutionValueFormatException(val));
