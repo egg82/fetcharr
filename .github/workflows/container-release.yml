@@ -1,4 +1,4 @@
-# Entirely written by ChatGPT
+# Entirely written by ChatGPT; deploy/build split fixed by Claude (issue #20)
 
 name: Build and publish release container
 
@@ -58,12 +58,18 @@ jobs:
           REPOSILITE_USERNAME: ${{ vars.REPOSILITE_USERNAME }}
           REPOSILITE_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
 
-      - name: Build everything and deploy allowed Maven artifacts
+      - name: Build project
+        run: mvn -B -ntp clean package
+
+      # best-effort: a 409 on re-deploying unchanged artifacts must not block the
+      # container publish below (issue #20)
+      - name: Deploy Maven artifacts to Reposilite (best-effort)
+        continue-on-error: true
         env:
           REPOSILITE_USERNAME: ${{ vars.REPOSILITE_USERNAME }}
           REPOSILITE_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
         run: >
-          mvn -B -ntp clean deploy -DdeployAtEnd=true
+          mvn -B -ntp deploy -DdeployAtEnd=true
           -DaltReleaseDeploymentRepository=egg82-repo-releases::https://repo.egg82.me/releases/
           -DaltSnapshotDeploymentRepository=egg82-repo-snapshots::https://repo.egg82.me/snapshots/
 
