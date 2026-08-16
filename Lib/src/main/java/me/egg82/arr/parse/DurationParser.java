@@ -57,14 +57,28 @@ public class DurationParser {
         val = val.trim();
         Matcher m = PATTERN.matcher(val);
         if (m.matches()) {
-            Duration time = Duration.ofMinutes(NumberParser.parseLong(-1L, m.group(1)));
-            time = time.plus(Duration.ofSeconds(NumberParser.parseLong(-1L, m.group(2))));
-            if (m.group(3) != null) {
-                time = time.plus(Duration.ofHours(NumberParser.parseLong(-1L, m.group(3))));
+            int last = m.group(4) != null ? 4 : m.group(3) != null ? 3 : 2;
+            Duration time = Duration.ofSeconds(NumberParser.parseLong(-1L, m.group(last)));
+            last--;
+
+            try {
+                time = time.plus(Duration.ofMinutes(NumberParser.parseLong(-1L, m.group(last))));
+                last--;
+
+                if (last > 0) {
+                    time = time.plus(Duration.ofHours(NumberParser.parseLong(-1L, m.group(last))));
+                    last--;
+                }
+                if (last > 0) {
+                    time = time.plus(Duration.ofDays(NumberParser.parseLong(-1L, m.group(last))));
+                }
+            } catch (ArithmeticException ex) {
+                if (!silent) {
+                    LOGGER.warn("Could not parse duration from string value \"{}\"", val, ex);
+                }
+                return null;
             }
-            if (m.group(4) != null) {
-                time = time.plus(Duration.ofDays(NumberParser.parseLong(-1L, m.group(4))));
-            }
+
             return time;
         }
 
