@@ -11,10 +11,7 @@ LABEL org.opencontainers.image.title="Fetcharr" \
 
 ARG JAR_FILE=App/target/fetcharr-2.1.1.jar
 
-ENV APP_USER=app \
-    PUID=1000 \
-    PGID=1000 \
-    LANG=en_US.UTF-8 \
+ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8 \
     JAVA_TOOL_OPTIONS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/urandom -Dfile.encoding=UTF-8"
@@ -29,10 +26,10 @@ RUN microdnf install -y \
     && microdnf clean all \
     && rm -rf /var/cache/dnf
 
-RUN groupadd -g "${PGID}" "${APP_USER}" \
-    && useradd -u "${PUID}" -g "${PGID}" -d /app -s /sbin/nologin -M "${APP_USER}" \
+RUN groupadd -g 1000 app \
+    && useradd -u 1000 -g 1000 -d /app -s /sbin/nologin -M app \
     && mkdir -p /app /tmp \
-    && chown -R "${PUID}:${PGID}" /app /tmp \
+    && chown -R 1000:1000 /app /tmp \
     && chmod 1777 /tmp
 
 WORKDIR /app
@@ -41,10 +38,10 @@ COPY entrypoint.sh /app/entrypoint.sh
 COPY start.sh /app/start.sh
 COPY ${JAR_FILE} /app/fetcharr.jar
 
-RUN chown "${PUID}:${PGID}" /app/start.sh /app/entrypoint.sh /app/fetcharr.jar \
+RUN chown 1000:1000 /app/start.sh /app/entrypoint.sh /app/fetcharr.jar \
   && chmod 0755 /app/start.sh /app/entrypoint.sh
 
-USER ${PUID}:${PGID}
+USER 1000:1000
 
 VOLUME ["/app/config", "/app/cache", "/app/logs", "/app/plugins"]
 

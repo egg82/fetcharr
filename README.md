@@ -260,37 +260,81 @@ spec:
 ```
 </details>
 
+## Running as a different user
+
+Fetcharr runs as UID 1000 and GID 1000 by default. If you need to use a different user,
+you can do that in one of two ways:
+
+Set the user at runtime:
+```bash
+ docker run \
+   --user 99:100 \
+   ... \
+   egg82/fetcharr:latest
+```
+
+or, in compose:
+```yaml
+services:
+  fetcharr:
+    image: egg82/fetcharr:latest
+    user: "99:100"
+   ...
+```
+
+The limitation of this method is that Fetcharr cannot (and will not attempt to)
+change volume ownership for any data directories you give it.
+
+The second option is to let Fetcharr remap its user after starting the container as root:
+```bash
+ docker run \
+   --user 0:0 \
+   -e PUID=99 -e PGID=100 \
+   ... \
+   egg82/fetcharr:latest
+```
+
+The upside to this method is that Fetcharr will start as root and be able to modify
+volume mounts as needed. The downside is that this is inherently less secure, even
+though it will drop privileges almost immediately after starting.
+
+### Unraid
+
+Unraid uses 99:100 (nobody:users) so you'll want to use one of the above options.
+Put the flag in the Extra Parameters field of the container's template after switching
+to Advanced View.
+
 ## Environment variables
 
 ### Common
 
-| variable | type    | values | default  | description |
-| -------- |---------| ------ |----------| ----------- |
-| PUID | int | 0-65535 | 1000 | Process UID override, eg. Unraid would be 99 |
-| PGID | int | 0-65535 | 1000 | Process GID override, eg. Unraid would be 100 |
-| LOG_MODE | string | trace, debug, info, warn, error | info | Logging mode |
-| DRY_RUN | boolean | true, false | false | Run in dry-run mode, which will list (but **not** perform) searches |
-| CONFIG_DIR | directory | /any/directory/path | /app/config | Configuration storage directory |
-| CACHE_DIR | directory | /any/directory/path | /app/cache | Cache storage directory |
-| LOG_DIR | directory | /any/directory/path | /app/logs | Log storage directory |
-| VERIFY_CERTS | boolean | true, false | true | Verify SSL certificates |
-| SSL_PATH | file | /any/file/path.ext | /etc/ssl/certs/ca-bundle.crt | File path for SSL cert bundle |
-| PROXY_HOST | string | \<URL\> | \<none\> | HTTP proxy host |
-| PROXY_PORT| integer | 1-65534 | 80 | HTTP proxy port |
-| CONNECT_TIMEOUT | integer | 0-2147483647 | 2500 | HTTP connection timeout in milliseconds |
-| REQUEST_TIMEOUT | integer | 0-2147483647 | 120000 | HTTP request timeout in milliseconds |
-| CONNECT_TTL | integer | 0-2147483647 | 300000 | HTTP connection TTL in milliseconds |
-| USE_FILE_CACHE | tristate | auto, true, false | auto | Use file-based cache |
-| USE_MEMORY_CACHE | tristate | auto, true, false | auto | Use in-memory cache |
-| SHORT_CACHE_TIME | time | 5minutes, 3hours, 1day, etc | 65minutes | Expiration time for short-lived cached values |
-| LONG_CACHE_TIME | time | 5minutes, 3hours, 1day, etc | 6hours | Expiration time for long-lived cached values |
-| SEARCH_AMOUNT | integer | 0-2147483647 | 5 | Number of items to search at each run |
-| SEARCH_INTERVAL | time | 5minutes, 3hours, 1day, etc | 1hour | How often to perform searches |
-| MONITORED_ONLY | boolean | true, false | true | Select for monitored items |
-| ~~MISSING_ONLY~~ | ~~boolean~~ | ~~true, false~~ | ~~false~~ | ~~Select for missing items~~ |
-| MISSING_STATUS | string | any, missing, upgrade | any | "any" for any missing item status, "missing" for missing-only, "upgrade" for non-missing only |
-| USE_CUTOFF | boolean | true, false | false | Select for items that do not meet their profile cutoff |
-| SKIP_TAGS | string | any,string,values | \<none\> | Comma-separated list of tags to skip searching |
+| variable        | type       | values                         | default                      | description                                                                                                                                       |
+|-----------------|------------|--------------------------------|------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| PUID            | int        | 0-65535                        | 1000                         | Process UID override, eg. Unraid would be 99. Only works when starting as root. See: [Running as a different user](#running-as-a-different-user)  |
+| PGID            | int        | 0-65535                        | 1000                         | Process GID override, eg. Unraid would be 100. Only works when starting as root. See: [Running as a different user](#running-as-a-different-user) |
+| LOG_MODE        | string     | trace, debug, info, warn, error | info                         | Logging mode                                                                                                                                      |
+| DRY_RUN         | boolean    | true, false                    | false                        | Run in dry-run mode, which will list (but **not** perform) searches                                                                               |
+| CONFIG_DIR      | directory  | /any/directory/path            | /app/config                  | Configuration storage directory                                                                                                                   |
+| CACHE_DIR       | directory  | /any/directory/path            | /app/cache                   | Cache storage directory                                                                                                                           |
+| LOG_DIR         | directory  | /any/directory/path            | /app/logs                    | Log storage directory                                                                                                                             |
+| VERIFY_CERTS    | boolean    | true, false                    | true                         | Verify SSL certificates                                                                                                                           |
+| SSL_PATH        | file       | /any/file/path.ext             | /etc/ssl/certs/ca-bundle.crt | File path for SSL cert bundle                                                                                                                     |
+| PROXY_HOST      | string     | \<URL\>                        | \<none\>                     | HTTP proxy host                                                                                                                                   |
+| PROXY_PORT      | integer    | 1-65534                        | 80                           | HTTP proxy port                                                                                                                                   |
+| CONNECT_TIMEOUT | integer    | 0-2147483647                   | 2500                         | HTTP connection timeout in milliseconds                                                                                                           |
+| REQUEST_TIMEOUT | integer    | 0-2147483647                   | 120000                       | HTTP request timeout in milliseconds                                                                                                              |
+| CONNECT_TTL     | integer    | 0-2147483647                   | 300000                       | HTTP connection TTL in milliseconds                                                                                                               |
+| USE_FILE_CACHE  | tristate   | auto, true, false              | auto                         | Use file-based cache                                                                                                                              |
+| USE_MEMORY_CACHE | tristate   | auto, true, false              | auto                         | Use in-memory cache                                                                                                                               |
+| SHORT_CACHE_TIME | time       | 5minutes, 3hours, 1day, etc    | 65minutes                    | Expiration time for short-lived cached values                                                                                                     |
+| LONG_CACHE_TIME | time       | 5minutes, 3hours, 1day, etc    | 6hours                       | Expiration time for long-lived cached values                                                                                                      |
+| SEARCH_AMOUNT   | integer    | 0-2147483647                   | 5                            | Number of items to search at each run                                                                                                             |
+| SEARCH_INTERVAL | time       | 5minutes, 3hours, 1day, etc    | 1hour                        | How often to perform searches                                                                                                                     |
+| MONITORED_ONLY  | boolean    | true, false                    | true                         | Select for monitored items                                                                                                                        |
+| ~~MISSING_ONLY~~ | ~~boolean~~ | ~~true, false~~                | ~~false~~                    | ~~Select for missing items~~                                                                                                                      |
+| MISSING_STATUS  | string     | any, missing, upgrade          | any                          | "any" for any missing item status, "missing" for missing-only, "upgrade" for non-missing only                                                     |
+| USE_CUTOFF      | boolean    | true, false                    | false                        | Select for items that do not meet their profile cutoff                                                                                            |
+| SKIP_TAGS       | string     | any,string,values              | \<none\>                     | Comma-separated list of tags to skip searching                                                                                                    |
 
 Notes on caching:
 
