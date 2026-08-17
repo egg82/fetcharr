@@ -58,18 +58,60 @@ jobs:
           REPOSILITE_USERNAME: ${{ vars.REPOSILITE_USERNAME }}
           REPOSILITE_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
 
+      # install, not package, so the deploy step below can use -pl and still
+      # resolve inter-module dependencies from the local repo
       - name: Build project
-        run: mvn -B -ntp clean package
+        run: mvn -B -ntp clean install
 
-      # best-effort: a 409 on re-deploying unchanged artifacts must not block the
-      # container publish below (issue #20)
-      - name: Deploy Maven artifacts to Reposilite (best-effort)
-        continue-on-error: true
+      # Reposilite has redeployment disabled, so re-deploying an existing version
+      # returns 409 - and deployAtEnd batches every module, so ONE 409 fails the
+      # whole batch and nothing publishes. That is what silently killed the Maven
+      # side of v2.1.0, v2.1.1 and v2.2.0. Rather than bumping unchanged modules
+      # just to dodge it, ask Reposilite what is already there and deploy the rest.
+      - name: Work out which modules need deploying
+        id: deploy_set
+        run: |
+          set -Eeuo pipefail
+          modules=""
+          while IFS='|' read -r mod artifact prop; do
+            version="$(sed -n "s|.*<${prop}>\(.*\)</${prop}>.*|\1|p" pom.xml | head -1)"
+            if [ -z "$version" ]; then
+              echo "::error::could not read ${prop} from pom.xml"
+              exit 1
+            fi
+            url="https://repo.egg82.me/api/maven/details/releases/me/egg82/${artifact}"
+            if body="$(curl -sf --max-time 20 "$url")"; then
+              published="$(printf '%s' "$body" | jq -r '.files[]? | select(.type=="DIRECTORY") | .name')"
+            elif [ "$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$url")" = "404" ]; then
+              published=""            # artifact has never been published
+            else
+              # cannot tell - include it and let the deploy be the judge, rather
+              # than silently skipping something that should have gone out
+              echo "::warning::could not query $artifact; deploying it anyway"
+              modules="${modules:+$modules,}$mod"
+              continue
+            fi
+            if printf '%s\n' "$published" | grep -qxF "$version"; then
+              echo "skip    $artifact $version (already published)"
+            else
+              echo "deploy  $artifact $version"
+              modules="${modules:+$modules,}$mod"
+            fi
+          done <<'EOF'
+          Lib|arr-lib|lib.version
+          API|fetcharr-api|api.version
+          Webhook|fetcharr-webhook|webhook.version
+          EOF
+          echo "modules=$modules" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy Maven artifacts to Reposilite
+        if: steps.deploy_set.outputs.modules != ''
         env:
           REPOSILITE_USERNAME: ${{ vars.REPOSILITE_USERNAME }}
           REPOSILITE_TOKEN: ${{ secrets.REPOSILITE_TOKEN }}
         run: >
-          mvn -B -ntp deploy -DdeployAtEnd=true
+          mvn -B -ntp deploy -DskipTests -DdeployAtEnd=true
+          -pl ${{ steps.deploy_set.outputs.modules }}
           -DaltReleaseDeploymentRepository=egg82-repo-releases::https://repo.egg82.me/releases/
           -DaltSnapshotDeploymentRepository=egg82-repo-snapshots::https://repo.egg82.me/snapshots/
 
