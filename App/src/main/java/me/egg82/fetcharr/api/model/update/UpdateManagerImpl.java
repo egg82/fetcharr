@@ -8,7 +8,6 @@ import me.egg82.arr.config.CacheConfigVars;
 import me.egg82.arr.config.Tristate;
 import me.egg82.arr.file.JSONFile;
 import me.egg82.arr.parse.BooleanParser;
-import me.egg82.arr.unit.TimeValue;
 import me.egg82.fetcharr.api.FetcharrAPI;
 import me.egg82.fetcharr.api.event.update.UpdaterPostDeregistrationEvent;
 import me.egg82.fetcharr.api.event.update.UpdaterPostRegistrationEvent;
@@ -24,17 +23,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.*;
 
 public class UpdateManagerImpl implements UpdateManager {
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -42,8 +34,7 @@ public class UpdateManagerImpl implements UpdateManager {
     private final FetcharrAPI api;
     private final ScheduledExecutorService pool;
 
-    private final List<@NotNull Updater> updaters = new ArrayList<>();
-    private final ReadWriteLock lock = new ReentrantReadWriteLock();
+    private final List<@NotNull Updater> updaters = new CopyOnWriteArrayList<>();
 
     private final ConcurrentMap<ObjectIntPair<@NotNull ArrType>, @NotNull Instant> updateTimes = new ConcurrentHashMap<>();
 
@@ -56,12 +47,7 @@ public class UpdateManagerImpl implements UpdateManager {
 
     @Override
     public @NotNull PVector<@NotNull Updater> updaters() {
-        try {
-            lock.readLock().lock();
-            return TreePVector.from(updaters);
-        } finally {
-            lock.readLock().unlock();
-        }
+        return TreePVector.from(updaters);
     }
 
     @Override
@@ -74,12 +60,7 @@ public class UpdateManagerImpl implements UpdateManager {
             return false;
         }
 
-        try {
-            lock.writeLock().lock();
-            updaters.add(updater);
-        } finally {
-            lock.writeLock().unlock();
-        }
+        updaters.add(updater);
 
         api.bus().post(new UpdaterPostRegistrationEvent(updater, api));
         return true;
@@ -95,12 +76,7 @@ public class UpdateManagerImpl implements UpdateManager {
             return false;
         }
 
-        try {
-            lock.writeLock().lock();
-            updaters.remove(updater);
-        } finally {
-            lock.writeLock().unlock();
-        }
+        updaters.remove(updater);
 
         api.bus().post(new UpdaterPostDeregistrationEvent(updater, api));
         return true;
@@ -173,7 +149,6 @@ public class UpdateManagerImpl implements UpdateManager {
         return "UpdateManagerImpl{" +
                 "api=" + api +
                 ", updaters=" + updaters +
-                ", lock=" + lock +
                 ", updateTimes=" + updateTimes +
                 '}';
     }
