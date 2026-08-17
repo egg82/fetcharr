@@ -291,6 +291,20 @@ public class PluginManagerImpl implements PluginManager {
             try {
                 MessageDigest digest = (e.sha256() != null) ? MessageDigest.getInstance("SHA-256") : null;
 
+                if (digest != null && target.exists()) {
+                    try (InputStream in = new BufferedInputStream(new FileInputStream(target))) {
+                        byte[] buffer = new byte[8192];
+                        int read;
+                        while ((read = in.read(buffer)) != -1) {
+                            digest.update(buffer, 0, read);
+                        }
+                    }
+                    if (toHex(digest.digest()).equalsIgnoreCase(e.sha256())) {
+                        logger.debug("SHA256 of current plugin {} matched expected, skipping", e.filename());
+                        continue;
+                    }
+                }
+
                 try (InputStream raw = Unirest.get(e.url()).accept("application/java-archive").asObject(RawResponse::getContent).getBody(); InputStream in = new BufferedInputStream(raw); OutputStream out = new BufferedOutputStream(new FileOutputStream(temp))) {
                     byte[] buffer = new byte[8192];
                     int read;
