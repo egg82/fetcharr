@@ -220,8 +220,7 @@ public class Main {
 
         RadarrV3API arrApi = new RadarrV3API(url, key, num);
         if (!arrApi.valid()) {
-            LOGGER.warn("Could not authenticate to Radarr instance configured at {} ({})", ArrConfigVars.URL.envName(ArrType.RADARR, num), url);
-            return;
+            LOGGER.warn("Could not authenticate to Radarr instance configured at {} ({}) - adding anyway", ArrConfigVars.URL.envName(ArrType.RADARR, num), url);
         }
 
         FetcharrAPI api = FetcharrAPIProvider.instance();
@@ -253,8 +252,7 @@ public class Main {
 
         SonarrV3API arrApi = new SonarrV3API(url, key, num);
         if (!arrApi.valid()) {
-            LOGGER.warn("Could not authenticate to Sonarr instance configured at {} ({})", ArrConfigVars.URL.envName(ArrType.SONARR, num), url);
-            return;
+            LOGGER.warn("Could not authenticate to Sonarr instance configured at {} ({}) - adding anyway", ArrConfigVars.URL.envName(ArrType.SONARR, num), url);
         }
 
         FetcharrAPI api = FetcharrAPIProvider.instance();
@@ -286,8 +284,7 @@ public class Main {
 
         LidarrV1API arrApi = new LidarrV1API(url, key, num);
         if (!arrApi.valid()) {
-            LOGGER.warn("Could not authenticate to Lidarr instance configured at {} ({})", ArrConfigVars.URL.envName(ArrType.LIDARR, num), url);
-            return;
+            LOGGER.warn("Could not authenticate to Lidarr instance configured at {} ({}) - adding anyway", ArrConfigVars.URL.envName(ArrType.LIDARR, num), url);
         }
 
         FetcharrAPI api = FetcharrAPIProvider.instance();
@@ -319,8 +316,7 @@ public class Main {
 
         ReadarrV1API arrApi = new ReadarrV1API(url, key, num);
         if (!arrApi.valid()) {
-            LOGGER.warn("Could not authenticate to Readarr instance configured at {} ({})", ArrConfigVars.URL.envName(ArrType.READARR, num), url);
-            return;
+            LOGGER.warn("Could not authenticate to Readarr instance configured at {} ({}) - adding anyway", ArrConfigVars.URL.envName(ArrType.READARR, num), url);
         }
 
         FetcharrAPI api = FetcharrAPIProvider.instance();
@@ -352,8 +348,7 @@ public class Main {
 
         WhisparrV3API arrApi = new WhisparrV3API(url, key, num);
         if (!arrApi.valid()) {
-            LOGGER.warn("Could not authenticate to Whisparr instance configured at {} ({})", ArrConfigVars.URL.envName(ArrType.WHISPARR, num), url);
-            return;
+            LOGGER.warn("Could not authenticate to Whisparr instance configured at {} ({}) - adding anyway", ArrConfigVars.URL.envName(ArrType.WHISPARR, num), url);
         }
 
         FetcharrAPI api = FetcharrAPIProvider.instance();

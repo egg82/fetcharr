@@ -102,7 +102,7 @@ public class UpdateManagerImpl implements UpdateManager {
     }
 
     private void run() {
-        pool.schedule(this::run, 5, TimeUnit.SECONDS);
+        pool.schedule(this::run, 30, TimeUnit.SECONDS);
 
         for (Updater u : updaters) {
             ObjectIntPair<@NotNull ArrType> key = ObjectIntPair.of(u.config().type(), u.config().id());
