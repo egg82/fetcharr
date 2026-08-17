@@ -5,7 +5,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import tools.jackson.databind.ObjectMapper;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -16,7 +15,6 @@ import java.util.stream.Stream;
 
 public class JSONFile {
     private static final Logger LOGGER = LoggerFactory.getLogger(JSONFile.class);
-    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final File file;
 
@@ -62,10 +60,7 @@ public class JSONFile {
             return null;
         }
 
-        try (InputStream in = new BufferedInputStream(new FileInputStream(file))) {
-            tools.jackson.databind.JsonNode node = MAPPER.readTree(in);
-            return new kong.unirest.core.JsonNode(MAPPER.writeValueAsString(node));
-        }
+        return new JsonNode(Files.readString(file.toPath()));
     }
 
     public void write(@NotNull JsonNode data) throws IOException {
